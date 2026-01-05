@@ -1,37 +1,61 @@
-# IARA 🧜‍♀️ (Inteligência Artificial de Risco e Análise)
+# IARA 🧜‍♀️ - Institutional Automated Risk Analysis (v25.0)
 
-> **Sistema Autônomo de Swing Trade "Institutional Grade" com Arquitetura Híbrida.**
+> **Sistema Autônomo de Trading Quantitativo "Market Survivor".**
+> *Focado em Swing Trade (3-5 dias), Proteção de Capital Extrema e Arquitetura Híbrida de Custo Otimizado.*
 
-A **IARA** é um sistema de trading quantitativo desenvolvido para operar Swing Trade (3-5 dias) com rigor de Hedge Fund. Diferente de bots tradicionais, ela prioriza a **Proteção de Capital** sobre o lucro rápido, utilizando uma arquitetura híbrida que une o processamento de dados local (GPU) com a inteligência de decisão na nuvem (LLMs).
+![Status](https://img.shields.io/badge/Status-Production%20Ready-green) ![Version](https://img.shields.io/badge/Version-v25.0%20Atomic-blue) ![Python](https://img.shields.io/badge/Python-3.10%2B-yellow)
+
+A **IARA** não é apenas um robô de trade; é um sistema de tesouraria completo. Diferente de bots comuns que focam apenas em "Sinais de Entrada", a IARA foi arquitetada com foco em **Sobrevivência**, implementando travas contra Flash Crashes, Correlação Cruzada de Portfólio, Detecção de OPA/M&A (Poison Pill) e execução tierizada para Small Caps.
 
 ---
 
-## 🧠 Arquitetura Híbrida
-O sistema opera em dois ambientes para maximizar eficiência e reduzir custos:
+## 🧠 Arquitetura "Atomic Survivor"
 
-1.  **Local (RTX 2060 / Llama 3):** Responsável pelo trabalho pesado e repetitivo.
-    *   Scraping de notícias e triagem inicial.
-    *   Cálculo de indicadores técnicos (ATR, ADX, AVWAP).
-    *   Monitoramento de preço 24/7 e Watchdog.
-2.  **Nuvem (OpenAI GPT-4o):** O "Cérebro" estratégico.
-    *   Atua como o **Juiz** no "Tribunal Iara".
-    *   Realiza análise de sentimento complexa e correlação macro.
-    *   Decide a entrada baseada em Dossiês filtrados.
+O sistema opera em um fluxo sequencial de 6 fases, combinando **Matemática Pura (Python Local)** para dados e risco, com **Inteligência Artificial (Nuvem)** para estratégia e triagem.
 
-## ✨ Funcionalidades Principais
+### 1. 🏭 Fase 0: Fábrica de Universo (08:00)
+Geração inteligente da lista de ativos do dia.
+*   **Buzz Factory:** Combina dados quantitativos (`yfinance` Top Gainers/Volume) com dados qualitativos (Scraper de Manchetes + NLP).
+*   **Tiering Dinâmico:** Classifica ativos em **Tier 1** (Blue Chips > $4B) e **Tier 2** (Small Caps > $800M).
+*   **Filtros de Qualidade:** Rejeita liquidez < $15M/dia e Market Cap < $800M.
 
-*   **🛡️ Gestão de Risco Institucional:**
-    *   **Kill Switch:** Bloqueio total se Drawdown > 8%.
-    *   **Position Sizing:** Cálculo de lotes baseado em Volatilidade (ATR) e Risco Fixo (1-2%).
-    *   **Filtros de Segurança:** Bloqueio de Gaps > 3%, proteção de Sexta-feira e travas de horário.
-*   **⚖️ O Tribunal:** Sistema de decisão onde agentes (Touro vs Urso) debatem antes do veredito final do Juiz.
-*   **📡 Integração Hardware:** Telemetria física via **Raspberry Pi Pico** (LEDs de Status e Alerta).
-*   **⚙️ Execução Profissional:** Ordens OCO (One-Cancels-Other) com Stop-Limit, Stop Loss Técnico e Alvos Dinâmicos.
+### 2. 🔍 Fase 1: Triagem Híbrida (10:30)
+Análise profunda com custo otimizado.
+*   **Coleta:** Técnica (`pandas_ta`), Fundamentalista e Notícias (`newspaper3k`).
+*   **IA de Triagem:** Utiliza **Google Gemini 3 Flash (Free Tier)** com *Rate Limiting* (Sleep 4s) para filtrar ruído e dar notas de relevância (0-10).
+*   **Filtros Técnicos:** Bloqueio de Gaps > 3% e Earnings em 5 dias.
+
+### 3. 🛡️ Fase 2: O Cofre de Risco (Matemática)
+Nenhuma IA toma decisão sem passar pela matemática.
+*   **Correlação Cruzada:** Bloqueia entrada se a correlação com o portfólio atual for > 0.75.
+*   **Beta Inteligente:** Permite Beta > 3.0 apenas se o volume for alto, ajustando o lote.
+*   **Drawdown Gradual:** Reduz lote em 50% se DD > 5%. **Kill Switch** se DD > 8%.
+
+### 4. ⚖️ Fase 3: O Tribunal (Hierarquia de IA)
+Decisão estratégica baseada em Dossiês.
+*   **Grounding:** Pesquisa Google (Free) para validar rumores antes de julgar.
+*   **Juiz Principal:** **GPT-5.2** (OpenAI) com acesso a RAG (Manuais de Estratégia).
+*   **Fallback System:** Se OpenAI cair -> Tenta GPT-4o-mini -> Tenta Claude 3.5 -> Último caso Gemini.
+
+### 5. ⚙️ Fase 4: Execução Blindada
+Protocolo de ordens para evitar *slippage* e erros.
+*   **Entrada:** Apenas **STOP-LIMIT** (+0.5% do gatilho). Nunca a mercado.
+*   **Position Sizing:** Risco fixo de 1-2% ajustado por ATR e Tier (Redutor para Small Caps).
+*   **Proteção Física:** Envio de Stop Loss Físico para a corretora + Backup Stop (Market) em -10%.
+
+### 6. 👮 Fase 5: O Guardião 24/7
+Monitoramento contínuo e protocolos de emergência.
+*   **Anti-Cascata:** Monitora Drawdown Intraday. Se cair 4%, zera tudo (Panic Protocol).
+*   **Poison Pill (M&A):** Scanner noturno busca termos de OPA/Fusão. Se achar, cancela stops e busca alvo de +60%.
+*   **Kill Switch Remoto:** Integração com **Telegram** para zeragem imediata via comando.
+
+---
 
 ## 🛠️ Tech Stack
 
-*   **Linguagem:** Python 3.10+
-*   **Análise de Dados:** `yfinance`, `pandas_ta`, `numpy`
-*   **IA & NLP:** `openai` (API), `torch` (Local), `transformers`
-*   **Conexão:** `ccxt` (Corretoras/Crypto), `requests`
-*   **Hardware:** `pyserial` (Comunicação com Raspberry Pi)
+*   **Core:** Python 3.10+
+*   **Dados:** `yfinance`, `requests`, `newspaper3k`
+*   **Matemática:** `pandas`, `pandas_ta` (Indicadores), `numpy`
+*   **AI Gateways:** `openai` (GPT-5.2), `google-generativeai` (Gemini Flash), `anthropic`
+*   **Infra:** `sqlite3` (Logs/Cache), `python-telegram-bot`
+*   **Hardware:** Integração Serial Opcional (Raspberry Pi Pico para LEDs de Status).
