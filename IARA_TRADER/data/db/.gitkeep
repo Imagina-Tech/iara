@@ -1,0 +1,3 @@
+# Este diretório armazenará os bancos SQLite
+# trades.db - Histórico de operações
+# logs.db - Logs do sistema

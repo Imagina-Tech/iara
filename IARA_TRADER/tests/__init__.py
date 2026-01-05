@@ -1,0 +1,3 @@
+"""
+IARA TRADER - Testes
+"""

@@ -1,0 +1,86 @@
+# ============================================
+# IARA TRADER - Git Ignore
+# ============================================
+
+# --- Secrets e Configurações Sensíveis ---
+.env
+config/secrets.yaml
+*.pem
+*.key
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# --- Virtual Environments ---
+venv/
+ENV/
+env/
+.venv/
+
+# --- IDEs ---
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.pydevproject
+.settings/
+
+# --- Jupyter ---
+.ipynb_checkpoints/
+*.ipynb
+
+# --- Logs e Cache ---
+*.log
+data/logs/*.log
+data/cache/*
+!data/cache/.gitkeep
+
+# --- Banco de Dados ---
+data/db/*.db
+data/db/*.sqlite
+data/db/*.sqlite3
+!data/db/.gitkeep
+
+# --- OS Files ---
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- Testes ---
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# --- Mypy ---
+.mypy_cache/
+
+# --- Build ---
+*.manifest
+*.spec
+
+# --- Backups ---
+*.bak
+*.backup

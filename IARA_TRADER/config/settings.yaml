@@ -1,0 +1,56 @@
+# ============================================
+# IARA TRADER - CONFIGURAÇÕES GLOBAIS
+# ============================================
+
+# --- GESTÃO DE RISCO ---
+risk:
+  max_drawdown_daily: 0.02        # 2% do capital por dia
+  max_drawdown_total: 0.06        # 6% do capital total (Kill Switch)
+  risk_per_trade: 0.01            # 1% por operação
+  max_positions: 5                # Máximo de posições simultâneas
+  max_correlation: 0.7            # Correlação máxima entre ativos
+
+# --- HORÁRIOS DE OPERAÇÃO ---
+schedule:
+  market_open: "09:30"
+  market_close: "16:00"
+  pre_market_scan: "08:00"
+  after_hours_scan: "17:00"
+  timezone: "America/New_York"
+
+# --- TIERS DE MARKET CAP ---
+tiers:
+  tier1_large_cap:
+    min_market_cap: 10000000000   # $10B+
+    position_multiplier: 1.0
+  tier2_mid_cap:
+    min_market_cap: 2000000000    # $2B - $10B
+    position_multiplier: 0.7
+  tier3_small_cap:
+    min_market_cap: 300000000     # $300M - $2B
+    position_multiplier: 0.5
+
+# --- FILTROS DE LIQUIDEZ ---
+liquidity:
+  min_avg_volume: 500000          # Volume médio mínimo
+  min_dollar_volume: 5000000      # Volume financeiro mínimo
+  max_spread_percent: 0.5         # Spread máximo 0.5%
+
+# --- INDICADORES TÉCNICOS ---
+technical:
+  rsi_period: 14
+  atr_period: 14
+  supertrend_period: 10
+  supertrend_multiplier: 3.0
+
+# --- CONFIGURAÇÃO DE IA ---
+ai:
+  screener_threshold: 7           # Nota mínima do Gemini (0-10)
+  judge_threshold: 8              # Nota mínima do GPT (0-10)
+  cache_expiry_hours: 4           # Cache de decisões
+
+# --- ALERTAS ---
+alerts:
+  telegram_enabled: true
+  email_enabled: false
+  flash_crash_threshold: 0.05     # 5% de queda rápida

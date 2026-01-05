@@ -1,0 +1,19 @@
+{
+  "tier1_large_cap": [
+    "AAPL",
+    "MSFT",
+    "GOOGL",
+    "AMZN",
+    "NVDA",
+    "META",
+    "TSLA",
+    "BRK-B",
+    "JPM",
+    "V"
+  ],
+  "tier2_mid_cap": [],
+  "tier3_small_cap": [],
+  "watchlist_custom": [],
+  "blacklist": [],
+  "last_updated": "2026-01-05"
+}
