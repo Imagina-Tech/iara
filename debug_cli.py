@@ -7,6 +7,8 @@ import asyncio
 import sys
 from pathlib import Path
 import yaml
+import json
+from datetime import datetime
 
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent))
@@ -15,13 +17,8 @@ from src.collectors.buzz_factory import BuzzFactory
 from src.collectors.market_data import MarketDataCollector
 from src.collectors.news_scraper import NewsScraper
 from src.collectors.earnings_checker import EarningsChecker
-from src.decision.screener import Screener
-from src.decision.ai_gateway import AIGateway
-from src.analysis.technical import TechnicalAnalyzer
 from src.core.state_manager import StateManager
 from src.core.database import Database
-import json
-from datetime import datetime
 
 print("=" * 80)
 print("IARA DEBUG CLI - Sistema de Inspeção de JSONs")
@@ -46,19 +43,14 @@ def save_json(data, filename):
 
 def print_json(data, title=""):
     if title:
-        print(f"
-{chr(61)*80}")
+        print(f"\n{'='*80}")
         print(f"  {title}")
-        print(f"{chr(61)*80}
-")
+        print(f"{'='*80}\n")
     print(json.dumps(data, indent=2, ensure_ascii=False, default=str))
-    print(f"
-{chr(61)*80}
-")
+    print(f"\n{'='*80}\n")
 
 async def cmd_buzz():
-    print("
-[1/3] Inicializando componentes...")
+    print("\n[1/3] Inicializando componentes...")
     market_data = MarketDataCollector(config)
     news_scraper = NewsScraper(config)
     buzz_factory = BuzzFactory(config, market_data, news_scraper)
@@ -86,19 +78,16 @@ async def cmd_buzz():
     }
     filepath = save_json(result, "buzz_factory")
     print_json(result, "BUZZ FACTORY OUTPUT (Phase 0)")
-    print(f"💾 Salvo em: {filepath}
-")
+    print(f"💾 Salvo em: {filepath}\n")
     return result
 
 async def cmd_technical(ticker):
-    print(f"
-[1/2] Buscando dados de mercado para {ticker}...")
+    print(f"\n[1/2] Buscando dados de mercado para {ticker}...")
     market_data = MarketDataCollector(config)
     print(f"[2/2] Analisando indicadores técnicos...")
     data = market_data.get_stock_data(ticker)
     if not data:
-        print(f"❌ Erro: Não foi possível obter dados para {ticker}
-")
+        print(f"❌ Erro: Não foi possível obter dados para {ticker}\n")
         return None
     result = {
         "timestamp": datetime.now().isoformat(),
@@ -112,13 +101,11 @@ async def cmd_technical(ticker):
     }
     filepath = save_json(result, f"technical_{ticker}")
     print_json(result, f"TECHNICAL DATA for {ticker}")
-    print(f"💾 Salvo em: {filepath}
-")
+    print(f"💾 Salvo em: {filepath}\n")
     return result
 
 async def cmd_portfolio():
-    print("
-[1/1] Carregando estado do portfolio...")
+    print("\n[1/1] Carregando estado do portfolio...")
     state_manager = StateManager(config)
     positions = state_manager.get_open_positions()
     result = {
@@ -141,26 +128,22 @@ async def cmd_portfolio():
     }
     filepath = save_json(result, "portfolio_state")
     print_json(result, "PORTFOLIO STATE")
-    print(f"💾 Salvo em: {filepath}
-")
+    print(f"💾 Salvo em: {filepath}\n")
     return result
 
 def cmd_config():
-    print("
-[1/1] Carregando configurações...")
+    print("\n[1/1] Carregando configurações...")
     result = {
         "timestamp": datetime.now().isoformat(),
         "config": config
     }
     filepath = save_json(result, "system_config")
     print_json(result, "SYSTEM CONFIGURATION")
-    print(f"💾 Salvo em: {filepath}
-")
+    print(f"💾 Salvo em: {filepath}\n")
     return result
 
 async def cmd_database():
-    print("
-[1/2] Inicializando banco de dados...")
+    print("\n[1/2] Inicializando banco de dados...")
     db = Database("data/iara.db")
     print("[2/2] Consultando histórico...")
     decisions = db.get_decisions_history(limit=10)
@@ -177,12 +160,11 @@ async def cmd_database():
     }
     filepath = save_json(result, "database_state")
     print_json(result, "DATABASE STATE")
-    print(f"💾 Salvo em: {filepath}
-")
+    print(f"💾 Salvo em: {filepath}\n")
     return result
 
 def show_help():
-    print("""
+    help_text = """
 COMANDOS DISPONÍVEIS:
 
 Phase 0 - Buzz Factory:
@@ -205,7 +187,8 @@ EXEMPLOS:
   python debug_cli.py /portfolio
 
 NOTA: Todos os JSONs são salvos em: data/debug_outputs/
-""")
+"""
+    print(help_text)
 
 async def main():
     if len(sys.argv) < 2:
@@ -220,8 +203,7 @@ async def main():
             await cmd_buzz()
         elif command == "/technical":
             if not args:
-                print("⚠️  Uso: python debug_cli.py /technical TICKER
-")
+                print("⚠️  Uso: python debug_cli.py /technical TICKER\n")
                 return
             await cmd_technical(args[0].upper())
         elif command == "/portfolio":
@@ -232,12 +214,9 @@ async def main():
             await cmd_database()
         else:
             print(f"⚠️  Comando desconhecido: {command}")
-            print("Use /help para ver comandos disponíveis.
-")
+            print("Use /help para ver comandos disponíveis.\n")
     except Exception as e:
-        print(f"
-❌ Erro ao executar comando: {e}
-")
+        print(f"\n❌ Erro ao executar comando: {e}\n")
         import traceback
         traceback.print_exc()
 
