@@ -198,7 +198,7 @@ Responda em JSON:
         # Ordena por nota decrescente
         results.sort(key=lambda x: x.nota, reverse=True)
 
-        passed_count = sum(1 for r in results if r.passed)
+        passed_count = sum(1 for r in results if r.passou)
         logger.info(f"Triagem concluída: {passed_count}/{len(results)} passaram (rate: 4s/call)")
 
         return results
@@ -242,4 +242,4 @@ Responda em JSON:
 
     def get_passed_candidates(self, results: List[ScreenerResult]) -> List[ScreenerResult]:
         """Filtra candidatos que passaram na triagem."""
-        return [r for r in results if r.passed]
+        return [r for r in results if r.passou]

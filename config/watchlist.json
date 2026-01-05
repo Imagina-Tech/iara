@@ -5,16 +5,16 @@
     "GOOGL",
     "AMZN",
     "NVDA",
-    "META",
     "TSLA",
-    "BRK-B",
+    "META",
     "JPM",
-    "PETR4",
-    "PETR3"
+    "V",
+    "WMT",
+    "JNJ"
   ],
-  "tier2_mid_cap": [],
-  "tier3_small_cap": [],
-  "watchlist_custom": [],
-  "blacklist": [],
-  "last_updated": "2026-01-05"
+  "tier2_mid_cap": [
+    "ROKU",
+    "SNAP",
+    "PINS"
+  ]
 }

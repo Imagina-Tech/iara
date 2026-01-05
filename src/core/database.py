@@ -163,6 +163,7 @@ class Database:
 
             if row:
                 return {
+                    "ticker": ticker,  # Add ticker to returned dict
                     "decisao": row[0],
                     "nota_final": row[1],
                     "entry_price": row[2],
@@ -170,7 +171,7 @@ class Database:
                     "take_profit_1": row[4],
                     "take_profit_2": row[5],
                     "justificativa": row[6],
-                    "timestamp": row[7],
+                    "timestamp": datetime.fromtimestamp(row[7]).isoformat(),
                     "cached": True
                 }
 

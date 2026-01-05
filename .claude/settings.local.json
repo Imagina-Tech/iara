@@ -9,7 +9,11 @@
       "Bash(dir \"data\"\" 2>&1 || echo \"Data directory status \")",
       "Bash(dir \"data\\\\rag_manuals\"\" 2>&1 || echo \"RAG manuals directory status \")",
       "Bash(python:*)",
-      "Bash(pip install:*)"
+      "Bash(pip install:*)",
+      "Bash(dir:*)",
+      "Bash(git add:*)",
+      "Bash(git push:*)",
+      "Bash(python test_imports.py:*)"
     ]
   }
 }

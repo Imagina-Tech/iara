@@ -24,6 +24,8 @@ class BuzzCandidate:
     buzz_score: float
     reason: str
     detected_at: datetime
+    tier: str = "unknown"  # "tier1_large_cap", "tier2_mid_cap"
+    market_cap: float = 0.0  # Market cap in dollars
 
 
 class BuzzFactory:
@@ -111,7 +113,7 @@ class BuzzFactory:
             # Verificar cada ticker
             for ticker in tier1_tickers:
                 try:
-                    data = await self.market_data.get_stock_data(ticker)
+                    data = self.market_data.get_stock_data(ticker)
 
                     if not data:
                         logger.debug(f"{ticker}: No market data available")
@@ -127,12 +129,15 @@ class BuzzFactory:
                             continue
 
                     # Criar candidato
+                    market_cap_value = data.market_cap if hasattr(data, 'market_cap') and data.market_cap else 0.0
                     candidates.append(BuzzCandidate(
                         ticker=ticker,
                         source="watchlist",
                         buzz_score=5.0,  # Score base para watchlist
-                        reason=f"Tier 1 watchlist asset (${data.market_cap/1e9:.1f}B cap)" if hasattr(data, 'market_cap') and data.market_cap else "Tier 1 watchlist asset",
-                        detected_at=datetime.now()
+                        reason=f"Tier 1 watchlist asset (${market_cap_value/1e9:.1f}B cap)" if market_cap_value > 0 else "Tier 1 watchlist asset",
+                        detected_at=datetime.now(),
+                        tier="tier1_large_cap",
+                        market_cap=market_cap_value
                     ))
 
                     logger.debug(f"{ticker}: Added to candidates from watchlist")
@@ -174,7 +179,7 @@ class BuzzFactory:
             scanned = 0
             for ticker in universe:
                 try:
-                    data = await self.market_data.get_stock_data(ticker)
+                    data = self.market_data.get_stock_data(ticker)
 
                     if not data:
                         continue
@@ -191,12 +196,24 @@ class BuzzFactory:
                             dollar_volume = data.volume * data.price if hasattr(data, 'price') else 0
 
                             if dollar_volume >= min_dollar_volume:
+                                # Determine tier based on market cap
+                                market_cap_value = data.market_cap if hasattr(data, 'market_cap') and data.market_cap else 0.0
+                                tier_config = self.config.get("tiers", {})
+                                tier1_min = tier_config.get("tier1_large_cap", {}).get("min_market_cap", 4_000_000_000)
+
+                                if market_cap_value >= tier1_min:
+                                    tier = "tier1_large_cap"
+                                else:
+                                    tier = "tier2_mid_cap"
+
                                 candidates.append(BuzzCandidate(
                                     ticker=ticker,
                                     source="volume_spike",
                                     buzz_score=7.0 + min(volume_ratio, 5.0),  # Score 7-12 baseado em volume
                                     reason=f"Volume spike {volume_ratio:.1f}x (${dollar_volume/1e6:.1f}M)",
-                                    detected_at=datetime.now()
+                                    detected_at=datetime.now(),
+                                    tier=tier,
+                                    market_cap=market_cap_value
                                 ))
 
                                 logger.debug(f"{ticker}: Volume spike {volume_ratio:.1f}x detected")
@@ -287,7 +304,7 @@ class BuzzFactory:
             scanned = 0
             for ticker in universe:
                 try:
-                    data = await self.market_data.get_stock_data(ticker)
+                    data = self.market_data.get_stock_data(ticker)
 
                     if not data:
                         continue
@@ -303,12 +320,24 @@ class BuzzFactory:
                             if abs(gap_pct) >= gap_threshold:
                                 gap_direction = "up" if gap_pct > 0 else "down"
 
+                                # Determine tier based on market cap
+                                market_cap_value = data.market_cap if hasattr(data, 'market_cap') and data.market_cap else 0.0
+                                tier_config = self.config.get("tiers", {})
+                                tier1_min = tier_config.get("tier1_large_cap", {}).get("min_market_cap", 4_000_000_000)
+
+                                if market_cap_value >= tier1_min:
+                                    tier = "tier1_large_cap"
+                                else:
+                                    tier = "tier2_mid_cap"
+
                                 candidates.append(BuzzCandidate(
                                     ticker=ticker,
                                     source="gap",
                                     buzz_score=8.0 + min(abs(gap_pct) * 10, 5.0),  # Score 8-13 baseado em gap
                                     reason=f"Gap {gap_direction} {gap_pct*100:.1f}% (${data.price:.2f} vs ${data.previous_close:.2f})",
-                                    detected_at=datetime.now()
+                                    detected_at=datetime.now(),
+                                    tier=tier,
+                                    market_cap=market_cap_value
                                 ))
 
                                 logger.debug(f"{ticker}: Gap {gap_direction} {gap_pct*100:.1f}% detected")
@@ -353,12 +382,29 @@ class BuzzFactory:
                 for ticker in article.tickers_mentioned:
                     # Verificar se ticker já foi adicionado
                     if not any(c.ticker == ticker for c in candidates):
+                        # Get market data for tier and market cap
+                        data = self.market_data.get_stock_data(ticker)
+                        market_cap_value = 0.0
+                        tier = "unknown"
+
+                        if data and hasattr(data, 'market_cap') and data.market_cap:
+                            market_cap_value = data.market_cap
+                            tier_config = self.config.get("tiers", {})
+                            tier1_min = tier_config.get("tier1_large_cap", {}).get("min_market_cap", 4_000_000_000)
+
+                            if market_cap_value >= tier1_min:
+                                tier = "tier1_large_cap"
+                            else:
+                                tier = "tier2_mid_cap"
+
                         candidates.append(BuzzCandidate(
                             ticker=ticker,
                             source="news_catalyst",
                             buzz_score=article.relevance_score,  # 8.0+ para catalysts
                             reason=f"Catalyst: {article.title[:80]}...",
-                            detected_at=datetime.now()
+                            detected_at=datetime.now(),
+                            tier=tier,
+                            market_cap=market_cap_value
                         ))
 
                         logger.debug(f"{ticker}: Catalyst news detected - {article.title[:50]}...")
@@ -407,7 +453,7 @@ class BuzzFactory:
 
             try:
                 # 1. Verificar market cap e classificar tier
-                data = await self.market_data.get_stock_data(ticker)
+                data = self.market_data.get_stock_data(ticker)
 
                 if not data:
                     logger.debug(f"{ticker} rejected: no market data")
