@@ -54,12 +54,16 @@ class Watchdog:
         self.state_manager = state_manager
 
         self.alert_config = config.get("alerts", {})
-        self.flash_crash_threshold = self.alert_config.get("flash_crash_threshold", 0.05)
+        self.phase5_config = config.get("phase5", {})
+        self.flash_crash_threshold = self.alert_config.get("flash_crash_threshold", 0.03)  # WS6: 3%
+        self.flash_crash_window = self.phase5_config.get("flash_crash_window", 300)  # WS6: 5 min
+        self.panic_dd_threshold = 0.04  # WS6: 4% intraday DD
 
         self._running = False
         self._alert_handlers: List[Callable] = []
         self._last_prices: Dict[str, float] = {}
-        self._check_interval = 60  # segundos
+        self._price_history: Dict[str, List[Dict]] = {}  # WS6: Track price history for 5min window
+        self._check_interval = self.phase5_config.get("watchdog_interval", 60)  # segundos
 
     def add_alert_handler(self, handler: Callable[[PriceAlert], None]) -> None:
         """Adiciona handler de alertas."""
@@ -85,6 +89,9 @@ class Watchdog:
 
     async def _check_positions(self) -> None:
         """Verifica todas as posições abertas."""
+        # WS6: Check intraday DD panic ANTES de verificar posições
+        await self._check_intraday_dd_panic()
+
         positions = self.state_manager.get_open_positions()
 
         for position in positions:
@@ -113,22 +120,50 @@ class Watchdog:
             return alerts
 
         current_price = data.price
-        last_price = self._last_prices.get(ticker, position.entry_price)
 
-        # 1. Verifica Flash Crash
-        if last_price > 0:
-            change = (current_price - last_price) / last_price
+        # WS6: Atualiza price history (5min window)
+        now = datetime.now()
+        if ticker not in self._price_history:
+            self._price_history[ticker] = []
 
-            if abs(change) >= self.flash_crash_threshold:
+        self._price_history[ticker].append({
+            "price": current_price,
+            "timestamp": now
+        })
+
+        # Remove entradas antigas (> 5 min)
+        cutoff_time = now - timedelta(seconds=self.flash_crash_window)
+        self._price_history[ticker] = [
+            p for p in self._price_history[ticker]
+            if p["timestamp"] >= cutoff_time
+        ]
+
+        # 1. WS6: Verifica Flash Crash (5min window)
+        if len(self._price_history[ticker]) >= 2:
+            oldest_price = self._price_history[ticker][0]["price"]
+            change_5min = (current_price - oldest_price) / oldest_price if oldest_price > 0 else 0
+
+            if abs(change_5min) >= self.flash_crash_threshold:
+                # WS6: Validar se é market-wide crash (VIX/SPY check)
+                is_market_wide = await self._check_market_wide_crash()
+
+                alert_level = AlertLevel.EMERGENCY if not is_market_wide else AlertLevel.CRITICAL
+                alert_msg = f"FLASH {'CRASH' if change_5min < 0 else 'SPIKE'}: {change_5min*100:.1f}% (5min)"
+
+                if is_market_wide:
+                    alert_msg += " [MARKET-WIDE]"
+                else:
+                    alert_msg += " [ISOLATED]"
+
                 alerts.append(PriceAlert(
                     ticker=ticker,
                     alert_type="flash_crash",
-                    level=AlertLevel.EMERGENCY,
-                    message=f"FLASH {'CRASH' if change < 0 else 'SPIKE'}: {change*100:.1f}%",
+                    level=alert_level,
+                    message=alert_msg,
                     current_price=current_price,
-                    reference_price=last_price,
-                    change_pct=change * 100,
-                    timestamp=datetime.now()
+                    reference_price=oldest_price,
+                    change_pct=change_5min * 100,
+                    timestamp=now
                 ))
 
         # 2. Verifica violação de Stop Loss
@@ -175,6 +210,74 @@ class Watchdog:
         self._last_prices[ticker] = current_price
 
         return alerts
+
+    async def _check_market_wide_crash(self) -> bool:
+        """
+        Verifica se crash é market-wide via VIX/SPY (WS6).
+
+        Returns:
+            True se market-wide, False se isolado
+        """
+        try:
+            # Fetch VIX e SPY
+            import yfinance as yf
+
+            vix = yf.Ticker("^VIX")
+            vix_hist = vix.history(period="1d", interval="5m")
+
+            spy = yf.Ticker("SPY")
+            spy_hist = spy.history(period="1d", interval="5m")
+
+            if vix_hist.empty or spy_hist.empty:
+                logger.warning("Could not fetch VIX/SPY data for market-wide validation")
+                return False
+
+            # Check VIX spike (>+10% em 5min)
+            if len(vix_hist) >= 2:
+                vix_current = vix_hist["Close"].iloc[-1]
+                vix_5min_ago = vix_hist["Close"].iloc[-2]
+                vix_change = (vix_current - vix_5min_ago) / vix_5min_ago if vix_5min_ago > 0 else 0
+
+                if vix_change > 0.10:  # +10%
+                    logger.warning(f"Market-wide crash detected: VIX +{vix_change*100:.1f}%")
+                    return True
+
+            # Check SPY drop (<-2% em 5min)
+            if len(spy_hist) >= 2:
+                spy_current = spy_hist["Close"].iloc[-1]
+                spy_5min_ago = spy_hist["Close"].iloc[-2]
+                spy_change = (spy_current - spy_5min_ago) / spy_5min_ago if spy_5min_ago > 0 else 0
+
+                if spy_change < -0.02:  # -2%
+                    logger.warning(f"Market-wide crash detected: SPY {spy_change*100:.1f}%")
+                    return True
+
+            return False
+
+        except Exception as e:
+            logger.error(f"Error checking market-wide crash: {e}")
+            return False
+
+    async def _check_intraday_dd_panic(self) -> None:
+        """
+        WS6: Verifica intraday DD >4% e ativa PANIC PROTOCOL.
+        """
+        current_dd = self.state_manager.get_current_drawdown()
+
+        if current_dd >= self.panic_dd_threshold:
+            logger.critical(f"🚨 PANIC PROTOCOL: Intraday DD {current_dd:.2%} >= {self.panic_dd_threshold:.2%}")
+
+            # 1. Fechar todas as posições imediatamente
+            positions = self.state_manager.get_open_positions()
+            for position in positions:
+                logger.critical(f"PANIC: Closing position {position.ticker} at market")
+                # TODO: Implementar close_position_at_market()
+
+            # 2. Ativar Kill Switch
+            self.state_manager.activate_kill_switch(f"Intraday DD {current_dd:.2%} >= 4%")
+
+            # 3. Alert crítico
+            # TODO: Send Telegram alert
 
     async def _handle_alert(self, alert: PriceAlert) -> None:
         """Processa um alerta."""

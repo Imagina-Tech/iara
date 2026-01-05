@@ -27,6 +27,12 @@ class TechnicalSignals:
     support: float
     resistance: float
     trend: str  # "uptrend", "downtrend", "sideways"
+    # WS2 additions
+    ema_20: float = 0.0
+    ema_50: float = 0.0
+    ema_trend: str = "neutral"
+    avg_volume_20d: float = 0.0
+    dollar_volume: float = 0.0
 
 
 class TechnicalAnalyzer:
@@ -88,6 +94,14 @@ class TechnicalAnalyzer:
             current_volume = df["Volume"].iloc[-1]
             volume_ratio = current_volume / avg_volume if avg_volume > 0 else 1.0
 
+            # EMA (20 e 50 períodos)
+            ema_20 = df["Close"].ewm(span=20, adjust=False).mean().iloc[-1] if len(df) >= 20 else 0
+            ema_50 = df["Close"].ewm(span=50, adjust=False).mean().iloc[-1] if len(df) >= 50 else 0
+            ema_trend = "bullish" if ema_20 > ema_50 else "bearish" if ema_50 > 0 else "neutral"
+
+            # Dollar volume
+            dollar_volume = current_volume * df["Close"].iloc[-1]
+
             # Suporte e Resistência (pivots simples)
             support, resistance = self._calculate_pivot_levels(df)
 
@@ -105,7 +119,12 @@ class TechnicalAnalyzer:
                 volume_ratio=volume_ratio,
                 support=support,
                 resistance=resistance,
-                trend=trend
+                trend=trend,
+                ema_20=ema_20,
+                ema_50=ema_50,
+                ema_trend=ema_trend,
+                avg_volume_20d=avg_volume,
+                dollar_volume=dollar_volume
             )
 
         except Exception as e:

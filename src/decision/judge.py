@@ -10,6 +10,8 @@ from datetime import datetime
 from pathlib import Path
 
 from .ai_gateway import AIGateway, AIProvider
+from src.core.database import Database
+from src.decision.grounding import GroundingService
 
 logger = logging.getLogger(__name__)
 
@@ -42,19 +44,24 @@ class Judge:
     FASE 3 do pipeline - Decisão com GPT + RAG.
     """
 
-    def __init__(self, config: Dict[str, Any], ai_gateway: AIGateway):
+    def __init__(self, config: Dict[str, Any], ai_gateway: AIGateway,
+                 grounding_service: Optional[GroundingService] = None):
         """
         Inicializa o juiz.
 
         Args:
             config: Configurações do sistema
             ai_gateway: Gateway de IA
+            grounding_service: Serviço de Google Grounding (opcional)
         """
         self.config = config
         self.ai_gateway = ai_gateway
+        self.grounding_service = grounding_service
         self.threshold = config.get("ai", {}).get("judge_threshold", 8)
         self._load_prompt_template()
         self._load_rag_context()
+        # WS4: Initialize database for caching and logging
+        self.db = Database(PROJECT_ROOT / "data" / "iara.db")
 
     def _load_prompt_template(self) -> None:
         """Carrega template de prompt."""
@@ -96,9 +103,10 @@ Responda em JSON com: decisao, nota_final, direcao, entry_price, stop_loss, take
     async def judge(self, ticker: str, screener_result: Dict[str, Any],
                     market_data: Dict[str, Any], technical_data: Dict[str, Any],
                     macro_data: Dict[str, Any], correlation_data: Dict[str, Any],
-                    news_details: str = "") -> TradeDecision:
+                    news_details: str = "", correlation_analyzer=None,
+                    portfolio_prices: Optional[Dict] = None) -> TradeDecision:
         """
-        Executa julgamento final.
+        Executa julgamento final com Google Grounding, Cache e Correlation Validation (WS4).
 
         Args:
             ticker: Símbolo do ativo
@@ -108,15 +116,57 @@ Responda em JSON com: decisao, nota_final, direcao, entry_price, stop_loss, take
             macro_data: Dados macro
             correlation_data: Dados de correlação
             news_details: Detalhes de notícias
+            correlation_analyzer: Instância do CorrelationAnalyzer (para validation)
+            portfolio_prices: Dict de preços do portfolio (para correlation check)
 
         Returns:
             TradeDecision
         """
         try:
-            # Monta prompt completo
+            # WS4.1: Check cache ANTES de processar (< 2h com setup idêntico)
+            cached = self.db.get_cached_decision(ticker, max_age_hours=2)
+            if cached:
+                logger.info(f"Cache HIT: {ticker} - reusing decision from {cached.get('timestamp')}")
+                # Convert cached dict to TradeDecision
+                return TradeDecision(
+                    ticker=ticker,
+                    decisao=cached.get("decisao", "REJEITAR"),
+                    nota_final=cached.get("nota_final", 0),
+                    direcao=cached.get("direcao", "NEUTRO"),
+                    entry_price=cached.get("entry_price", 0),
+                    stop_loss=cached.get("stop_loss", 0),
+                    take_profit_1=cached.get("take_profit_1", 0),
+                    take_profit_2=cached.get("take_profit_2", 0),
+                    risco_recompensa=cached.get("risco_recompensa", 0),
+                    tamanho_sugerido=cached.get("tamanho_sugerido", "NORMAL"),
+                    justificativa=cached.get("justificativa", ""),
+                    alertas=cached.get("alertas", []),
+                    validade_horas=cached.get("validade_horas", 4),
+                    timestamp=datetime.fromisoformat(cached.get("timestamp"))
+                )
+
+            # WS4.2: Google Grounding Pre-Check (se news existe)
+            grounded_news = news_details
+            if self.grounding_service and news_details:
+                logger.info(f"Google Grounding: Verifying news for {ticker}...")
+                grounding_result = await self.grounding_service.verify_news(ticker, news_details)
+
+                if grounding_result.verified:
+                    # Augmentar news com fontes verificadas
+                    sources = grounding_result.sources
+                    grounded_news = f"{news_details}\n\nVerified Sources:\n" + "\n".join(f"- {s}" for s in sources[:3])
+                    logger.info(f"Google Grounding: {len(sources)} sources verified")
+                elif grounding_result.confidence < 0.3:
+                    # News não verificado com baixa confiança - rejeitar
+                    logger.warning(f"Google Grounding: Low confidence ({grounding_result.confidence:.2f}) - rejecting {ticker}")
+                    decision = self._create_rejection(ticker, "News não verificado (baixa confiança)")
+                    self.db.log_decision(ticker, decision.__dict__)
+                    return decision
+
+            # Monta prompt completo (com news grounded)
             prompt = self._build_prompt(
                 ticker, screener_result, market_data, technical_data,
-                macro_data, correlation_data, news_details
+                macro_data, correlation_data, grounded_news
             )
 
             # Chama IA (prefere OpenAI por qualidade)
@@ -129,14 +179,47 @@ Responda em JSON com: decisao, nota_final, direcao, entry_price, stop_loss, take
 
             if not response.success or not response.parsed_json:
                 logger.error(f"Falha no julgamento de {ticker}")
-                return self._create_rejection(ticker, "Falha na análise de IA")
+                decision = self._create_rejection(ticker, "Falha na análise de IA")
+                self.db.log_decision(ticker, decision.__dict__)
+                return decision
 
             # Valida e processa resposta
-            return self._parse_decision(ticker, response.parsed_json)
+            decision = self._parse_decision(ticker, response.parsed_json)
+
+            # WS4.3: Correlation Validation (se APROVAR)
+            if decision.decisao == "APROVAR" and correlation_analyzer and portfolio_prices:
+                # Fetch preços do ticker
+                import yfinance as yf
+                ticker_obj = yf.Ticker(ticker)
+                hist = ticker_obj.history(period="60d")
+
+                if not hist.empty:
+                    ticker_prices = hist["Close"]
+
+                    # Enforce correlation limit
+                    is_allowed, violated_tickers = correlation_analyzer.enforce_correlation_limit(
+                        ticker, ticker_prices, portfolio_prices
+                    )
+
+                    if not is_allowed:
+                        # HARD VETO - mudar decisão para REJEITAR
+                        logger.error(f"CORRELATION VETO: {ticker} rejected (correlation with {violated_tickers})")
+                        decision.decisao = "REJEITAR"
+                        decision.nota_final = 0
+                        decision.justificativa = f"VETO: Correlação > 0.75 com {', '.join(violated_tickers)}"
+                        decision.alertas.append(f"Correlation veto: {', '.join(violated_tickers)}")
+
+            # WS4.4: Cache e log decision
+            self.db.cache_decision(ticker, decision.__dict__)
+            self.db.log_decision(ticker, decision.__dict__)
+
+            return decision
 
         except Exception as e:
             logger.error(f"Erro no julgamento de {ticker}: {e}")
-            return self._create_rejection(ticker, str(e))
+            decision = self._create_rejection(ticker, str(e))
+            self.db.log_decision(ticker, decision.__dict__)
+            return decision
 
     def _build_prompt(self, ticker: str, screener_result: Dict,
                       market_data: Dict, technical_data: Dict,

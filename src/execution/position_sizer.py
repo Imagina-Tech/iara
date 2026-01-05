@@ -40,17 +40,20 @@ class PositionSizer:
         self.tiers_config = config.get("tiers", {})
 
     def calculate(self, capital: float, entry_price: float, stop_loss: float,
-                  ticker: str, tier: str, size_suggestion: str = "NORMAL") -> PositionSize:
+                  ticker: str, tier: str, size_suggestion: str = "NORMAL",
+                  beta_multiplier: float = 1.0, defensive_multiplier: float = 1.0) -> PositionSize:
         """
-        Calcula tamanho da posição.
+        Calcula tamanho da posição com TODOS os multipliers (WS5).
 
         Args:
             capital: Capital disponível
             entry_price: Preço de entrada
             stop_loss: Preço do stop loss
             ticker: Símbolo do ativo
-            tier: Tier do ativo (tier1_large_cap, tier2_mid_cap, tier3_small_cap)
+            tier: Tier do ativo (tier1_large_cap, tier2_mid_cap)
             size_suggestion: Sugestão do juiz (NORMAL, REDUZIDO, MÍNIMO)
+            beta_multiplier: Multiplicador de beta (de risk_math.calculate_beta_adjustment)
+            defensive_multiplier: Multiplicador defensivo (de state_manager.get_defensive_multiplier)
 
         Returns:
             PositionSize
@@ -70,9 +73,14 @@ class PositionSizer:
         }
         suggestion_mult = suggestion_multipliers.get(size_suggestion, 1.0)
 
-        # Risco final
-        final_risk_pct = base_risk_pct * tier_multiplier * suggestion_mult
+        # WS5: Aplica TODOS os multipliers
+        final_risk_pct = (base_risk_pct * tier_multiplier * suggestion_mult *
+                          beta_multiplier * defensive_multiplier)
         risk_amount = capital * final_risk_pct
+
+        logger.info(f"{ticker} size calculation: base={base_risk_pct:.3f} x tier={tier_multiplier} x "
+                    f"suggestion={suggestion_mult} x beta={beta_multiplier} x defensive={defensive_multiplier} = "
+                    f"{final_risk_pct:.3f}")
 
         # Calcula risco por ação
         risk_per_share = abs(entry_price - stop_loss)

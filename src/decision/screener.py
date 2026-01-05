@@ -3,7 +3,9 @@ SCREENER - Triagem com IA (FASE 1)
 Usa Gemini Free para avaliação inicial
 """
 
+import asyncio
 import logging
+from concurrent.futures import ThreadPoolExecutor
 from typing import Dict, Optional, Any, List
 from dataclasses import dataclass
 from datetime import datetime
@@ -76,7 +78,8 @@ Responda em JSON:
 
     async def screen(self, market_data: Dict[str, Any],
                      technical_data: Dict[str, Any],
-                     news_summary: str = "") -> ScreenerResult:
+                     news_summary: str = "",
+                     earnings_checker=None) -> ScreenerResult:
         """
         Executa triagem de um ativo.
 
@@ -84,6 +87,7 @@ Responda em JSON:
             market_data: Dados de mercado
             technical_data: Dados técnicos
             news_summary: Resumo de notícias
+            earnings_checker: Instância do EarningsChecker (opcional)
 
         Returns:
             ScreenerResult
@@ -91,7 +95,34 @@ Responda em JSON:
         ticker = market_data.get("ticker", "UNKNOWN")
 
         try:
-            # Monta o prompt
+            # 1. Check earnings proximity (rejeitar se < 5 dias)
+            if earnings_checker and earnings_checker.check_earnings_proximity(ticker, days=5):
+                logger.info(f"{ticker} rejected by screener: earnings within 5 days")
+                return ScreenerResult(
+                    ticker=ticker,
+                    nota=0,
+                    resumo="Earnings próximo (<5 dias) - alta IV",
+                    vies="NEUTRO",
+                    confianca=0,
+                    passed=False,
+                    timestamp=datetime.now()
+                )
+
+            # 2. Check gap > 3% (rejeitar se gap muito grande)
+            gap_pct = market_data.get("gap_pct", 0)
+            if abs(gap_pct) > 0.03:
+                logger.info(f"{ticker} rejected by screener: gap {gap_pct*100:.1f}% > 3%")
+                return ScreenerResult(
+                    ticker=ticker,
+                    nota=0,
+                    resumo=f"Gap {gap_pct*100:.1f}% muito alto - aguardar consolidação",
+                    vies="NEUTRO",
+                    confianca=0,
+                    passed=False,
+                    timestamp=datetime.now()
+                )
+
+            # 3. Monta o prompt
             prompt = self.prompt_template.format(
                 ticker=ticker,
                 price=market_data.get("price", 0),
@@ -103,7 +134,7 @@ Responda em JSON:
                 news_summary=news_summary or "Sem notícias recentes"
             )
 
-            # Chama IA (prefere Gemini por ser gratuito)
+            # 4. Chama IA (prefere Gemini por ser gratuito)
             response = await self.ai_gateway.complete(
                 prompt=prompt,
                 preferred_provider=AIProvider.GEMINI,
@@ -115,7 +146,7 @@ Responda em JSON:
                 logger.error(f"Falha na triagem de {ticker}")
                 return self._create_failed_result(ticker)
 
-            # Processa resposta
+            # 5. Processa resposta
             result_data = response.parsed_json
             nota = float(result_data.get("nota", 0))
 
@@ -133,33 +164,69 @@ Responda em JSON:
             logger.error(f"Erro na triagem de {ticker}: {e}")
             return self._create_failed_result(ticker)
 
-    async def screen_batch(self, candidates: List[Dict]) -> List[ScreenerResult]:
+    async def screen_batch(self, candidates: List[Dict],
+                           earnings_checker=None,
+                           max_workers: int = 3) -> List[ScreenerResult]:
         """
-        Executa triagem em lote.
+        Executa triagem em lote com paralelização e rate limiting.
 
         Args:
             candidates: Lista de candidatos com market_data e technical_data
+            earnings_checker: Instância do EarningsChecker (opcional)
+            max_workers: Número de workers paralelos (default: 3)
 
         Returns:
             Lista de ScreenerResult
         """
         results = []
 
-        for candidate in candidates:
+        # Processar com rate limiting (4s entre chamadas Gemini)
+        for i, candidate in enumerate(candidates):
             result = await self.screen(
                 market_data=candidate.get("market_data", {}),
                 technical_data=candidate.get("technical_data", {}),
-                news_summary=candidate.get("news_summary", "")
+                news_summary=candidate.get("news_summary", ""),
+                earnings_checker=earnings_checker
             )
             results.append(result)
+
+            # Rate limiting: 4 segundos entre chamadas (Gemini Free Tier)
+            if i < len(candidates) - 1:
+                logger.debug(f"Rate limiting: waiting 4s before next call...")
+                await asyncio.sleep(4)
 
         # Ordena por nota decrescente
         results.sort(key=lambda x: x.nota, reverse=True)
 
         passed_count = sum(1 for r in results if r.passed)
-        logger.info(f"Triagem concluída: {passed_count}/{len(results)} passaram")
+        logger.info(f"Triagem concluída: {passed_count}/{len(results)} passaram (rate: 4s/call)")
 
         return results
+
+    def filter_duplicates(self, candidates: List[Dict], state_manager) -> List[Dict]:
+        """
+        Remove tickers que já estão no portfolio.
+
+        Args:
+            candidates: Lista de candidatos
+            state_manager: Instância do StateManager
+
+        Returns:
+            Lista filtrada (sem duplicatas)
+        """
+        open_positions = state_manager.get_open_positions()
+        open_tickers = {pos.ticker for pos in open_positions}
+
+        filtered = [
+            c for c in candidates
+            if c.get("market_data", {}).get("ticker") not in open_tickers
+        ]
+
+        duplicates_count = len(candidates) - len(filtered)
+        if duplicates_count > 0:
+            logger.info(f"Filtered {duplicates_count} duplicates from screener input")
+
+        return filtered
 
     def _create_failed_result(self, ticker: str) -> ScreenerResult:
         """Cria resultado de falha."""

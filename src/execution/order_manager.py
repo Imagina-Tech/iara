@@ -309,3 +309,252 @@ class OrderManager:
             # TODO: Implementar cancelamento assíncrono
 
         oco.status = OrderStatus.FILLED
+
+    def calculate_stop_loss(self, ticker: str, entry_price: float, atr: float,
+                            direction: str, has_earnings: bool = False,
+                            swing_low: Optional[float] = None) -> float:
+        """
+        Calcula stop loss inteligente (WS5).
+
+        Lógica:
+        - Se earnings < 5 dias: Entry * 0.995 (tight 0.5%)
+        - Senão: MAX(Entry - 2.5*ATR, SwingLow)
+
+        Args:
+            ticker: Símbolo do ativo
+            entry_price: Preço de entrada
+            atr: ATR atual
+            direction: "LONG" ou "SHORT"
+            has_earnings: Se earnings está próximo
+            swing_low: Swing low recente (opcional)
+
+        Returns:
+            Preço do stop loss
+        """
+        technical_config = self.config.get("technical", {})
+        atr_multiplier = technical_config.get("atr_stop_multiplier", 2.5)
+
+        if has_earnings:
+            # Earnings próximo - stop tight de 0.5%
+            if direction == "LONG":
+                stop = entry_price * 0.995
+            else:  # SHORT
+                stop = entry_price * 1.005
+
+            logger.info(f"{ticker}: Earnings proximity - tight stop at {stop:.2f} (0.5% from entry)")
+            return round(stop, 2)
+
+        # Stop normal baseado em ATR
+        if direction == "LONG":
+            atr_stop = entry_price - (atr_multiplier * atr)
+
+            # Se tem swing low, usar o MAIOR entre ATR stop e swing low
+            if swing_low and swing_low > atr_stop:
+                stop = swing_low
+                logger.info(f"{ticker}: Using swing low ${swing_low:.2f} (> ATR stop ${atr_stop:.2f})")
+            else:
+                stop = atr_stop
+                logger.info(f"{ticker}: Using ATR stop ${stop:.2f} ({atr_multiplier}x ATR)")
+
+        else:  # SHORT
+            atr_stop = entry_price + (atr_multiplier * atr)
+
+            # Para SHORT, swing high seria o teto
+            if swing_low and swing_low < atr_stop:  # swing_low aqui seria swing_high semanticamente
+                stop = swing_low
+                logger.info(f"{ticker}: Using swing high ${swing_low:.2f} (< ATR stop ${atr_stop:.2f})")
+            else:
+                stop = atr_stop
+                logger.info(f"{ticker}: Using ATR stop ${stop:.2f} ({atr_multiplier}x ATR)")
+
+        # Backup safety: nunca mais de 10% de perda
+        max_loss_pct = 0.10
+        if direction == "LONG":
+            min_stop = entry_price * (1 - max_loss_pct)
+            if stop < min_stop:
+                logger.warning(f"{ticker}: Stop ${stop:.2f} exceeds 10% loss, capping at ${min_stop:.2f}")
+                stop = min_stop
+        else:
+            max_stop = entry_price * (1 + max_loss_pct)
+            if stop > max_stop:
+                logger.warning(f"{ticker}: Stop ${stop:.2f} exceeds 10% loss, capping at ${max_stop:.2f}")
+                stop = max_stop
+
+        return round(stop, 2)
+
+    async def place_entry_order(self, ticker: str, direction: str, entry_price: float,
+                                quantity: int) -> Optional[Order]:
+        """
+        Coloca ordem de entrada STOP-LIMIT (WS5).
+
+        Tipo: STOP_LIMIT com limit +0.5% do trigger (evita slippage).
+
+        Args:
+            ticker: Símbolo do ativo
+            direction: "LONG" ou "SHORT"
+            entry_price: Preço trigger (stop price)
+            quantity: Quantidade de ações
+
+        Returns:
+            Order ou None se falhar
+        """
+        try:
+            # Calcula limit price (+0.5% do trigger)
+            if direction == "LONG":
+                side = OrderSide.BUY
+                limit_price = entry_price * 1.005  # +0.5%
+            else:
+                side = OrderSide.SELL
+                limit_price = entry_price * 0.995  # -0.5%
+
+            # Cria ordem STOP-LIMIT
+            order = Order(
+                id=str(uuid.uuid4()),
+                ticker=ticker,
+                side=side,
+                order_type=OrderType.STOP_LIMIT,
+                quantity=quantity,
+                stop_price=entry_price,
+                limit_price=limit_price,
+                notes=f"Entry {direction} - Stop: ${entry_price:.2f}, Limit: ${limit_price:.2f}"
+            )
+
+            self.pending_orders[order.id] = order
+
+            # Submete ao broker
+            success = await self.submit_order(order)
+
+            if success:
+                logger.info(f"Entry order placed: {ticker} {direction} {quantity} @ stop ${entry_price:.2f} / limit ${limit_price:.2f}")
+                return order
+            else:
+                logger.error(f"Failed to place entry order for {ticker}")
+                return None
+
+        except Exception as e:
+            logger.error(f"Error placing entry order for {ticker}: {e}")
+            return None
+
+    async def place_stop_orders(self, ticker: str, direction: str, physical_stop: float,
+                                backup_stop: float, quantity: int) -> Dict[str, Optional[Order]]:
+        """
+        Coloca sistema de stops DUPLO (WS5).
+
+        - Physical stop: Enviado ao broker
+        - Backup stop: Tracked localmente (-10% como fallback)
+
+        Args:
+            ticker: Símbolo do ativo
+            direction: "LONG" ou "SHORT"
+            physical_stop: Stop principal (enviado ao broker)
+            backup_stop: Stop backup (monitorado localmente)
+            quantity: Quantidade
+
+        Returns:
+            Dict com "physical" e "backup" orders
+        """
+        try:
+            side = OrderSide.SELL if direction == "LONG" else OrderSide.BUY
+
+            # 1. Physical stop (broker)
+            physical_order = Order(
+                id=str(uuid.uuid4()),
+                ticker=ticker,
+                side=side,
+                order_type=OrderType.STOP,
+                quantity=quantity,
+                stop_price=physical_stop,
+                notes=f"Physical Stop {direction}"
+            )
+
+            self.pending_orders[physical_order.id] = physical_order
+            physical_success = await self.submit_order(physical_order)
+
+            # 2. Backup stop (local tracking)
+            backup_order = Order(
+                id=str(uuid.uuid4()),
+                ticker=ticker,
+                side=side,
+                order_type=OrderType.STOP,
+                quantity=quantity,
+                stop_price=backup_stop,
+                status=OrderStatus.PENDING,  # Não submete, apenas monitora
+                notes=f"Backup Stop {direction} (local tracking)"
+            )
+
+            self.pending_orders[backup_order.id] = backup_order
+
+            logger.info(f"Dual stop system: Physical ${physical_stop:.2f} (broker) + Backup ${backup_stop:.2f} (local)")
+
+            return {
+                "physical": physical_order if physical_success else None,
+                "backup": backup_order
+            }
+
+        except Exception as e:
+            logger.error(f"Error placing stop orders for {ticker}: {e}")
+            return {"physical": None, "backup": None}
+
+    async def place_take_profit_orders(self, ticker: str, direction: str, tp1: float,
+                                       tp2: float, quantity: int) -> Dict[str, Optional[Order]]:
+        """
+        Coloca ordens de Take Profit MULTI-TARGET (WS5).
+
+        - TP1: 50% da posição no primeiro alvo
+        - TP2: 50% restante no segundo alvo
+
+        Args:
+            ticker: Símbolo do ativo
+            direction: "LONG" ou "SHORT"
+            tp1: Primeiro take profit
+            tp2: Segundo take profit
+            quantity: Quantidade total
+
+        Returns:
+            Dict com "tp1" e "tp2" orders
+        """
+        try:
+            side = OrderSide.SELL if direction == "LONG" else OrderSide.BUY
+
+            # Divide quantidade 50/50
+            qty_tp1 = quantity // 2
+            qty_tp2 = quantity - qty_tp1  # Restante (evita arredondamento)
+
+            # TP1 (50%)
+            tp1_order = Order(
+                id=str(uuid.uuid4()),
+                ticker=ticker,
+                side=side,
+                order_type=OrderType.LIMIT,
+                quantity=qty_tp1,
+                limit_price=tp1,
+                notes=f"Take Profit 1 (50%) @ ${tp1:.2f}"
+            )
+
+            self.pending_orders[tp1_order.id] = tp1_order
+            tp1_success = await self.submit_order(tp1_order)
+
+            # TP2 (50%)
+            tp2_order = Order(
+                id=str(uuid.uuid4()),
+                ticker=ticker,
+                side=side,
+                order_type=OrderType.LIMIT,
+                quantity=qty_tp2,
+                limit_price=tp2,
+                notes=f"Take Profit 2 (50%) @ ${tp2:.2f}"
+            )
+
+            self.pending_orders[tp2_order.id] = tp2_order
+            tp2_success = await self.submit_order(tp2_order)
+
+            logger.info(f"Multi-target TP: {qty_tp1} @ ${tp1:.2f} + {qty_tp2} @ ${tp2:.2f}")
+
+            return {
+                "tp1": tp1_order if tp1_success else None,
+                "tp2": tp2_order if tp2_success else None
+            }
+
+        except Exception as e:
+            logger.error(f"Error placing TP orders for {ticker}: {e}")
+            return {"tp1": None, "tp2": None}

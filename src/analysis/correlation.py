@@ -153,6 +153,45 @@ class CorrelationAnalyzer:
 
         return True, "Correlação dentro dos limites"
 
+    def enforce_correlation_limit(self, new_ticker: str, new_prices: pd.Series,
+                                  existing_positions: Dict[str, pd.Series]) -> Tuple[bool, List[str]]:
+        """
+        HARD VETO - Enforce correlation limit (WS3).
+        Este método é NON-NEGOTIABLE e rejeita qualquer ativo com correlação > max_correlation.
+
+        Args:
+            new_ticker: Ticker do novo ativo
+            new_prices: Série de preços do novo ativo
+            existing_positions: Dict ticker -> preços das posições abertas
+
+        Returns:
+            Tuple (is_allowed, violated_tickers)
+            - is_allowed: False se VETO (correlação > threshold com QUALQUER posição)
+            - violated_tickers: Lista de tickers com correlação problemática
+        """
+        if not existing_positions:
+            logger.debug(f"Correlation check for {new_ticker}: PASSED (no existing positions)")
+            return True, []
+
+        # Verifica correlação com TODAS as posições
+        correlations = self.check_portfolio_correlation(new_ticker, new_prices, existing_positions)
+
+        # Identifica violações
+        violated_tickers = []
+        for result in correlations:
+            if result.is_problematic:
+                violated_tickers.append(result.ticker2)
+                logger.warning(f"CORRELATION VETO: {new_ticker} x {result.ticker2} = {result.correlation:.3f} "
+                               f"(max {self.max_correlation:.2f})")
+
+        if violated_tickers:
+            logger.error(f"HARD VETO: {new_ticker} rejected due to correlation > {self.max_correlation:.2f} "
+                         f"with {len(violated_tickers)} position(s): {', '.join(violated_tickers)}")
+            return False, violated_tickers
+
+        logger.info(f"Correlation check for {new_ticker}: PASSED (all correlations < {self.max_correlation:.2f})")
+        return True, []
+
     def get_diversification_score(self, correlation_matrix: pd.DataFrame) -> float:
         """
         Calcula score de diversificação do portfólio.

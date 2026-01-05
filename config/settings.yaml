@@ -8,7 +8,7 @@ risk:
   max_drawdown_total: 0.06        # 6% do capital total (Kill Switch)
   risk_per_trade: 0.01            # 1% por operação
   max_positions: 5                # Máximo de posições simultâneas
-  max_correlation: 0.7            # Correlação máxima entre ativos
+  max_correlation: 0.75           # Correlação máxima entre ativos
 
 # --- HORÁRIOS DE OPERAÇÃO ---
 schedule:
@@ -21,25 +21,23 @@ schedule:
 # --- TIERS DE MARKET CAP ---
 tiers:
   tier1_large_cap:
-    min_market_cap: 10000000000   # $10B+
+    min_market_cap: 4000000000    # $4B+ (Blue Chip)
     position_multiplier: 1.0
   tier2_mid_cap:
-    min_market_cap: 2000000000    # $2B - $10B
-    position_multiplier: 0.7
-  tier3_small_cap:
-    min_market_cap: 300000000     # $300M - $2B
-    position_multiplier: 0.5
+    min_market_cap: 800000000     # $800M - $4B (Small Cap)
+    position_multiplier: 0.6
 
 # --- FILTROS DE LIQUIDEZ ---
 liquidity:
   min_avg_volume: 500000          # Volume médio mínimo
-  min_dollar_volume: 5000000      # Volume financeiro mínimo
+  min_dollar_volume: 15000000     # Volume financeiro mínimo ($15M)
   max_spread_percent: 0.5         # Spread máximo 0.5%
 
 # --- INDICADORES TÉCNICOS ---
 technical:
   rsi_period: 14
   atr_period: 14
+  atr_stop_multiplier: 2.5        # Multiplicador para cálculo de stop loss
   supertrend_period: 10
   supertrend_multiplier: 3.0
 
@@ -53,4 +51,25 @@ ai:
 alerts:
   telegram_enabled: false
   email_enabled: false
-  flash_crash_threshold: 0.05     # 5% de queda rápida
+  flash_crash_threshold: 0.03     # 3% de queda rápida (em 5 minutos)
+
+# --- PHASE 0: BUZZ FACTORY ---
+phase0:
+  volume_spike_multiplier: 2.0    # Volume > 2x média = spike
+  gap_threshold: 0.03             # Gap > 3% = interessante
+  friday_block: true              # Bloquear entradas na sexta
+  earnings_proximity_days: 5      # Bloquear se earnings < 5 dias
+
+# --- PHASE 2: GESTÃO DE RISCO ---
+phase2:
+  beta_normal: 2.0                # Beta < 2.0 = normal
+  beta_aggressive: 3.0            # Beta 2.0-3.0 = aggressive
+  weekly_dd_defensive: 0.05       # DD semanal > 5% = modo defensivo
+  daily_dd_defensive: 0.03        # DD diário > 3% = modo defensivo
+  sector_exposure_max: 0.20       # Máximo 20% em um setor
+
+# --- PHASE 5: MONITORAMENTO ---
+phase5:
+  watchdog_interval: 60           # Verificar posições a cada 60s
+  sentinel_interval: 300          # Verificar notícias a cada 300s (5min)
+  flash_crash_window: 300         # Janela de 5 minutos para flash crash

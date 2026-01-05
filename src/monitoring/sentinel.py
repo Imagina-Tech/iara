@@ -40,7 +40,8 @@ class Sentinel:
     Monitora notícias de posições abertas.
     """
 
-    def __init__(self, config: Dict[str, Any], news_scraper, ai_gateway, state_manager):
+    def __init__(self, config: Dict[str, Any], news_scraper, ai_gateway, state_manager,
+                 judge=None, order_manager=None):
         """
         Inicializa o sentinel.
 
@@ -49,14 +50,19 @@ class Sentinel:
             news_scraper: Scraper de notícias
             ai_gateway: Gateway de IA
             state_manager: Gerenciador de estado
+            judge: Judge instance (WS6 - para exit decisions)
+            order_manager: Order manager (WS6 - para trailing stops)
         """
         self.config = config
         self.news_scraper = news_scraper
         self.ai_gateway = ai_gateway
         self.state_manager = state_manager
+        self.judge = judge  # WS6
+        self.order_manager = order_manager  # WS6
 
+        self.phase5_config = config.get("phase5", {})
         self._running = False
-        self._check_interval = 300  # 5 minutos
+        self._check_interval = self.phase5_config.get("sentinel_interval", 300)  # 5 minutos
         self._seen_headlines: Dict[str, datetime] = {}
         self._alert_handlers: List = []
 
@@ -200,10 +206,14 @@ Critérios para "critical":
             except Exception as e:
                 logger.error(f"Erro no handler: {e}")
 
-        # Ação automática para críticos
-        if alert.impact == NewsImpact.CRITICAL and alert.action_suggested == "EXIT_NOW":
-            logger.critical(f"Notícia crítica para {alert.ticker}: {alert.headline}")
-            # TODO: Considerar saída automática ou notificação urgente
+        # WS6: Ação automática para críticos - chamar Judge
+        if alert.impact in [NewsImpact.NEGATIVE, NewsImpact.CRITICAL]:
+            # Find position
+            positions = self.state_manager.get_open_positions()
+            position = next((p for p in positions if p.ticker == alert.ticker), None)
+
+            if position:
+                await self.call_judge_for_exit(position, alert)
 
     def _cleanup_seen_headlines(self) -> None:
         """Limpa headlines antigas."""
@@ -213,6 +223,135 @@ Critérios para "critical":
             for headline, ts in self._seen_headlines.items()
             if ts > cutoff
         }
+
+    async def check_friday_breakeven(self) -> None:
+        """
+        WS6: Friday afternoon breakeven logic.
+        Se Friday após 14:00, mover stops lucrativas para breakeven.
+        """
+        now = datetime.now()
+
+        # Check if Friday (weekday == 4) and after 14:00
+        if now.weekday() != 4:
+            return
+
+        if now.hour < 14:
+            return
+
+        logger.info("Friday afternoon: Moving profitable positions to breakeven")
+
+        positions = self.state_manager.get_open_positions()
+
+        for position in positions:
+            # Check if position is profitable
+            current_price = position.current_price if position.current_price > 0 else position.entry_price
+            is_profitable = (
+                (position.direction == "LONG" and current_price > position.entry_price) or
+                (position.direction == "SHORT" and current_price < position.entry_price)
+            )
+
+            if is_profitable and self.order_manager:
+                # Move stop to breakeven (+0.1% buffer)
+                breakeven_price = position.entry_price * 1.001 if position.direction == "LONG" else position.entry_price * 0.999
+
+                logger.info(f"Friday breakeven: Moving {position.ticker} stop to ${breakeven_price:.2f}")
+
+                # Update stop order
+                # TODO: Implement order_manager.update_stop_order()
+
+    async def update_trailing_stops(self) -> None:
+        """
+        WS6: Update trailing stops for profitable positions.
+        Trailing stop = Current price - 2*ATR
+        """
+        positions = self.state_manager.get_open_positions()
+
+        for position in positions:
+            try:
+                # Fetch current price and ATR
+                import yfinance as yf
+                ticker_obj = yf.Ticker(position.ticker)
+                hist = ticker_obj.history(period="20d")
+
+                if hist.empty:
+                    continue
+
+                current_price = hist["Close"].iloc[-1]
+
+                # Calculate ATR
+                import pandas_ta as ta
+                atr_series = ta.atr(hist["High"], hist["Low"], hist["Close"], length=14)
+                if atr_series is None or atr_series.empty:
+                    continue
+
+                atr = atr_series.iloc[-1]
+
+                # Calculate trailing stop
+                if position.direction == "LONG":
+                    trailing_stop = current_price - (2 * atr)
+
+                    # Only update if trailing stop > current stop (tighten only)
+                    if trailing_stop > position.stop_loss:
+                        logger.info(f"Trailing stop update: {position.ticker} ${position.stop_loss:.2f} → ${trailing_stop:.2f}")
+
+                        # Update position in state manager
+                        position.stop_loss = round(trailing_stop, 2)
+
+                        # Update stop order at broker
+                        if self.order_manager:
+                            # TODO: Implement order_manager.update_stop_order()
+                            pass
+
+                else:  # SHORT
+                    trailing_stop = current_price + (2 * atr)
+
+                    # Only update if trailing stop < current stop (tighten only)
+                    if trailing_stop < position.stop_loss:
+                        logger.info(f"Trailing stop update: {position.ticker} ${position.stop_loss:.2f} → ${trailing_stop:.2f}")
+
+                        position.stop_loss = round(trailing_stop, 2)
+
+                        if self.order_manager:
+                            # TODO: Implement order_manager.update_stop_order()
+                            pass
+
+            except Exception as e:
+                logger.error(f"Error updating trailing stop for {position.ticker}: {e}")
+
+    async def call_judge_for_exit(self, position, news_alert: NewsAlert) -> None:
+        """
+        WS6: Chama Judge para decisão de saída baseada em news negativo.
+
+        Args:
+            position: Posição aberta
+            news_alert: Alert de notícia negativa
+        """
+        if not self.judge:
+            logger.warning("Judge not available for exit decision")
+            return
+
+        try:
+            logger.info(f"Calling Judge for exit decision on {position.ticker} due to news: {news_alert.headline[:50]}...")
+
+            # Prepare data for Judge
+            # TODO: Fetch full market/technical data
+            market_data = {"ticker": position.ticker, "price": position.current_price}
+            technical_data = {}
+            macro_data = {}
+            correlation_data = {}
+            news_details = f"NEGATIVE NEWS: {news_alert.headline}\n{news_alert.summary}"
+
+            # Call Judge (simplified - não é full judge, apenas exit recommendation)
+            # Poderia ter um método judge.get_exit_recommendation() específico
+            logger.info(f"Judge recommendation needed for {position.ticker} - news impact: {news_alert.impact.value}")
+
+            # Ação baseada na severidade
+            if news_alert.impact == NewsImpact.CRITICAL and news_alert.action_suggested == "EXIT_NOW":
+                logger.critical(f"CRITICAL NEWS: Closing {position.ticker} immediately")
+                # TODO: order_manager.close_position_at_market(position)
+
+        except Exception as e:
+            logger.error(f"Error calling Judge for exit: {e}")
 
     def get_status(self) -> Dict[str, Any]:
         """Retorna status do sentinel."""

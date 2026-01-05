@@ -172,3 +172,42 @@ class RiskCalculator:
 
         # Limita a fração de Kelly para ser conservador
         return max(0, min(kelly * 0.5, 0.25))  # Half-Kelly, max 25%
+
+    def calculate_beta_adjustment(self, beta: float, volume_ratio: float) -> float:
+        """
+        Calcula multiplicador de posição baseado em Beta e volume.
+
+        Lógica WS3:
+        - Beta < 2.0: multiplier = 1.0 (normal)
+        - Beta 2.0-3.0: multiplier = 0.75 (aggressive - reduce 25%)
+        - Beta >= 3.0 com volume >= 2.0x: multiplier = 0.5 (extreme confirmed)
+        - Beta >= 3.0 sem volume: multiplier = 0.0 (REJEITAR)
+
+        Args:
+            beta: Beta do ativo vs SPY
+            volume_ratio: Volume atual / média 20d
+
+        Returns:
+            Multiplicador de posição (0.0 = rejeitar, 1.0 = normal)
+        """
+        phase2_config = self.config.get("phase2", {})
+        beta_normal = phase2_config.get("beta_normal", 2.0)
+        beta_aggressive = phase2_config.get("beta_aggressive", 3.0)
+
+        if beta < beta_normal:
+            # Beta baixo/normal - sizing completo
+            return 1.0
+        elif beta_normal <= beta < beta_aggressive:
+            # Beta moderadamente alto - reduz 25%
+            logger.info(f"Beta {beta:.2f} in aggressive range [{beta_normal}-{beta_aggressive}), reducing position to 75%")
+            return 0.75
+        else:  # beta >= beta_aggressive
+            # Beta muito alto - precisa confirmação de volume
+            if volume_ratio >= 2.0:
+                # Volume confirma movimento - permite com 50% sizing
+                logger.warning(f"Beta {beta:.2f} >= {beta_aggressive} but volume {volume_ratio:.1f}x confirms - reducing to 50%")
+                return 0.5
+            else:
+                # Beta alto sem volume - REJEITAR
+                logger.warning(f"Beta {beta:.2f} >= {beta_aggressive} without volume confirmation ({volume_ratio:.1f}x < 2.0x) - REJECTING")
+                return 0.0
