@@ -7,10 +7,14 @@ import logging
 from typing import Dict, Optional, Any, List
 from dataclasses import dataclass
 from datetime import datetime
+from pathlib import Path
 
 from .ai_gateway import AIGateway, AIProvider
 
 logger = logging.getLogger(__name__)
+
+# Caminho raiz do projeto
+PROJECT_ROOT = Path(__file__).parent.parent.parent
 
 
 @dataclass
@@ -47,7 +51,8 @@ class Screener:
     def _load_prompt_template(self) -> None:
         """Carrega template de prompt do arquivo."""
         try:
-            with open("config/prompts/screener.md", "r", encoding="utf-8") as f:
+            template_path = PROJECT_ROOT / "config" / "prompts" / "screener.md"
+            with open(template_path, "r", encoding="utf-8") as f:
                 self.prompt_template = f.read()
         except FileNotFoundError:
             logger.warning("Template de screener não encontrado, usando default")

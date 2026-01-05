@@ -6,9 +6,11 @@ import pytest
 import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
+from pathlib import Path
 
 import sys
-sys.path.insert(0, '..')
+# Adiciona o diretório raiz ao path
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from src.analysis.risk_math import RiskCalculator, RiskMetrics
 from src.execution.position_sizer import PositionSizer, PositionSize

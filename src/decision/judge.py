@@ -13,6 +13,9 @@ from .ai_gateway import AIGateway, AIProvider
 
 logger = logging.getLogger(__name__)
 
+# Caminho raiz do projeto
+PROJECT_ROOT = Path(__file__).parent.parent.parent
+
 
 @dataclass
 class TradeDecision:
@@ -56,7 +59,8 @@ class Judge:
     def _load_prompt_template(self) -> None:
         """Carrega template de prompt."""
         try:
-            with open("config/prompts/judge.md", "r", encoding="utf-8") as f:
+            template_path = PROJECT_ROOT / "config" / "prompts" / "judge.md"
+            with open(template_path, "r", encoding="utf-8") as f:
                 self.prompt_template = f.read()
         except FileNotFoundError:
             logger.warning("Template de juiz não encontrado, usando default")
@@ -79,7 +83,7 @@ Responda em JSON com: decisao, nota_final, direcao, entry_price, stop_loss, take
     def _load_rag_context(self) -> None:
         """Carrega contexto RAG dos manuais."""
         self.rag_context = ""
-        rag_path = Path("data/rag_manuals")
+        rag_path = PROJECT_ROOT / "data" / "rag_manuals"
 
         if rag_path.exists():
             for file in rag_path.glob("*.md"):

@@ -51,6 +51,6 @@ ai:
 
 # --- ALERTAS ---
 alerts:
-  telegram_enabled: true
+  telegram_enabled: false
   email_enabled: false
   flash_crash_threshold: 0.05     # 5% de queda rápida

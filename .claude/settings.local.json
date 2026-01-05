@@ -3,7 +3,12 @@
     "allow": [
       "Bash(mkdir:*)",
       "Bash(dir /s /b \"C:\\\\Users\\\\Trindade\\\\Desktop\\\\iara\\\\IARA_TRADER\")",
-      "Bash(dir /s /b)"
+      "Bash(dir /s /b)",
+      "Bash(tree:*)",
+      "Bash(dir \"config\\\\prompts\"\" 2>&1 || echo \"Directory not found \")",
+      "Bash(dir \"data\"\" 2>&1 || echo \"Data directory status \")",
+      "Bash(dir \"data\\\\rag_manuals\"\" 2>&1 || echo \"RAG manuals directory status \")",
+      "Bash(python:*)"
     ]
   }
 }
