@@ -78,7 +78,7 @@ async def cmd_buzz():
     }
     filepath = save_json(result, "buzz_factory")
     print_json(result, "BUZZ FACTORY OUTPUT (Phase 0)")
-    print(f"💾 Salvo em: {filepath}\n")
+    print(f"[SAVED] {filepath}\n")
     return result
 
 async def cmd_technical(ticker):
@@ -87,7 +87,7 @@ async def cmd_technical(ticker):
     print(f"[2/2] Analisando indicadores técnicos...")
     data = market_data.get_stock_data(ticker)
     if not data:
-        print(f"❌ Erro: Não foi possível obter dados para {ticker}\n")
+        print(f"[ERROR] Não foi possível obter dados para {ticker}\n")
         return None
     result = {
         "timestamp": datetime.now().isoformat(),
@@ -101,7 +101,7 @@ async def cmd_technical(ticker):
     }
     filepath = save_json(result, f"technical_{ticker}")
     print_json(result, f"TECHNICAL DATA for {ticker}")
-    print(f"💾 Salvo em: {filepath}\n")
+    print(f"[SAVED] {filepath}\n")
     return result
 
 async def cmd_portfolio():
@@ -128,7 +128,7 @@ async def cmd_portfolio():
     }
     filepath = save_json(result, "portfolio_state")
     print_json(result, "PORTFOLIO STATE")
-    print(f"💾 Salvo em: {filepath}\n")
+    print(f"[SAVED] {filepath}\n")
     return result
 
 def cmd_config():
@@ -139,7 +139,7 @@ def cmd_config():
     }
     filepath = save_json(result, "system_config")
     print_json(result, "SYSTEM CONFIGURATION")
-    print(f"💾 Salvo em: {filepath}\n")
+    print(f"[SAVED] {filepath}\n")
     return result
 
 async def cmd_database():
@@ -160,7 +160,7 @@ async def cmd_database():
     }
     filepath = save_json(result, "database_state")
     print_json(result, "DATABASE STATE")
-    print(f"💾 Salvo em: {filepath}\n")
+    print(f"[SAVED] {filepath}\n")
     return result
 
 def show_help():
@@ -203,7 +203,7 @@ async def main():
             await cmd_buzz()
         elif command == "/technical":
             if not args:
-                print("⚠️  Uso: python debug_cli.py /technical TICKER\n")
+                print("[WARNING] Uso: python debug_cli.py /technical TICKER\n")
                 return
             await cmd_technical(args[0].upper())
         elif command == "/portfolio":
@@ -213,10 +213,10 @@ async def main():
         elif command == "/database":
             await cmd_database()
         else:
-            print(f"⚠️  Comando desconhecido: {command}")
+            print(f"[WARNING] Comando desconhecido: {command}")
             print("Use /help para ver comandos disponíveis.\n")
     except Exception as e:
-        print(f"\n❌ Erro ao executar comando: {e}\n")
+        print(f"\n[ERROR] Erro ao executar comando: {e}\n")
         import traceback
         traceback.print_exc()
 
