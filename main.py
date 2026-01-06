@@ -40,18 +40,18 @@ def load_config() -> dict:
 def print_banner():
     """Exibe banner de inicialização."""
     banner = """
-    ╔═══════════════════════════════════════════════════════════════╗
-    ║                                                               ║
-    ║     ██╗ █████╗ ██████╗  █████╗     ████████╗██████╗           ║
-    ║     ██║██╔══██╗██╔══██╗██╔══██╗    ╚══██╔══╝██╔══██╗          ║
-    ║     ██║███████║██████╔╝███████║       ██║   ██████╔╝          ║
-    ║     ██║██╔══██║██╔══██╗██╔══██║       ██║   ██╔══██╗          ║
-    ║     ██║██║  ██║██║  ██║██║  ██║       ██║   ██║  ██║          ║
-    ║     ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝╚═╝  ╚═╝       ╚═╝   ╚═╝  ╚═╝          ║
-    ║                                                               ║
-    ║           Intelligent Automated Risk-Aware Trader             ║
-    ║                        v1.0.0                                 ║
-    ╚═══════════════════════════════════════════════════════════════╝
+    ==================================================================
+
+         ___    _     ____       _        _____   ____
+        |_ _|  / \\   |  _ \\     / \\      |_   _| |  _ \\
+         | |  / _ \\  | |_) |   / _ \\       | |   | |_) |
+         | | / ___ \\ |  _ <   / ___ \\      | |   |  _ <
+        |___/_/   \\_\\|_| \\_\\ /_/   \\_\\     |_|   |_| \\_\\
+
+           Intelligent Automated Risk-Aware Trader
+                        v1.0.0
+
+    ==================================================================
     """
     print(banner)
 
@@ -123,8 +123,24 @@ async def main():
     poison_pill = PoisonPillScanner(config, news_scraper, ai_gateway, state_manager)
     telegram = TelegramBot(config, state_manager)
 
-    # Orchestrator
-    orchestrator = Orchestrator(config)
+    # Earnings Checker (required by orchestrator)
+    from src.collectors.earnings_checker import EarningsChecker
+    earnings_checker = EarningsChecker(config)
+
+    # Orchestrator (passa todos os componentes)
+    orchestrator = Orchestrator(
+        config=config,
+        buzz_factory=buzz_factory,
+        screener=screener,
+        risk_calculator=risk_calc,
+        correlation_analyzer=correlation,
+        judge=judge,
+        order_manager=order_manager,
+        position_sizer=position_sizer,
+        state_manager=state_manager,
+        earnings_checker=earnings_checker,
+        market_data=market_data
+    )
 
     logger.info("=" * 60)
     logger.info("IARA TRADER inicializado com sucesso!")
