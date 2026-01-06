@@ -686,6 +686,23 @@ Nível 5: EMERGÊNCIA (Kill Switch)
 
 ## 📊 HISTÓRICO DE MODIFICAÇÕES
 
+### 2026-01-06 (Noite - Update 4)
+**Debug CLI .env Loading Corrigido**
+- **BUG FIX:** `debug_cli.py` - Faltava carregar variáveis de ambiente do .env
+  * Erro: `NewsScraper` inicializava mas `os.getenv("GOOGLE_SEARCH_API_KEY")` retornava None
+  * Causa: `debug_cli.py` não importava nem executava `load_dotenv()`
+  * Fix: Adicionado `from dotenv import load_dotenv` e `load_dotenv()` no início
+- **LOCALIZAÇÃO:**
+  * Import: `debug_cli.py` linha 12 (from dotenv import load_dotenv)
+  * Execução: `debug_cli.py` linha 15 (load_dotenv() - ANTES de importar componentes)
+- **IMPACTO:** Agora todos os comandos do debug_cli têm acesso às API keys:
+  * GOOGLE_SEARCH_API_KEY
+  * GOOGLE_CSE_ID
+  * OPENAI_API_KEY
+  * GEMINI_API_KEY
+  * Etc.
+- **Status:** ✅ debug_cli.py agora carrega .env corretamente
+
 ### 2026-01-06 (Noite - Update 3)
 **News Catalyst Scanner Corrigido**
 - **BUG FIX:** `src/collectors/news_aggregator.py` - Método `find_catalyst_news()` corrigido
