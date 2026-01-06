@@ -147,21 +147,25 @@ class Orchestrator:
                 logger.warning("Nenhum candidato da Phase 0 para processar")
                 return []
 
+            # Importar NewsAggregator para buscar notícias quando necessário
+            from src.collectors.news_aggregator import NewsAggregator
+            news_aggregator = NewsAggregator(self.config)
+
             # 1. Preparar candidatos para screener
             screener_input = []
             for candidate in self.phase0_candidates:
                 try:
                     # Fetch market data e technical data
                     ticker = candidate.ticker
-                    data = await self.market_data.get_stock_data(ticker)
+                    data = self.market_data.get_stock_data(ticker)
 
                     if not data:
                         continue
 
                     market_data = {
                         "ticker": ticker,
-                        "price": data.price,
-                        "change_pct": data.change_pct,
+                        "price": data.price if hasattr(data, 'price') else 0,
+                        "change_pct": data.change_pct if hasattr(data, 'change_pct') else 0,
                         "gap_pct": getattr(data, 'gap_pct', 0)
                     }
 
@@ -173,10 +177,30 @@ class Orchestrator:
                         "supertrend_direction": "neutral"
                     }
 
+                    # Buscar notícias para o candidato
+                    news_summary = ""
+                    if hasattr(candidate, 'news_content') and candidate.news_content:
+                        # Usar notícias já coletadas na Phase 0
+                        news_summary = candidate.news_content
+                        logger.debug(f"{ticker}: Usando notícias da Phase 0")
+                    else:
+                        # Buscar notícias fresh para candidatos sem news_content
+                        try:
+                            gnews_articles = await news_aggregator.get_gnews(ticker, max_results=3)
+                            if gnews_articles:
+                                news_texts = []
+                                for art in gnews_articles[:3]:
+                                    news_texts.append(f"- {art.get('title', '')}")
+                                news_summary = f"Recent news for {ticker}:\n" + "\n".join(news_texts)
+                                logger.debug(f"{ticker}: Buscou {len(gnews_articles)} notícias do GNews")
+                        except Exception as news_err:
+                            logger.debug(f"{ticker}: Erro buscando notícias - {news_err}")
+
                     screener_input.append({
                         "market_data": market_data,
                         "technical_data": technical_data,
-                        "news_summary": ""
+                        "news_summary": news_summary,
+                        "candidate": candidate  # Manter referência ao candidato original
                     })
 
                 except Exception as e:
@@ -316,6 +340,10 @@ class Orchestrator:
                 logger.warning("Nenhum candidato da Phase 2")
                 return []
 
+            # Importar NewsAggregator para buscar notícias detalhadas
+            from src.collectors.news_aggregator import NewsAggregator
+            news_aggregator = NewsAggregator(self.config)
+
             approved = []
 
             for candidate in self.phase2_results:
@@ -324,16 +352,70 @@ class Orchestrator:
                 try:
                     # Prepare data for Judge
                     screener_result = candidate["screener_result"].__dict__
-                    market_data = {"ticker": ticker, "price": 0}
-                    technical_data = {}
+
+                    # Buscar dados de mercado atualizados
+                    stock_data = self.market_data.get_stock_data(ticker)
+                    market_data = {
+                        "ticker": ticker,
+                        "price": stock_data.price if stock_data and hasattr(stock_data, 'price') else 0,
+                        "market_cap": stock_data.market_cap if stock_data and hasattr(stock_data, 'market_cap') else 0,
+                        "tier": candidate.get("tier", "unknown"),
+                        "beta": candidate.get("risk_metrics").beta if candidate.get("risk_metrics") else 1.0,
+                        "sector_perf": 0
+                    }
+
+                    technical_data = {
+                        "volatility_20d": 0,
+                        "rsi": 50,
+                        "atr": 0,
+                        "supertrend_direction": "neutral",
+                        "volume_ratio": 1.0,
+                        "support": 0,
+                        "resistance": 0
+                    }
+
                     macro_data = {"vix": 20, "spy_trend": "neutral"}
-                    correlation_data = {"max_correlation": 0}
+                    correlation_data = {"max_correlation": 0, "sector_exposure": 0}
+
+                    # Buscar notícias DETALHADAS para o Judge
                     news_details = ""
+                    try:
+                        logger.info(f"{ticker}: Buscando notícias detalhadas para o Judge...")
+                        gnews_articles = await news_aggregator.get_gnews(ticker, max_results=5)
+
+                        if gnews_articles:
+                            news_parts = [f"=== NEWS FOR {ticker} ==="]
+                            for i, art in enumerate(gnews_articles[:5], 1):
+                                title = art.get('title', 'No title')
+                                desc = art.get('description', '')[:200] if art.get('description') else ''
+                                source = art.get('source', 'Unknown')
+                                news_parts.append(f"\n[{i}] {title}")
+                                if desc:
+                                    news_parts.append(f"    Summary: {desc}")
+                                news_parts.append(f"    Source: {source}")
+
+                            news_details = "\n".join(news_parts)
+                            logger.info(f"{ticker}: {len(gnews_articles)} notícias encontradas para Judge")
+                        else:
+                            news_details = f"No recent news found for {ticker}"
+                            logger.info(f"{ticker}: Nenhuma notícia encontrada")
+
+                    except Exception as news_err:
+                        logger.warning(f"{ticker}: Erro buscando notícias - {news_err}")
+                        news_details = "News fetch failed"
 
                     # Get portfolio prices for correlation validation
-                    portfolio_prices = {}  # TODO: fetch from positions
+                    portfolio_prices = {}
+                    for pos in self.state_manager.get_open_positions():
+                        try:
+                            import yfinance as yf
+                            pos_hist = yf.Ticker(pos.ticker).history(period="60d")
+                            if not pos_hist.empty:
+                                portfolio_prices[pos.ticker] = pos_hist["Close"]
+                        except Exception:
+                            pass
 
-                    # Call Judge
+                    # Call Judge com notícias
                     decision = await self.judge.judge(
                         ticker, screener_result, market_data, technical_data,
                         macro_data, correlation_data, news_details,

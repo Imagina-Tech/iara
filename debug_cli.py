@@ -103,7 +103,8 @@ async def cmd_buzz():
         "summary": {
             "total_candidates_raw": len(candidates),
             "total_candidates_filtered": len(filtered),
-            "by_source": {source: len(items) for source, items in by_source.items()}
+            "by_source": {source: len(items) for source, items in by_source.items()},
+            "candidates_with_news": sum(1 for c in filtered if hasattr(c, 'news_content') and c.news_content)
         },
         "candidates": [
             {
@@ -114,7 +115,8 @@ async def cmd_buzz():
                 "market_cap": c.market_cap,
                 "market_cap_billions": round(c.market_cap / 1e9, 2) if c.market_cap > 0 else 0,
                 "reason": c.reason,
-                "detected_at": c.detected_at.isoformat()
+                "detected_at": c.detected_at.isoformat(),
+                "news_content": c.news_content if hasattr(c, 'news_content') else ""
             }
             for c in filtered
         ]
@@ -134,6 +136,8 @@ async def cmd_buzz():
         print(f"  {source:20s}: {len(items):3d} candidatos")
     print(f"\n  TOTAL FILTRADO      : {len(filtered):3d} candidatos")
     print(f"  TOTAL RAW           : {len(candidates):3d} candidatos")
+    candidates_with_news = sum(1 for c in filtered if hasattr(c, 'news_content') and c.news_content)
+    print(f"  COM NOTICIAS        : {candidates_with_news:3d} candidatos")
     print("=" * 80)
 
     # Display top 10
@@ -147,6 +151,10 @@ async def cmd_buzz():
         print(f"   Tier: {c.tier}")
         print(f"   Market Cap: ${market_cap_b:.2f}B")
         print(f"   Razao: {c.reason[:80]}")
+        # Mostrar news_content se disponível
+        if hasattr(c, 'news_content') and c.news_content:
+            news_preview = c.news_content[:150].replace('\n', ' ')
+            print(f"   News: {news_preview}...")
 
     print("\n" + "=" * 80)
     print(f"[SAVED] {output_path.absolute()}")

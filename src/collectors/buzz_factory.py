@@ -26,6 +26,7 @@ class BuzzCandidate:
     detected_at: datetime
     tier: str = "unknown"  # "tier1_large_cap", "tier2_mid_cap"
     market_cap: float = 0.0  # Market cap in dollars
+    news_content: str = ""  # Conteúdo das notícias relacionadas (para passar ao Screener/Judge)
 
 
 class BuzzFactory:
@@ -411,6 +412,12 @@ class BuzzFactory:
                             else:
                                 tier = "tier2_mid_cap"
 
+                        # Construir conteúdo da notícia para passar ao Screener/Judge
+                        news_text = f"HEADLINE: {article.title}\n"
+                        if article.summary:
+                            news_text += f"SUMMARY: {article.summary}\n"
+                        news_text += f"SOURCE: {article.source}"
+
                         candidates.append(BuzzCandidate(
                             ticker=ticker,
                             source="news_catalyst",
@@ -418,7 +425,8 @@ class BuzzFactory:
                             reason=f"Catalyst: {article.title[:80]}...",
                             detected_at=datetime.now(),
                             tier=tier,
-                            market_cap=market_cap_value
+                            market_cap=market_cap_value,
+                            news_content=news_text  # Salvar conteúdo para pipeline
                         ))
 
                         logger.debug(f"{ticker}: Catalyst news detected - {article.title[:50]}...")
