@@ -66,6 +66,7 @@ async def cmd_buzz():
     """
     Executa Buzz Factory (Phase 0) com TODAS as fontes.
     FORÇA execução completa independente do horário (simula horário de mercado).
+    Mostra exatamente o que será passado para Screener e Judge.
     """
     print("\n" + "=" * 80)
     print("  BUZZ FACTORY - PHASE 0 (MODO TESTE COMPLETO)")
@@ -96,6 +97,59 @@ async def cmd_buzz():
 
     print("[4/4] Serializando para JSON...\n")
 
+    # Simular busca de notícias como aconteceria no orchestrator
+    from src.collectors.news_aggregator import NewsAggregator
+    news_aggregator = NewsAggregator(config)
+
+    # Buscar notícias para top 5 candidatos (simulando Phase 1 e 3)
+    print("=" * 80)
+    print("  SIMULANDO BUSCA DE NOTICIAS (como acontece em Phase 1 e 3)")
+    print("=" * 80)
+
+    news_for_candidates = {}
+    top_candidates = filtered[:5]
+
+    for c in top_candidates:
+        ticker = c.ticker
+        print(f"\n--- Buscando noticias para {ticker} ---")
+
+        # Buscar via GNews (como faz o orchestrator)
+        gnews_articles = await news_aggregator.get_gnews(ticker, max_results=5)
+
+        if gnews_articles:
+            # Formato para SCREENER (Phase 1) - resumido
+            news_summary_parts = [f"Recent news for {ticker}:"]
+            for art in gnews_articles[:3]:
+                news_summary_parts.append(f"- {art.get('title', 'No title')}")
+            news_summary = "\n".join(news_summary_parts)
+
+            # Formato para JUDGE (Phase 3) - detalhado
+            news_details_parts = [f"=== NEWS FOR {ticker} ==="]
+            for i, art in enumerate(gnews_articles[:5], 1):
+                news_details_parts.append(f"\n[{i}] {art.get('title', 'No title')}")
+                if art.get('description'):
+                    news_details_parts.append(f"    {art['description'][:200]}")
+                if art.get('source'):
+                    news_details_parts.append(f"    Source: {art['source']}")
+            news_details = "\n".join(news_details_parts)
+
+            news_for_candidates[ticker] = {
+                "screener_format": news_summary,
+                "judge_format": news_details,
+                "raw_articles": gnews_articles
+            }
+
+            print(f"\n[SCREENER INPUT] O que Phase 1 recebe:")
+            print("-" * 40)
+            print(news_summary)
+
+            print(f"\n[JUDGE INPUT] O que Phase 3 recebe:")
+            print("-" * 40)
+            print(news_details)
+        else:
+            print(f"  Nenhuma noticia encontrada para {ticker}")
+            news_for_candidates[ticker] = None
+
     result = {
         "generated_at": datetime.now().isoformat(),
         "test_mode": True,
@@ -116,7 +170,9 @@ async def cmd_buzz():
                 "market_cap_billions": round(c.market_cap / 1e9, 2) if c.market_cap > 0 else 0,
                 "reason": c.reason,
                 "detected_at": c.detected_at.isoformat(),
-                "news_content": c.news_content if hasattr(c, 'news_content') else ""
+                "news_content": c.news_content if hasattr(c, 'news_content') else "",
+                "news_for_screener": news_for_candidates.get(c.ticker, {}).get("screener_format", "") if c.ticker in [x.ticker for x in top_candidates] else "",
+                "news_for_judge": news_for_candidates.get(c.ticker, {}).get("judge_format", "") if c.ticker in [x.ticker for x in top_candidates] else ""
             }
             for c in filtered
         ]
@@ -129,7 +185,7 @@ async def cmd_buzz():
         json.dump(result, f, indent=2, ensure_ascii=False)
 
     # Display summary
-    print("=" * 80)
+    print("\n" + "=" * 80)
     print("  RESUMO DOS CANDIDATOS")
     print("=" * 80)
     for source, items in by_source.items():
@@ -137,7 +193,8 @@ async def cmd_buzz():
     print(f"\n  TOTAL FILTRADO      : {len(filtered):3d} candidatos")
     print(f"  TOTAL RAW           : {len(candidates):3d} candidatos")
     candidates_with_news = sum(1 for c in filtered if hasattr(c, 'news_content') and c.news_content)
-    print(f"  COM NOTICIAS        : {candidates_with_news:3d} candidatos")
+    print(f"  COM NEWS_CATALYST   : {candidates_with_news:3d} candidatos")
+    print(f"  COM GNEWS BUSCADO   : {len([t for t in news_for_candidates if news_for_candidates[t]])} candidatos (top 5)")
     print("=" * 80)
 
     # Display top 10
@@ -151,10 +208,11 @@ async def cmd_buzz():
         print(f"   Tier: {c.tier}")
         print(f"   Market Cap: ${market_cap_b:.2f}B")
         print(f"   Razao: {c.reason[:80]}")
-        # Mostrar news_content se disponível
+        # Mostrar news_content se disponível (do catalyst scan)
         if hasattr(c, 'news_content') and c.news_content:
-            news_preview = c.news_content[:150].replace('\n', ' ')
-            print(f"   News: {news_preview}...")
+            print(f"   [NEWS CATALYST]:")
+            for line in c.news_content.split('\n')[:3]:
+                print(f"      {line}")
 
     print("\n" + "=" * 80)
     print(f"[SAVED] {output_path.absolute()}")
