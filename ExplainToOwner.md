@@ -686,6 +686,36 @@ Nível 5: EMERGÊNCIA (Kill Switch)
 
 ## 📊 HISTÓRICO DE MODIFICAÇÕES
 
+### 2026-01-06 (Noite - Update 7)
+**Debug CLI Logging + Pylance Type Fixes**
+- **BUG FIX:** `debug_cli.py` - Logs não apareciam no console
+  * Erro: `logger.info()` dos módulos (buzz_factory, news_aggregator) eram descartados silenciosamente
+  * Causa: `logging.basicConfig()` não estava configurado no debug_cli.py
+  * Fix: Adicionado `logging.basicConfig()` com nível INFO e formato timestamped
+- **LOCALIZAÇÃO:**
+  * Import: `debug_cli.py` linha 8 (import logging)
+  * Config: `debug_cli.py` linhas 18-24 (logging.basicConfig com handler stdout)
+- **FORMATO DOS LOGS:** `HH:MM:SS | LEVEL | module | message`
+- **Status:** ✅ Logs agora visíveis em tempo real durante execução do /buzz
+
+### 2026-01-06 (Noite - Update 6)
+**Pylance Type Errors Fixes (44 erros corrigidos)**
+- **Correções de tipo em 20+ arquivos:**
+  * `state_manager.py`: Adicionada propriedade `kill_switch_active` para acesso externo
+  * `broker_api.py`: Adicionado método abstrato `disconnect()` e implementações
+  * `screener.py`: Adicionada propriedade `passou` como alias para `passed`
+  * `database.py`: Parâmetro `Union[str, Path]` e nullable return types
+  * `orchestrator.py`: Inicializar `beta_multiplier` antes de uso condicional
+  * `correlation.py`: Usar `.values` para numpy array + `float()` explícito
+  * `risk_math.py`: Converter para `float` ANTES de divisão/comparação
+  * `earnings_checker.py`: `isinstance(pd.Timestamp)` em vez de `hasattr()`
+  * `ai_gateway.py`: `type: ignore[attr-defined]` para google.generativeai (biblioteca deprecated)
+  * `judge.py`: Extrair e validar timestamp com `isinstance(str)` antes de `fromisoformat()`
+  * `test_phase1.py`: Usar objetos `ScreenerResult` reais em vez de mocks incompatíveis
+- **FILOSOFIA:** Correções "majestosas" - resolver a causa raiz, não silenciar com `# type: ignore`
+  * `type: ignore` usado APENAS para bibliotecas externas sem stubs (gnews, telegram, google.generativeai)
+- **Status:** ✅ Zero erros Pylance em modo strict
+
 ### 2026-01-06 (Noite - Update 5)
 **Market Data Robustez + Progress Logging Completo**
 - **BUG FIX:** `src/collectors/market_data.py` - Crash do TMO resolvido
@@ -831,7 +861,19 @@ Nível 5: EMERGÊNCIA (Kill Switch)
 
 ### ⚠️ Pendências (TODO no código)
 
-1. **Orchestrator** (`src/core/orchestrator.py`)
+1. **🚨 CRÍTICO: Fluxo de Notícias Quebrado** (`src/core/orchestrator.py`)
+   - **Problema:** Notícias NÃO estão fluindo pelo pipeline!
+   - **Phase 0:** Notícias são usadas para DESCOBRIR candidatos (extrai tickers), mas o conteúdo NÃO é salvo
+   - **Phase 1:** `news_summary: ""` está VAZIO (linha 179) - Screener não recebe notícias
+   - **Phase 3:** `news_details = ""` está VAZIO (linha 331) - Judge não recebe notícias
+   - **Impacto:** IA decide SEM contexto de notícias - decisões podem ser subótimas
+   - **Correção necessária:**
+     * Salvar conteúdo das notícias no BuzzCandidate (não só o ticker)
+     * Passar notícias do Phase 0 → Phase 1 (news_summary)
+     * Buscar notícias detalhadas para Phase 3 (news_details)
+     * Ou: Buscar notícias fresh em cada fase (mais API calls, mais atual)
+
+2. **Orchestrator** (`src/core/orchestrator.py`)
    - Métodos das fases 0-5 são stubs
    - Precisa implementar sequenciamento completo
 
