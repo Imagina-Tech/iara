@@ -240,41 +240,82 @@ class BuzzFactory:
         """
         Retorna universo de tickers para escanear.
 
-        Por enquanto retorna lista fixa de tickers populares.
-        No futuro, pode ser expandido para S&P 500 completo.
+        Inclui ações americanas (NYSE/NASDAQ) e brasileiras (B3 via ADR ou .SA).
         """
-        # Top 100 tickers por volume (lista simplificada)
         return [
-            # Tech giants
+            # === USA - Tech Giants ===
             "AAPL", "MSFT", "GOOGL", "GOOG", "AMZN", "META", "NVDA", "TSLA",
-            # Finance
+            # === USA - Finance ===
             "JPM", "BAC", "WFC", "C", "GS", "MS",
-            # Healthcare
+            # === USA - Healthcare ===
             "JNJ", "UNH", "PFE", "ABBV", "MRK", "TMO",
-            # Consumer
+            # === USA - Consumer ===
             "WMT", "HD", "DIS", "NKE", "SBUX", "MCD",
-            # Energy
+            # === USA - Energy ===
             "XOM", "CVX", "COP", "SLB",
-            # Industrial
+            # === USA - Industrial ===
             "BA", "CAT", "GE", "HON", "UPS",
-            # Popular ETFs
+            # === USA - Popular ETFs ===
             "SPY", "QQQ", "DIA", "IWM",
-            # Meme/Popular stocks
+            # === USA - Meme/Popular ===
             "GME", "AMC", "PLTR", "RIVN", "LCID",
-            # Crypto-related
+            # === USA - Crypto-related ===
             "COIN", "MSTR",
-            # Additional tech
+            # === USA - Additional Tech ===
             "AMD", "INTC", "CSCO", "ORCL", "CRM", "ADBE",
-            # Semiconductors
+            # === USA - Semiconductors ===
             "TSM", "ASML", "QCOM", "AVGO", "MU",
-            # EVs
+            # === USA - EVs ===
             "F", "GM", "NIO", "XPEV",
-            # Pharma
+            # === USA - Pharma ===
             "LLY", "BMY", "GILD", "REGN",
-            # Retail
+            # === USA - Retail ===
             "TGT", "COST", "LULU",
-            # Telecom
-            "T", "VZ", "TMUS"
+            # === USA - Telecom ===
+            "T", "VZ", "TMUS",
+            # === BRASIL - ADRs (negociados nos EUA) ===
+            "PBR",   # Petrobras
+            "VALE",  # Vale
+            "ITUB",  # Itau Unibanco
+            "BBD",   # Bradesco
+            "ABEV",  # Ambev
+            "SBS",   # Sabesp
+            "ERJ",   # Embraer
+            "GGB",   # Gerdau
+            "SID",   # CSN
+            "BSBR",  # Banco Santander Brasil
+            "CIG",   # CEMIG
+            "ELP",   # Eletrobras (Eletropaulo)
+            "UGP",   # Ultrapar
+            "CBD",   # Pao de Acucar (GPA)
+            "BRFS",  # BRF (Brasil Foods)
+            "AZUL",  # Azul Airlines
+            "GOL",   # Gol Airlines
+            "NU",    # Nubank
+            "XP",    # XP Inc
+            "STNE",  # StoneCo
+            "PAGS",  # PagSeguro
+            # === BRASIL - B3 (yfinance suporta .SA) ===
+            "PETR4.SA",  # Petrobras PN
+            "VALE3.SA",  # Vale ON
+            "ITUB4.SA",  # Itau PN
+            "BBDC4.SA",  # Bradesco PN
+            "ABEV3.SA",  # Ambev ON
+            "WEGE3.SA",  # WEG ON
+            "RENT3.SA",  # Localiza ON
+            "EQTL3.SA",  # Equatorial ON
+            "B3SA3.SA",  # B3 ON
+            "SUZB3.SA",  # Suzano ON
+            "RADL3.SA",  # Raia Drogasil ON
+            "RAIL3.SA",  # Rumo ON
+            "JBSS3.SA",  # JBS ON
+            "BBAS3.SA",  # Banco do Brasil ON
+            "MGLU3.SA",  # Magazine Luiza ON
+            "VBBR3.SA",  # Vibra Energia ON
+            "PRIO3.SA",  # PetroRio ON
+            "CSAN3.SA",  # Cosan ON
+            "TOTS3.SA",  # Totvs ON
+            "HAPV3.SA",  # Hapvida ON
         ]
 
     async def _scan_gaps(self, force: bool = False) -> List[BuzzCandidate]:

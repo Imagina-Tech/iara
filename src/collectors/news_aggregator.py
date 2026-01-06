@@ -168,9 +168,39 @@ Responda APENAS em JSON formato:
             Lista de NewsArticle com catalisadores
         """
         if keywords is None:
-            # Keywords para filtrar nos títulos/descrições
-            keywords = ["earnings", "FDA", "approval", "merger", "acquisition",
-                        "partnership", "breakthrough", "guidance", "buyback", "announces"]
+            # Keywords EXPANDIDAS - Inglês e Português
+            keywords = [
+                # === INGLÊS ===
+                # Earnings/Resultados
+                "earnings", "revenue", "profit", "loss", "quarterly", "annual",
+                "beats", "misses", "outlook", "forecast", "guidance",
+                # Regulatório
+                "FDA", "approval", "SEC", "investigation", "regulatory",
+                # M&A
+                "merger", "acquisition", "deal", "buyout", "takeover", "bid",
+                # Mercado - movimentos
+                "surges", "plunges", "jumps", "drops", "rallies", "tumbles",
+                "soars", "crashes", "spikes", "falls", "rises", "gains",
+                # Analistas
+                "upgrade", "downgrade", "target", "rating", "buy", "sell", "hold",
+                # Corporativo
+                "partnership", "breakthrough", "buyback", "announces", "launches",
+                "dividend", "split", "IPO", "offering", "stake",
+                # === PORTUGUÊS (Brasil) ===
+                # Resultados
+                "lucro", "prejuizo", "receita", "resultado", "trimestral", "anual",
+                "balanço", "balanco", "dividendo", "proventos",
+                # Mercado
+                "dispara", "despenca", "sobe", "cai", "alta", "queda", "recorde",
+                "valoriza", "desvaloriza", "avança", "recua",
+                # Corporativo
+                "fusão", "fusao", "aquisição", "aquisicao", "parceria", "acordo",
+                "oferta", "compra", "venda", "ações", "acoes",
+                # Regulatório BR
+                "CVM", "Bacen", "BNDES", "Petrobras", "Vale", "Itau", "Bradesco",
+                # Setores BR
+                "Bovespa", "B3", "Ibovespa", "real", "dólar", "dolar"
+            ]
 
         catalyst_news = []
 
@@ -178,99 +208,117 @@ Responda APENAS em JSON formato:
             from gnews import GNews  # type: ignore
             import re
 
-            google_news = GNews(language='en', max_results=10)
+            # === BUSCA EM INGLÊS ===
+            google_news_en = GNews(language='en', country='US', max_results=15)
 
-            # TÓPICOS VÁLIDOS do GNews (não keywords!)
-            # Usar apenas tópicos financeiros/business relevantes
-            topics = ["BUSINESS", "FINANCE", "TECHNOLOGY"]
-            total_topics = len(topics)
+            # === BUSCA EM PORTUGUÊS (Brasil) ===
+            google_news_pt = GNews(language='pt', country='BR', max_results=15)
 
-            for topic_idx, topic in enumerate(topics, 1):
-                try:
-                    logger.info(f"[CATALYST] {topic_idx}/{total_topics} - Buscando em {topic}...")
+            # Configurações de busca por idioma
+            search_configs = [
+                {"gnews": google_news_en, "topics": ["BUSINESS", "TECHNOLOGY"], "lang": "EN"},
+                {"gnews": google_news_pt, "topics": ["BUSINESS", "TECHNOLOGY"], "lang": "PT-BR"},
+            ]
 
-                    # Buscar notícias por TÓPICO válido
-                    news = google_news.get_news_by_topic(topic)
-                    articles_to_scan = news[:10]  # Top 10 de cada tópico
-                    total_articles = len(articles_to_scan)
+            total_configs = len(search_configs)
 
-                    logger.info(f"[CATALYST] {topic}: {total_articles} artigos encontrados, analisando...")
+            for config_idx, config in enumerate(search_configs, 1):
+                gnews = config["gnews"]
+                topics = config["topics"]
+                lang = config["lang"]
 
-                    for article_idx, item in enumerate(articles_to_scan, 1):
-                        title = item.get("title", "")
-                        description = item.get("description", "")
-                        full_text = f"{title} {description}".lower()
+                logger.info(f"[CATALYST] === Buscando em {lang} ({config_idx}/{total_configs}) ===")
 
-                        # Log progress every article
-                        article_progress = (article_idx / total_articles) * 100
-                        logger.debug(f"[CATALYST] {topic} - Artigo {article_idx}/{total_articles} ({article_progress:.0f}%): {title[:60]}...")
+                for topic in topics:
+                    try:
+                        logger.info(f"[CATALYST] {lang}/{topic} - Buscando...")
 
-                        # Filtrar por keywords nos títulos/descrições
-                        has_catalyst = any(keyword.lower() in full_text for keyword in keywords)
+                        # Buscar notícias por TÓPICO válido
+                        news = gnews.get_news_by_topic(topic)
+                        articles_to_scan = news[:15]  # Top 15 de cada tópico
+                        total_articles = len(articles_to_scan)
 
-                        if has_catalyst:
-                            # Extrair tickers mencionados do título
-                            # Buscar padrões comuns: (TICKER), TICKER:, ou TICKER isolado
-                            ticker_patterns = [
-                                r'\(([A-Z]{2,5})\)',  # (AAPL)
-                                r'([A-Z]{2,5})(?:\s+stock|\s+shares)',  # AAPL stock
-                                r'\b([A-Z]{2,5})\b'  # AAPL (qualquer palavra maiúscula)
-                            ]
-                            potential_tickers = []
-                            for pattern in ticker_patterns:
-                                potential_tickers.extend(re.findall(pattern, title))
+                        logger.info(f"[CATALYST] {lang}/{topic}: {total_articles} artigos, analisando...")
 
-                            # Lista expandida de não-tickers (siglas, eventos, mídias, palavras comuns)
-                            non_tickers = {
-                                # Corporate
-                                "CEO", "CFO", "CTO", "COO", "CMO", "CIO", "IPO", "M&A",
-                                # Government/Regulatory
-                                "SEC", "FDA", "FTC", "FCC", "EPA", "IRS", "DOJ", "FBI",
-                                # Financial Terms
-                                "ETF", "ESG", "NYSE", "NASDAQ", "DOW", "S&P", "GDP", "CPI",
-                                # Geography
-                                "USA", "UK", "EU", "US", "UAE", "UAE", "APAC",
-                                # Media/Events
-                                "CES", "NBC", "CBS", "ABC", "CNN", "BBC", "FOX", "HBO", "MTV",
-                                "NFL", "NBA", "MLB", "NHL", "UFC", "FIFA", "NCAA", "PGA", "WWE",
-                                # International Orgs
-                                "NATO", "UN", "WHO", "WTO", "OPEC", "IMF", "ASEAN", "BRICS",
-                                # Tech/Trends
-                                "AI", "ML", "AR", "VR", "IOT", "API", "SDK", "OS", "IT",
-                                # Common Words
-                                "THE", "AND", "FOR", "WITH", "FROM", "TO", "AT", "ON", "IN",
-                                "NEW", "SAYS", "AMID", "AFTER", "BEFORE", "JUST", "LIVE", "NEWS",
-                                "HERE", "WHAT", "WHY", "HOW", "WHEN", "WHERE", "WHO",
-                                # Energy/Commodities (not stocks)
-                                "OIL", "GAS", "GOLD"
-                            }
+                        for article_idx, item in enumerate(articles_to_scan, 1):
+                            title = item.get("title", "")
+                            description = item.get("description", "")
+                            full_text = f"{title} {description}".lower()
 
-                            # Filtrar e validar
-                            tickers = [
-                                t for t in set(potential_tickers)  # Remove duplicados
-                                if t not in non_tickers and 2 <= len(t) <= 5
-                            ]
+                            # Filtrar por keywords nos títulos/descrições
+                            has_catalyst = any(keyword.lower() in full_text for keyword in keywords)
 
-                            if tickers:
-                                logger.info(f"[CATALYST] ✓ Encontrado: {tickers} em '{title[:50]}...'")
-                                catalyst_news.append(NewsArticle(
-                                    title=title,
-                                    url=item.get("url", ""),
-                                    published_date=None,
-                                    source=f"GNews-{topic}",
-                                    summary=description,
-                                    tickers_mentioned=tickers,
-                                    sentiment=None,
-                                    relevance_score=8.0  # Alto score para catalysts
-                                ))
+                            if has_catalyst:
+                                # Extrair tickers do TÍTULO E DESCRIÇÃO (não só título)
+                                text_to_scan = f"{title} {description}"
 
-                    await asyncio.sleep(2)  # Rate limiting entre tópicos
+                                # Padrões para extrair tickers
+                                ticker_patterns = [
+                                    r'\(([A-Z]{2,5})\)',  # (AAPL)
+                                    r'([A-Z]{2,5})(?:\s+stock|\s+shares)',  # AAPL stock
+                                    r'([A-Z]{3,5}[0-9])',  # PETR4, VALE3 (Brasil)
+                                    r'\b([A-Z]{2,5})\b'  # AAPL (qualquer palavra maiúscula)
+                                ]
+                                potential_tickers = []
+                                for pattern in ticker_patterns:
+                                    potential_tickers.extend(re.findall(pattern, text_to_scan))
 
-                except Exception as e:
-                    logger.debug(f"Error fetching topic '{topic}': {e}")
-                    continue
+                                # Lista de não-tickers (siglas comuns)
+                                non_tickers = {
+                                    # Corporate
+                                    "CEO", "CFO", "CTO", "COO", "CMO", "CIO", "IPO",
+                                    # Government/Regulatory
+                                    "SEC", "FDA", "FTC", "FCC", "EPA", "IRS", "DOJ", "FBI",
+                                    "CVM", "BC", "PIB",
+                                    # Financial Terms
+                                    "ETF", "ESG", "NYSE", "NASDAQ", "DOW", "GDP", "CPI",
+                                    # Geography
+                                    "USA", "UK", "EU", "US", "UAE", "APAC", "BR", "EUA",
+                                    # Media
+                                    "CNN", "BBC", "FOX", "HBO", "UOL",
+                                    # Sports
+                                    "NFL", "NBA", "MLB", "NHL", "UFC", "FIFA",
+                                    # International Orgs
+                                    "NATO", "UN", "WHO", "WTO", "OPEC", "IMF",
+                                    # Tech
+                                    "AI", "ML", "AR", "VR", "IOT", "API", "SDK",
+                                    # Common English
+                                    "THE", "AND", "FOR", "WITH", "FROM", "AT", "ON", "IN",
+                                    "NEW", "SAYS", "AMID", "AFTER", "JUST", "NEWS", "CEO",
+                                    "WHY", "HOW", "WHEN", "WHERE", "WHO", "WHAT",
+                                    # Common Portuguese
+                                    "COM", "POR", "PARA", "QUE", "NAO", "MAIS", "COMO",
+                                    "SOBRE", "APOS", "PODE", "DIZ", "VER", "SER", "TEM"
+                                }
 
-            logger.info(f"Catalyst scan: Found {len(catalyst_news)} relevant news")
+                                # Filtrar e validar
+                                tickers = [
+                                    t for t in set(potential_tickers)
+                                    if t not in non_tickers and 2 <= len(t) <= 6
+                                ]
+
+                                if tickers:
+                                    logger.info(f"[CATALYST] {lang} OK: {tickers} em '{title[:50]}...'")
+                                    catalyst_news.append(NewsArticle(
+                                        title=title,
+                                        url=item.get("url", ""),
+                                        published_date=None,
+                                        source=f"GNews-{lang}-{topic}",
+                                        summary=description,
+                                        tickers_mentioned=tickers,
+                                        sentiment=None,
+                                        relevance_score=8.0
+                                    ))
+
+                        await asyncio.sleep(1)  # Rate limiting entre tópicos
+
+                    except Exception as e:
+                        logger.debug(f"Error fetching {lang}/{topic}: {e}")
+                        continue
+
+                await asyncio.sleep(2)  # Rate limiting entre idiomas
+
+            logger.info(f"Catalyst scan: Found {len(catalyst_news)} relevant news (EN + PT-BR)")
 
         except Exception as e:
             logger.error(f"Error in catalyst news scan: {e}")
