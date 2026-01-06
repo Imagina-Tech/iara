@@ -43,7 +43,7 @@ Agora você deve fazer a análise DEFINITIVA.
 Responda APENAS em JSON:
 
 ```json
-{
+{{
   "ticker": "XXXX",
   "decisao": "APROVAR" | "REJEITAR" | "AGUARDAR",
   "nota_final": 0,
@@ -57,7 +57,7 @@ Responda APENAS em JSON:
   "justificativa": "Explicação detalhada",
   "alertas": ["Lista de riscos identificados"],
   "validade_horas": 4
-}
+}}
 ```
 
 ## Regras do Juiz

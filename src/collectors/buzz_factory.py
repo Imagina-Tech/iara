@@ -472,7 +472,7 @@ class BuzzFactory:
                         candidate.tier = "tier2_mid_cap"
 
                 # 2. Verificar liquidez
-                if not await self.market_data.check_liquidity(ticker):
+                if not self.market_data.check_liquidity(ticker):
                     logger.debug(f"{ticker} rejected: low liquidity")
                     continue
 
