@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-01-06T10:50:47.305550",
+  "generated_at": "2026-01-06T11:07:14.572705",
   "test_mode": true,
   "forced_all_sources": true,
   "summary": {
@@ -18,7 +18,7 @@
       "market_cap": 3966242652160,
       "market_cap_billions": 3966.24,
       "reason": "Tier 1 watchlist asset ($3966.2B cap)",
-      "detected_at": "2026-01-06T10:46:18.832250"
+      "detected_at": "2026-01-06T11:03:01.253955"
     },
     {
       "ticker": "MSFT",
@@ -28,7 +28,7 @@
       "market_cap": 3514772750336,
       "market_cap_billions": 3514.77,
       "reason": "Tier 1 watchlist asset ($3514.8B cap)",
-      "detected_at": "2026-01-06T10:46:20.654296"
+      "detected_at": "2026-01-06T11:03:02.757670"
     },
     {
       "ticker": "GOOGL",
@@ -38,7 +38,7 @@
       "market_cap": 3833971081216,
       "market_cap_billions": 3833.97,
       "reason": "Tier 1 watchlist asset ($3834.0B cap)",
-      "detected_at": "2026-01-06T10:46:22.025770"
+      "detected_at": "2026-01-06T11:03:04.051768"
     },
     {
       "ticker": "AMZN",
@@ -48,7 +48,7 @@
       "market_cap": 2491461664768,
       "market_cap_billions": 2491.46,
       "reason": "Tier 1 watchlist asset ($2491.5B cap)",
-      "detected_at": "2026-01-06T10:46:23.423777"
+      "detected_at": "2026-01-06T11:03:05.395492"
     },
     {
       "ticker": "NVDA",
@@ -58,7 +58,7 @@
       "market_cap": 4580157423616,
       "market_cap_billions": 4580.16,
       "reason": "Tier 1 watchlist asset ($4580.2B cap)",
-      "detected_at": "2026-01-06T10:46:24.978562"
+      "detected_at": "2026-01-06T11:03:06.939339"
     },
     {
       "ticker": "TSLA",
@@ -68,7 +68,7 @@
       "market_cap": 1502172807168,
       "market_cap_billions": 1502.17,
       "reason": "Tier 1 watchlist asset ($1502.2B cap)",
-      "detected_at": "2026-01-06T10:46:26.308323"
+      "detected_at": "2026-01-06T11:03:08.342202"
     },
     {
       "ticker": "META",
@@ -78,7 +78,7 @@
       "market_cap": 1660498345984,
       "market_cap_billions": 1660.5,
       "reason": "Tier 1 watchlist asset ($1660.5B cap)",
-      "detected_at": "2026-01-06T10:46:27.652277"
+      "detected_at": "2026-01-06T11:03:09.768414"
     },
     {
       "ticker": "JPM",
@@ -88,7 +88,7 @@
       "market_cap": 918527803392,
       "market_cap_billions": 918.53,
       "reason": "Tier 1 watchlist asset ($918.5B cap)",
-      "detected_at": "2026-01-06T10:46:29.115045"
+      "detected_at": "2026-01-06T11:03:11.340706"
     },
     {
       "ticker": "V",
@@ -98,7 +98,7 @@
       "market_cap": 682797629440,
       "market_cap_billions": 682.8,
       "reason": "Tier 1 watchlist asset ($682.8B cap)",
-      "detected_at": "2026-01-06T10:46:30.416199"
+      "detected_at": "2026-01-06T11:03:12.720510"
     },
     {
       "ticker": "WMT",
@@ -108,7 +108,7 @@
       "market_cap": 898620063744,
       "market_cap_billions": 898.62,
       "reason": "Tier 1 watchlist asset ($898.6B cap)",
-      "detected_at": "2026-01-06T10:46:31.834891"
+      "detected_at": "2026-01-06T11:03:14.198660"
     },
     {
       "ticker": "JNJ",
@@ -118,7 +118,7 @@
       "market_cap": 492243091456,
       "market_cap_billions": 492.24,
       "reason": "Tier 1 watchlist asset ($492.2B cap)",
-      "detected_at": "2026-01-06T10:46:33.340473"
+      "detected_at": "2026-01-06T11:03:15.638128"
     }
   ]
 }

@@ -27,6 +27,7 @@ class StockData:
     avg_volume: int
     market_cap: float
     change_pct: float
+    previous_close: Optional[float] = None
     beta: Optional[float] = None
     sector: Optional[str] = None
     industry: Optional[str] = None
@@ -59,31 +60,46 @@ class MarketDataCollector:
         """
         try:
             stock = yf.Ticker(ticker)
-            info = stock.info
+            info = stock.info if stock.info else {}
             hist = stock.history(period="1d")
 
             if hist.empty:
-                logger.warning(f"Sem dados históricos para {ticker}")
+                logger.debug(f"{ticker}: Sem dados históricos")
                 return None
+
+            # Safely extract price data
+            try:
+                close_price = float(hist["Close"].iloc[-1])
+                open_price = float(hist["Open"].iloc[-1])
+                high_price = float(hist["High"].iloc[-1])
+                low_price = float(hist["Low"].iloc[-1])
+                volume = int(hist["Volume"].iloc[-1])
+            except (KeyError, IndexError, ValueError) as e:
+                logger.debug(f"{ticker}: Erro ao extrair dados OHLCV: {e}")
+                return None
+
+            # Get current price (prefer info, fallback to close)
+            current_price = info.get("currentPrice") or info.get("regularMarketPrice") or close_price
 
             return StockData(
                 ticker=ticker,
-                price=info.get("currentPrice", hist["Close"].iloc[-1]),
-                open=hist["Open"].iloc[-1],
-                high=hist["High"].iloc[-1],
-                low=hist["Low"].iloc[-1],
-                close=hist["Close"].iloc[-1],
-                volume=int(hist["Volume"].iloc[-1]),
-                avg_volume=info.get("averageVolume", 0),
-                market_cap=info.get("marketCap", 0),
-                change_pct=info.get("regularMarketChangePercent", 0),
+                price=current_price,
+                open=open_price,
+                high=high_price,
+                low=low_price,
+                close=close_price,
+                volume=volume,
+                avg_volume=info.get("averageVolume") or info.get("averageVolume10days") or 0,
+                market_cap=info.get("marketCap") or 0,
+                change_pct=info.get("regularMarketChangePercent") or 0,
+                previous_close=info.get("previousClose") or info.get("regularMarketPreviousClose"),
                 beta=info.get("beta"),
                 sector=info.get("sector"),
                 industry=info.get("industry")
             )
 
         except Exception as e:
-            logger.error(f"Erro ao obter dados de {ticker}: {e}")
+            logger.debug(f"{ticker}: {str(e)}")
             return None
 
     def get_ohlcv(self, ticker: str, period: str = "1mo", interval: str = "1d") -> Optional[pd.DataFrame]:

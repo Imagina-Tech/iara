@@ -111,15 +111,19 @@ class BuzzFactory:
 
             # Processar apenas Tier 1 (Blue Chips)
             tier1_tickers = watchlist_data.get("tier1_large_cap", [])
-            logger.info(f"Loading {len(tier1_tickers)} tickers from watchlist")
+            total = len(tier1_tickers)
+            logger.info(f"[WATCHLIST] Processando {total} tickers...")
 
             # Verificar cada ticker
-            for ticker in tier1_tickers:
+            for idx, ticker in enumerate(tier1_tickers, 1):
+                progress = (idx / total) * 100
+                logger.info(f"[WATCHLIST] {idx}/{total} ({progress:.0f}%) - Processando {ticker}...")
+
                 try:
                     data = self.market_data.get_stock_data(ticker)
 
                     if not data:
-                        logger.debug(f"{ticker}: No market data available")
+                        logger.info(f"[WATCHLIST] {ticker}: Sem dados")
                         continue
 
                     # Verificar market cap mínimo ($4B para Tier 1)
@@ -128,7 +132,7 @@ class BuzzFactory:
 
                     if hasattr(data, 'market_cap') and data.market_cap:
                         if data.market_cap < min_market_cap:
-                            logger.debug(f"{ticker}: Market cap ${data.market_cap/1e9:.2f}B below Tier 1 threshold")
+                            logger.info(f"[WATCHLIST] {ticker}: Market cap ${data.market_cap/1e9:.2f}B < ${min_market_cap/1e9:.0f}B")
                             continue
 
                     # Criar candidato
@@ -143,13 +147,13 @@ class BuzzFactory:
                         market_cap=market_cap_value
                     ))
 
-                    logger.debug(f"{ticker}: Added to candidates from watchlist")
+                    logger.info(f"[WATCHLIST] {ticker}: OK - ${market_cap_value/1e9:.2f}B cap")
 
                 except Exception as e:
-                    logger.error(f"Error processing {ticker} from watchlist: {e}")
+                    logger.warning(f"[WATCHLIST] {ticker}: Erro - {str(e)}")
                     continue
 
-            logger.info(f"Watchlist scan complete: {len(candidates)} candidates")
+            logger.info(f"[WATCHLIST] Completo: {len(candidates)}/{total} candidatos aprovados")
 
         except Exception as e:
             logger.error(f"Error scanning watchlist: {e}")
@@ -169,18 +173,17 @@ class BuzzFactory:
             volume_multiplier = phase0_config.get("volume_spike_multiplier", 2.0)
             min_dollar_volume = self.config.get("liquidity", {}).get("min_dollar_volume", 15_000_000)
 
-            logger.info(f"Scanning volume spikes (>{volume_multiplier}x average)...")
-
             # Universo de tickers para escanear
-            # Opção 1: S&P 500 (simplified - top 100 por volume)
-            # Opção 2: Lista fixa de tickers populares
-            # Opção 3: Download dinâmico (mais complexo)
-
-            # Por enquanto, usar lista fixa de tickers populares
             universe = self._get_scan_universe()
+            total = len(universe)
+            logger.info(f"[VOLUME SPIKES] Processando {total} tickers (>{volume_multiplier}x media)...")
 
             scanned = 0
-            for ticker in universe:
+            for idx, ticker in enumerate(universe, 1):
+                progress = (idx / total) * 100
+                if idx % 10 == 0 or idx == 1:  # Log a cada 10 tickers
+                    logger.info(f"[VOLUME SPIKES] {idx}/{total} ({progress:.0f}%) - Escaneados: {scanned}, Spikes: {len(candidates)}")
+
                 try:
                     data = self.market_data.get_stock_data(ticker)
 
@@ -190,8 +193,8 @@ class BuzzFactory:
                     scanned += 1
 
                     # Calcular volume ratio
-                    if hasattr(data, 'volume') and hasattr(data, 'avg_volume_20d'):
-                        volume_ratio = data.volume / data.avg_volume_20d if data.avg_volume_20d > 0 else 0
+                    if hasattr(data, 'volume') and hasattr(data, 'avg_volume'):
+                        volume_ratio = data.volume / data.avg_volume if data.avg_volume > 0 else 0
 
                         # Verificar critérios
                         if volume_ratio >= volume_multiplier:
@@ -222,10 +225,10 @@ class BuzzFactory:
                                 logger.debug(f"{ticker}: Volume spike {volume_ratio:.1f}x detected")
 
                 except Exception as e:
-                    logger.debug(f"Error scanning {ticker}: {e}")
+                    logger.debug(f"{ticker}: {str(e)}")
                     continue
 
-            logger.info(f"Volume scan complete: {scanned} scanned, {len(candidates)} spikes found")
+            logger.info(f"[VOLUME SPIKES] Completo: {len(candidates)} spikes de {scanned} tickers escaneados")
 
         except Exception as e:
             logger.error(f"Error in volume spike scan: {e}")
@@ -303,13 +306,17 @@ class BuzzFactory:
                     logger.debug("Gap scan skipped: not in premarket/early market hours")
                     return candidates
 
-            logger.info(f"Scanning gaps (>{gap_threshold*100:.1f}%)...")
-
             # Escanear universo de tickers
             universe = self._get_scan_universe()
+            total = len(universe)
+            logger.info(f"[GAP SCANNER] Processando {total} tickers (>{gap_threshold*100:.0f}% gap)...")
 
             scanned = 0
-            for ticker in universe:
+            for idx, ticker in enumerate(universe, 1):
+                progress = (idx / total) * 100
+                if idx % 10 == 0 or idx == 1:  # Log a cada 10 tickers
+                    logger.info(f"[GAP SCANNER] {idx}/{total} ({progress:.0f}%) - Escaneados: {scanned}, Gaps: {len(candidates)}")
+
                 try:
                     data = self.market_data.get_stock_data(ticker)
 
@@ -350,10 +357,10 @@ class BuzzFactory:
                                 logger.debug(f"{ticker}: Gap {gap_direction} {gap_pct*100:.1f}% detected")
 
                 except Exception as e:
-                    logger.debug(f"Error scanning {ticker} for gaps: {e}")
+                    logger.debug(f"{ticker}: {str(e)}")
                     continue
 
-            logger.info(f"Gap scan complete: {scanned} scanned, {len(candidates)} gaps found")
+            logger.info(f"[GAP SCANNER] Completo: {len(candidates)} gaps de {scanned} tickers escaneados")
 
         except Exception as e:
             logger.error(f"Error in gap scan: {e}")

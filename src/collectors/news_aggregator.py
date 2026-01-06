@@ -183,16 +183,27 @@ Responda APENAS em JSON formato:
             # TÓPICOS VÁLIDOS do GNews (não keywords!)
             # Usar apenas tópicos financeiros/business relevantes
             topics = ["BUSINESS", "FINANCE", "TECHNOLOGY"]
+            total_topics = len(topics)
 
-            for topic in topics:
+            for topic_idx, topic in enumerate(topics, 1):
                 try:
+                    logger.info(f"[CATALYST] {topic_idx}/{total_topics} - Buscando em {topic}...")
+
                     # Buscar notícias por TÓPICO válido
                     news = google_news.get_news_by_topic(topic)
+                    articles_to_scan = news[:10]  # Top 10 de cada tópico
+                    total_articles = len(articles_to_scan)
 
-                    for item in news[:10]:  # Top 10 de cada tópico
+                    logger.info(f"[CATALYST] {topic}: {total_articles} artigos encontrados, analisando...")
+
+                    for article_idx, item in enumerate(articles_to_scan, 1):
                         title = item.get("title", "")
                         description = item.get("description", "")
                         full_text = f"{title} {description}".lower()
+
+                        # Log progress every article
+                        article_progress = (article_idx / total_articles) * 100
+                        logger.debug(f"[CATALYST] {topic} - Artigo {article_idx}/{total_articles} ({article_progress:.0f}%): {title[:60]}...")
 
                         # Filtrar por keywords nos títulos/descrições
                         has_catalyst = any(keyword.lower() in full_text for keyword in keywords)
@@ -241,6 +252,7 @@ Responda APENAS em JSON formato:
                             ]
 
                             if tickers:
+                                logger.info(f"[CATALYST] ✓ Encontrado: {tickers} em '{title[:50]}...'")
                                 catalyst_news.append(NewsArticle(
                                     title=title,
                                     url=item.get("url", ""),
