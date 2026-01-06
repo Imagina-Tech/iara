@@ -48,15 +48,16 @@ class BuzzFactory:
         self.market_data = market_data
         self.news_scraper = news_scraper
 
-    async def generate_daily_buzz(self, force_all: bool = False) -> List[BuzzCandidate]:
+    async def generate_daily_buzz(self, force_all: bool = False, max_candidates: int = 25) -> List[BuzzCandidate]:
         """
         Gera a lista de oportunidades do dia.
 
         Args:
             force_all: Se True, força execução de TODAS as fontes independente do horário (para testes)
+            max_candidates: Número máximo de candidatos a retornar (default: 25)
 
         Returns:
-            Lista de candidatos ordenados por buzz_score
+            Lista de candidatos ordenados por buzz_score (limitada a max_candidates)
         """
         candidates: List[BuzzCandidate] = []
         seen_tickers: Set[str] = set()
@@ -92,7 +93,11 @@ class BuzzFactory:
         # Ordena por buzz_score decrescente
         candidates.sort(key=lambda x: x.buzz_score, reverse=True)
 
-        logger.info(f"Buzz Factory gerou {len(candidates)} candidatos")
+        # Limita ao máximo de candidatos
+        total_found = len(candidates)
+        candidates = candidates[:max_candidates]
+
+        logger.info(f"Buzz Factory: {total_found} encontrados, top {len(candidates)} selecionados")
         return candidates
 
     async def _scan_watchlist(self) -> List[BuzzCandidate]:
@@ -118,13 +123,13 @@ class BuzzFactory:
             # Verificar cada ticker
             for idx, ticker in enumerate(tier1_tickers, 1):
                 progress = (idx / total) * 100
-                logger.info(f"[WATCHLIST] {idx}/{total} ({progress:.0f}%) - Processando {ticker}...")
+                # Progress bar que sobrescreve a linha anterior
+                print(f"\r[WATCHLIST] {idx}/{total} ({progress:.0f}%) - {ticker}: processando...    ", end="", flush=True)
 
                 try:
                     data = self.market_data.get_stock_data(ticker)
 
                     if not data:
-                        logger.info(f"[WATCHLIST] {ticker}: Sem dados")
                         continue
 
                     # Verificar market cap mínimo ($4B para Tier 1)
@@ -133,7 +138,6 @@ class BuzzFactory:
 
                     if hasattr(data, 'market_cap') and data.market_cap:
                         if data.market_cap < min_market_cap:
-                            logger.info(f"[WATCHLIST] {ticker}: Market cap ${data.market_cap/1e9:.2f}B < ${min_market_cap/1e9:.0f}B")
                             continue
 
                     # Criar candidato
@@ -148,12 +152,11 @@ class BuzzFactory:
                         market_cap=market_cap_value
                     ))
 
-                    logger.info(f"[WATCHLIST] {ticker}: OK - ${market_cap_value/1e9:.2f}B cap")
-
                 except Exception as e:
-                    logger.warning(f"[WATCHLIST] {ticker}: Erro - {str(e)}")
+                    logger.debug(f"[WATCHLIST] {ticker}: Erro - {str(e)}")
                     continue
 
+            print()  # Nova linha após progress bar
             logger.info(f"[WATCHLIST] Completo: {len(candidates)}/{total} candidatos aprovados")
 
         except Exception as e:
@@ -182,8 +185,8 @@ class BuzzFactory:
             scanned = 0
             for idx, ticker in enumerate(universe, 1):
                 progress = (idx / total) * 100
-                if idx % 10 == 0 or idx == 1:  # Log a cada 10 tickers
-                    logger.info(f"[VOLUME SPIKES] {idx}/{total} ({progress:.0f}%) - Escaneados: {scanned}, Spikes: {len(candidates)}")
+                # Progress bar que sobrescreve a linha anterior
+                print(f"\r[VOLUME SPIKES] {idx}/{total} ({progress:.0f}%) - Escaneados: {scanned}, Spikes: {len(candidates)}    ", end="", flush=True)
 
                 try:
                     data = self.market_data.get_stock_data(ticker)
@@ -229,6 +232,7 @@ class BuzzFactory:
                     logger.debug(f"{ticker}: {str(e)}")
                     continue
 
+            print()  # Nova linha após progress bar
             logger.info(f"[VOLUME SPIKES] Completo: {len(candidates)} spikes de {scanned} tickers escaneados")
 
         except Exception as e:
@@ -240,82 +244,46 @@ class BuzzFactory:
         """
         Retorna universo de tickers para escanear.
 
-        Inclui ações americanas (NYSE/NASDAQ) e brasileiras (B3 via ADR ou .SA).
+        Universo amplo para descobrir oportunidades. O limite de candidatos
+        que passam para a próxima fase é controlado em generate_daily_buzz().
         """
         return [
-            # === USA - Tech Giants ===
+            # === USA - Big Tech ===
             "AAPL", "MSFT", "GOOGL", "GOOG", "AMZN", "META", "NVDA", "TSLA",
             # === USA - Finance ===
-            "JPM", "BAC", "WFC", "C", "GS", "MS",
+            "JPM", "BAC", "GS",
             # === USA - Healthcare ===
-            "JNJ", "UNH", "PFE", "ABBV", "MRK", "TMO",
+            "JNJ", "UNH", "PFE", "LLY",
             # === USA - Consumer ===
             "WMT", "HD", "DIS", "NKE", "SBUX", "MCD",
             # === USA - Energy ===
-            "XOM", "CVX", "COP", "SLB",
+            "XOM", "CVX", "COP",
             # === USA - Industrial ===
-            "BA", "CAT", "GE", "HON", "UPS",
-            # === USA - Popular ETFs ===
-            "SPY", "QQQ", "DIA", "IWM",
-            # === USA - Meme/Popular ===
-            "GME", "AMC", "PLTR", "RIVN", "LCID",
-            # === USA - Crypto-related ===
+            "BA", "CAT", "GE",
+            # === USA - Tech/Semiconductors ===
+            "AMD", "INTC", "QCOM", "AVGO", "MU", "TSM",
+            # === USA - Software ===
+            "CRM", "ADBE", "ORCL",
+            # === USA - Crypto/Volatil ===
             "COIN", "MSTR",
-            # === USA - Additional Tech ===
-            "AMD", "INTC", "CSCO", "ORCL", "CRM", "ADBE",
-            # === USA - Semiconductors ===
-            "TSM", "ASML", "QCOM", "AVGO", "MU",
-            # === USA - EVs ===
-            "F", "GM", "NIO", "XPEV",
-            # === USA - Pharma ===
-            "LLY", "BMY", "GILD", "REGN",
-            # === USA - Retail ===
-            "TGT", "COST", "LULU",
-            # === USA - Telecom ===
-            "T", "VZ", "TMUS",
-            # === BRASIL - ADRs (negociados nos EUA) ===
+            # === USA - Popular ===
+            "PLTR", "GME",
+            # === BRASIL - ADRs (liquidez em USD) ===
             "PBR",   # Petrobras
             "VALE",  # Vale
-            "ITUB",  # Itau Unibanco
-            "BBD",   # Bradesco
-            "ABEV",  # Ambev
-            "SBS",   # Sabesp
-            "ERJ",   # Embraer
-            "GGB",   # Gerdau
-            "SID",   # CSN
-            "BSBR",  # Banco Santander Brasil
-            "CIG",   # CEMIG
-            "ELP",   # Eletrobras (Eletropaulo)
-            "UGP",   # Ultrapar
-            "CBD",   # Pao de Acucar (GPA)
-            "BRFS",  # BRF (Brasil Foods)
-            "AZUL",  # Azul Airlines
-            "GOL",   # Gol Airlines
+            "ITUB",  # Itau
             "NU",    # Nubank
             "XP",    # XP Inc
-            "STNE",  # StoneCo
-            "PAGS",  # PagSeguro
-            # === BRASIL - B3 (yfinance suporta .SA) ===
+            # === BRASIL - B3 (tickers validados) ===
             "PETR4.SA",  # Petrobras PN
             "VALE3.SA",  # Vale ON
             "ITUB4.SA",  # Itau PN
             "BBDC4.SA",  # Bradesco PN
-            "ABEV3.SA",  # Ambev ON
             "WEGE3.SA",  # WEG ON
-            "RENT3.SA",  # Localiza ON
-            "EQTL3.SA",  # Equatorial ON
             "B3SA3.SA",  # B3 ON
-            "SUZB3.SA",  # Suzano ON
-            "RADL3.SA",  # Raia Drogasil ON
-            "RAIL3.SA",  # Rumo ON
-            "JBSS3.SA",  # JBS ON
-            "BBAS3.SA",  # Banco do Brasil ON
+            "RENT3.SA",  # Localiza ON
             "MGLU3.SA",  # Magazine Luiza ON
-            "VBBR3.SA",  # Vibra Energia ON
             "PRIO3.SA",  # PetroRio ON
-            "CSAN3.SA",  # Cosan ON
-            "TOTS3.SA",  # Totvs ON
-            "HAPV3.SA",  # Hapvida ON
         ]
 
     async def _scan_gaps(self, force: bool = False) -> List[BuzzCandidate]:
@@ -356,8 +324,8 @@ class BuzzFactory:
             scanned = 0
             for idx, ticker in enumerate(universe, 1):
                 progress = (idx / total) * 100
-                if idx % 10 == 0 or idx == 1:  # Log a cada 10 tickers
-                    logger.info(f"[GAP SCANNER] {idx}/{total} ({progress:.0f}%) - Escaneados: {scanned}, Gaps: {len(candidates)}")
+                # Progress bar que sobrescreve a linha anterior
+                print(f"\r[GAP SCANNER] {idx}/{total} ({progress:.0f}%) - Escaneados: {scanned}, Gaps: {len(candidates)}    ", end="", flush=True)
 
                 try:
                     data = self.market_data.get_stock_data(ticker)
@@ -402,6 +370,7 @@ class BuzzFactory:
                     logger.debug(f"{ticker}: {str(e)}")
                     continue
 
+            print()  # Nova linha após progress bar
             logger.info(f"[GAP SCANNER] Completo: {len(candidates)} gaps de {scanned} tickers escaneados")
 
         except Exception as e:

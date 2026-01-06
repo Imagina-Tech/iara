@@ -2,19 +2,9 @@
   "tier1_large_cap": [
     "AAPL",
     "MSFT",
-    "GOOGL",
-    "AMZN",
     "NVDA",
-    "TSLA",
-    "META",
-    "JPM",
-    "V",
-    "WMT",
-    "JNJ"
+    "GOOGL",
+    "AMZN"
   ],
-  "tier2_mid_cap": [
-    "ROKU",
-    "SNAP",
-    "PINS"
-  ]
+  "tier2_mid_cap": []
 }

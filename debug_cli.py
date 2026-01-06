@@ -107,36 +107,45 @@ async def cmd_buzz():
     print("=" * 80)
 
     news_for_candidates = {}
-    top_candidates = filtered[:5]
+    top_candidates = filtered[:3]  # Reduzido para 3 (scraping é lento)
 
     for c in top_candidates:
         ticker = c.ticker
         print(f"\n--- Buscando noticias para {ticker} ---")
 
-        # Buscar via GNews (como faz o orchestrator)
-        gnews_articles = await news_aggregator.get_gnews(ticker, max_results=5)
+        # SCREENER (Phase 1) - apenas títulos, rápido
+        gnews_simple = await news_aggregator.get_gnews(ticker, max_results=3, fetch_full_content=False)
 
-        if gnews_articles:
+        # JUDGE (Phase 3) - conteúdo completo, mais lento
+        print(f"    Fazendo scrape do conteudo completo (para o Judge)...")
+        gnews_full = await news_aggregator.get_gnews(ticker, max_results=2, fetch_full_content=True)
+
+        if gnews_simple:
             # Formato para SCREENER (Phase 1) - resumido
             news_summary_parts = [f"Recent news for {ticker}:"]
-            for art in gnews_articles[:3]:
+            for art in gnews_simple[:3]:
                 news_summary_parts.append(f"- {art.get('title', 'No title')}")
             news_summary = "\n".join(news_summary_parts)
 
-            # Formato para JUDGE (Phase 3) - detalhado
-            news_details_parts = [f"=== NEWS FOR {ticker} ==="]
-            for i, art in enumerate(gnews_articles[:5], 1):
-                news_details_parts.append(f"\n[{i}] {art.get('title', 'No title')}")
-                if art.get('description'):
-                    news_details_parts.append(f"    {art['description'][:200]}")
-                if art.get('source'):
-                    news_details_parts.append(f"    Source: {art['source']}")
+            # Formato para JUDGE (Phase 3) - conteúdo completo
+            news_details_parts = [f"=== DETAILED NEWS FOR {ticker} ==="]
+            for i, art in enumerate(gnews_full[:2], 1):
+                news_details_parts.append(f"\n{'='*60}")
+                news_details_parts.append(f"[ARTICLE {i}] {art.get('title', 'No title')}")
+                news_details_parts.append(f"Source: {art.get('source', 'Unknown')}")
+                news_details_parts.append(f"Published: {art.get('published', 'Unknown')}")
+                news_details_parts.append(f"\nCONTENT:")
+                if art.get('full_content'):
+                    news_details_parts.append(art['full_content'])
+                else:
+                    news_details_parts.append(f"[Scrape failed - using description]")
+                    news_details_parts.append(art.get('description', 'No description'))
             news_details = "\n".join(news_details_parts)
 
             news_for_candidates[ticker] = {
                 "screener_format": news_summary,
                 "judge_format": news_details,
-                "raw_articles": gnews_articles
+                "raw_articles": gnews_simple
             }
 
             print(f"\n[SCREENER INPUT] O que Phase 1 recebe:")
@@ -145,7 +154,7 @@ async def cmd_buzz():
 
             print(f"\n[JUDGE INPUT] O que Phase 3 recebe:")
             print("-" * 40)
-            print(news_details)
+            print(news_details[:1500] + "..." if len(news_details) > 1500 else news_details)
         else:
             print(f"  Nenhuma noticia encontrada para {ticker}")
             news_for_candidates[ticker] = None
@@ -171,8 +180,8 @@ async def cmd_buzz():
                 "reason": c.reason,
                 "detected_at": c.detected_at.isoformat(),
                 "news_content": c.news_content if hasattr(c, 'news_content') else "",
-                "news_for_screener": news_for_candidates.get(c.ticker, {}).get("screener_format", "") if c.ticker in [x.ticker for x in top_candidates] else "",
-                "news_for_judge": news_for_candidates.get(c.ticker, {}).get("judge_format", "") if c.ticker in [x.ticker for x in top_candidates] else ""
+                "news_for_screener": (news_for_candidates.get(c.ticker) or {}).get("screener_format", "") if c.ticker in [x.ticker for x in top_candidates] else "",
+                "news_for_judge": (news_for_candidates.get(c.ticker) or {}).get("judge_format", "") if c.ticker in [x.ticker for x in top_candidates] else ""
             }
             for c in filtered
         ]

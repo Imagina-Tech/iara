@@ -41,13 +41,14 @@ class NewsAggregator:
         self.config = config
         self.ai_gateway = ai_gateway
 
-    async def get_gnews(self, ticker: str, max_results: int = 5) -> List[Dict[str, Any]]:
+    async def get_gnews(self, ticker: str, max_results: int = 5, fetch_full_content: bool = False) -> List[Dict[str, Any]]:
         """
         Busca notícias do GNews API.
 
         Args:
             ticker: Ticker do ativo
             max_results: Número máximo de resultados
+            fetch_full_content: Se True, faz scrape completo do artigo (mais lento)
 
         Returns:
             Lista de artigos (dicts)
@@ -60,13 +61,22 @@ class NewsAggregator:
 
             articles = []
             for item in news:
-                articles.append({
+                article_data = {
                     "title": item.get("title", ""),
                     "url": item.get("url", ""),
                     "published": item.get("published date", ""),
                     "description": item.get("description", ""),
-                    "source": "GNews"
-                })
+                    "source": "GNews",
+                    "full_content": ""
+                }
+
+                # Scrape conteúdo completo se solicitado (para o Judge)
+                if fetch_full_content and article_data["url"]:
+                    full_content = await self._scrape_article_content(article_data["url"])
+                    if full_content:
+                        article_data["full_content"] = full_content
+
+                articles.append(article_data)
 
             logger.info(f"GNews: Found {len(articles)} articles for {ticker}")
             return articles
@@ -74,6 +84,37 @@ class NewsAggregator:
         except Exception as e:
             logger.error(f"Error fetching GNews for {ticker}: {e}")
             return []
+
+    async def _scrape_article_content(self, url: str, max_chars: int = 2000) -> str:
+        """
+        Faz scrape do conteúdo completo de um artigo usando newspaper3k.
+
+        Args:
+            url: URL do artigo
+            max_chars: Máximo de caracteres a retornar
+
+        Returns:
+            Texto do artigo (truncado se necessário)
+        """
+        try:
+            from newspaper import Article
+
+            article = Article(url)
+            article.download()
+            article.parse()
+
+            # Combinar título + texto
+            content = article.text or ""
+
+            # Truncar se muito longo
+            if len(content) > max_chars:
+                content = content[:max_chars] + "..."
+
+            return content
+
+        except Exception as e:
+            logger.debug(f"Failed to scrape {url}: {e}")
+            return ""
 
     async def extract_tickers_and_sentiment(
         self,
@@ -222,25 +263,28 @@ Responda APENAS em JSON formato:
 
             total_configs = len(search_configs)
 
+            total_scanned = 0
+            total_found = 0
+
             for config_idx, config in enumerate(search_configs, 1):
                 gnews = config["gnews"]
                 topics = config["topics"]
                 lang = config["lang"]
 
-                logger.info(f"[CATALYST] === Buscando em {lang} ({config_idx}/{total_configs}) ===")
-
                 for topic in topics:
                     try:
-                        logger.info(f"[CATALYST] {lang}/{topic} - Buscando...")
+                        # Progress bar que sobrescreve a linha
+                        print(f"\r[CATALYST] {lang}/{topic} - Buscando artigos...    ", end="", flush=True)
 
                         # Buscar notícias por TÓPICO válido
                         news = gnews.get_news_by_topic(topic)
                         articles_to_scan = news[:15]  # Top 15 de cada tópico
                         total_articles = len(articles_to_scan)
 
-                        logger.info(f"[CATALYST] {lang}/{topic}: {total_articles} artigos, analisando...")
-
                         for article_idx, item in enumerate(articles_to_scan, 1):
+                            total_scanned += 1
+                            print(f"\r[CATALYST] {lang}/{topic} - {article_idx}/{total_articles} artigos | Total: {total_scanned} scanned, {total_found} found    ", end="", flush=True)
+
                             title = item.get("title", "")
                             description = item.get("description", "")
                             full_text = f"{title} {description}".lower()
@@ -298,7 +342,7 @@ Responda APENAS em JSON formato:
                                 ]
 
                                 if tickers:
-                                    logger.info(f"[CATALYST] {lang} OK: {tickers} em '{title[:50]}...'")
+                                    total_found += 1
                                     catalyst_news.append(NewsArticle(
                                         title=title,
                                         url=item.get("url", ""),
@@ -318,7 +362,8 @@ Responda APENAS em JSON formato:
 
                 await asyncio.sleep(2)  # Rate limiting entre idiomas
 
-            logger.info(f"Catalyst scan: Found {len(catalyst_news)} relevant news (EN + PT-BR)")
+            print()  # Nova linha após progress bar
+            logger.info(f"[CATALYST] Completo: {total_found} noticias de {total_scanned} artigos (EN + PT-BR)")
 
         except Exception as e:
             logger.error(f"Error in catalyst news scan: {e}")
