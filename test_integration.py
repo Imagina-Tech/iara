@@ -118,7 +118,7 @@ async def test_integration():
                 print(f"  [SKIP] No market data for {ticker}")
                 continue
 
-            beta = data.beta if hasattr(data, 'beta') else 1.0
+            beta: float = data.beta if hasattr(data, 'beta') and data.beta is not None else 1.0
             volume_ratio = 1.5  # Mock
 
             # Beta adjustment

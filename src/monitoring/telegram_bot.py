@@ -86,7 +86,8 @@ class TelegramBot:
             self._bot = Bot(token=self.token)
 
             # Configura application
-            app = Application.builder().token(self.token).build()
+            # Type hint explícito para melhor inferência do Pylance
+            app: Application = Application.builder().token(self.token).build()
 
             # Adiciona handlers
             app.add_handler(CommandHandler("status", self._on_status))
@@ -97,7 +98,7 @@ class TelegramBot:
             app.add_handler(CommandHandler("help", self._on_help))
 
             # Inicia polling
-            await app.run_polling()
+            await app.run_polling()  # type: ignore
 
         except ImportError:
             logger.error("python-telegram-bot não instalado")
@@ -262,7 +263,7 @@ class TelegramBot:
         self.state_manager.deactivate_kill_switch()
         return "🟢 *Sistema Resumido*\n\nOperações normais restauradas."
 
-    async def _handle_close(self, ticker: str = None) -> str:
+    async def _handle_close(self, ticker: Optional[str] = None) -> str:
         """Fecha posição específica."""
         if not ticker:
             return "❌ Ticker não especificado"

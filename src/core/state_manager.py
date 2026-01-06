@@ -207,6 +207,11 @@ class StateManager:
         """Retorna o estado do Kill Switch."""
         return self._kill_switch_active
 
+    @property
+    def kill_switch_active(self) -> bool:
+        """Propriedade para acesso direto ao estado do Kill Switch."""
+        return self._kill_switch_active
+
     def add_position(self, position: Position) -> bool:
         """Adiciona uma nova posição."""
         max_positions = self.config.get("risk", {}).get("max_positions", 5)

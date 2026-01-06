@@ -261,6 +261,7 @@ class Orchestrator:
                     # 2. BETA CHECK
                     spy_hist = yf.Ticker("SPY").history(period="60d")
                     risk_metrics = self.risk_calculator.calculate_risk_metrics(hist, spy_hist, ticker)
+                    beta_multiplier = 1.0  # Default value
 
                     if risk_metrics:
                         beta = risk_metrics.beta

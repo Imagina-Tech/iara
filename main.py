@@ -184,7 +184,7 @@ async def main():
         await watchdog.stop()
         await sentinel.stop()
         await telegram.stop()
-        await broker.disconnect() if hasattr(broker, 'disconnect') else None
+        await broker.disconnect()
 
         logger.info("IARA TRADER encerrado.")
 

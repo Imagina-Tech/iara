@@ -7,6 +7,7 @@ import logging
 from datetime import datetime, timedelta
 from typing import Dict, Any, Optional
 import yfinance as yf
+import pandas as pd
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +26,7 @@ class EarningsChecker:
         """
         self.config = config
         self.phase0_config = config.get("phase0", {})
-        self.proximity_days = self.phase0_config.get("earnings_proximity_days", 5)
+        self.proximity_days: int = self.phase0_config.get("earnings_proximity_days", 5)
 
         # Cache de earnings (evitar múltiplas consultas)
         self._cache: Dict[str, Dict[str, Any]] = {}
@@ -124,7 +125,7 @@ class EarningsChecker:
             # Tentar obter calendar
             calendar = stock.calendar
 
-            if calendar is None or (hasattr(calendar, 'empty') and calendar.empty):
+            if calendar is None or (isinstance(calendar, pd.DataFrame) and calendar.empty):
                 logger.debug(f"{ticker}: No calendar data available")
                 return None
 
@@ -153,9 +154,11 @@ class EarningsChecker:
                             return parser.parse(next_date)
                     elif isinstance(next_date, datetime):
                         return next_date
-                    else:
+                    elif hasattr(next_date, 'to_pydatetime'):
                         # pandas Timestamp
-                        return next_date.to_pydatetime() if hasattr(next_date, 'to_pydatetime') else None
+                        return next_date.to_pydatetime()
+                    else:
+                        return None
 
             # Tentar info alternativo
             info = stock.info

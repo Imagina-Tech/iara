@@ -5,9 +5,9 @@
       "Bash(dir /s /b \"C:\\\\Users\\\\Trindade\\\\Desktop\\\\iara\\\\IARA_TRADER\")",
       "Bash(dir /s /b)",
       "Bash(tree:*)",
-      "Bash(dir \"config\\\\prompts\"\" 2>&1 || echo \"Directory not found \")",
-      "Bash(dir \"data\"\" 2>&1 || echo \"Data directory status \")",
-      "Bash(dir \"data\\\\rag_manuals\"\" 2>&1 || echo \"RAG manuals directory status \")",
+      "Bash(dir \"config\\\\prompts\" 2>&1 || echo \"Directory not found\")",
+      "Bash(dir \"data\" 2>&1 || echo \"Data directory status\")",
+      "Bash(dir \"data\\\\rag_manuals\" 2>&1 || echo \"RAG manuals directory status\")",
       "Bash(python:*)",
       "Bash(pip install:*)",
       "Bash(dir:*)",
@@ -19,7 +19,8 @@
       "Bash(timeout 10 python:*)",
       "Bash(timeout 15 python:*)",
       "Bash(cmd /c \"python debug_cli.py /buzz\")",
-      "Bash(./run_buzz_test.bat)"
+      "Bash(./run_buzz_test.bat)",
+      "Bash(del pylint_output.txt)"
     ]
   }
 }

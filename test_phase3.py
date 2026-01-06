@@ -28,7 +28,7 @@ with open(config_path, "r", encoding="utf-8") as f:
 
 print("\n[1] Testing Database Cache System...")
 db_path = Path(__file__).parent / "data" / "iara.db"
-db = Database(db_path)
+db = Database(str(db_path))
 
 # Create a mock decision
 test_decision = {

@@ -308,12 +308,21 @@ class NewsScraper:
             article.parse()
             article.nlp()
 
+            # Converte publish_date para datetime se for string
+            publish_date = article.publish_date
+            if isinstance(publish_date, str):
+                try:
+                    from dateutil import parser
+                    publish_date = parser.parse(publish_date)
+                except Exception:
+                    publish_date = None
+
             return NewsArticle(
                 title=article.title,
                 summary=article.summary,
                 url=url,
                 source=article.source_url,
-                published_at=article.publish_date
+                published_at=publish_date if isinstance(publish_date, datetime) else None
             )
 
         except Exception as e:

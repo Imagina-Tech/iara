@@ -96,17 +96,28 @@ async def test_phase1():
     # Test get_passed_candidates
     print("\n[5] Testing result filtering...")
 
-    # Create mock ScreenerResult objects
-    class MockResult:
-        def __init__(self, ticker, nota_final, decisao, passou):
-            self.ticker = ticker
-            self.nota_final = nota_final
-            self.decisao = decisao
-            self.passou = passou
+    # Create real ScreenerResult objects (not mocks)
+    from src.decision.screener import ScreenerResult
 
     mock_results = [
-        MockResult('TSLA', 8.5, 'APROVAR', True),
-        MockResult('AMD', 6.0, 'REJEITAR', False)
+        ScreenerResult(
+            ticker='TSLA',
+            nota=8.5,
+            resumo='Strong momentum',
+            vies='LONG',
+            confianca=0.85,
+            passed=True,
+            timestamp=datetime.now()
+        ),
+        ScreenerResult(
+            ticker='AMD',
+            nota=6.0,
+            resumo='Weak signal',
+            vies='NEUTRO',
+            confianca=0.60,
+            passed=False,
+            timestamp=datetime.now()
+        )
     ]
 
     passed = screener.get_passed_candidates(mock_results)

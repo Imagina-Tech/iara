@@ -211,11 +211,11 @@ class CorrelationAnalyzer:
             return 1.0
 
         # Soma das correlações fora da diagonal
-        total_corr = 0
+        total_corr: float = 0.0
         count = 0
         for i in range(n):
             for j in range(i + 1, n):
-                total_corr += abs(correlation_matrix.iloc[i, j])
+                total_corr += float(abs(correlation_matrix.iloc[i, j]))
                 count += 1
 
         avg_corr = total_corr / count if count > 0 else 0

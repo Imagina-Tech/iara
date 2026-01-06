@@ -7,7 +7,7 @@ import sqlite3
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any, List, Union
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +22,7 @@ class Database:
     - trade_history: Histórico de trades executados
     """
 
-    def __init__(self, db_path: str = "data/iara.db"):
+    def __init__(self, db_path: Union[str, Path] = "data/iara.db"):
         """
         Inicializa o banco de dados.
 
@@ -301,7 +301,7 @@ class Database:
             conn.commit()
             decision_id = cursor.lastrowid
             logger.info(f"Decision logged for {ticker} (ID: {decision_id})")
-            return decision_id
+            return decision_id if decision_id is not None else 0
 
         except Exception as e:
             logger.error(f"Error logging decision for {ticker}: {e}")
@@ -400,7 +400,7 @@ class Database:
             conn.commit()
             trade_id = cursor.lastrowid
             logger.info(f"Trade entry logged for {ticker} (ID: {trade_id})")
-            return trade_id
+            return trade_id if trade_id is not None else 0
 
         except Exception as e:
             logger.error(f"Error logging trade entry for {ticker}: {e}")

@@ -66,6 +66,11 @@ class BaseBrokerAPI(ABC):
         """Obtém status de ordem."""
         pass
 
+    @abstractmethod
+    async def disconnect(self) -> None:
+        """Desconecta da corretora."""
+        pass
+
 
 class CCXTBroker(BaseBrokerAPI):
     """
@@ -120,7 +125,7 @@ class CCXTBroker(BaseBrokerAPI):
 
     async def get_balance(self) -> BrokerBalance:
         """Obtém saldo."""
-        if not self._connected:
+        if not self._connected or self.exchange is None:
             raise RuntimeError("Não conectado")
 
         balance = await self.exchange.fetch_balance()
@@ -137,7 +142,7 @@ class CCXTBroker(BaseBrokerAPI):
 
     async def get_positions(self) -> List[BrokerPosition]:
         """Obtém posições abertas."""
-        if not self._connected:
+        if not self._connected or self.exchange is None:
             raise RuntimeError("Não conectado")
 
         positions = []
@@ -168,7 +173,7 @@ class CCXTBroker(BaseBrokerAPI):
 
     async def place_order(self, order: Any) -> Dict:
         """Envia ordem."""
-        if not self._connected:
+        if not self._connected or self.exchange is None:
             return {"success": False, "error": "Não conectado"}
 
         try:
@@ -198,7 +203,7 @@ class CCXTBroker(BaseBrokerAPI):
 
     async def cancel_order(self, order_id: str) -> Dict:
         """Cancela ordem."""
-        if not self._connected:
+        if not self._connected or self.exchange is None:
             return {"success": False, "error": "Não conectado"}
 
         try:
@@ -209,7 +214,7 @@ class CCXTBroker(BaseBrokerAPI):
 
     async def get_order_status(self, order_id: str) -> Dict:
         """Obtém status de ordem."""
-        if not self._connected:
+        if not self._connected or self.exchange is None:
             return {"success": False, "error": "Não conectado"}
 
         try:
@@ -315,6 +320,11 @@ class PaperBroker(BaseBrokerAPI):
         if order:
             return {"success": True, **order}
         return {"success": False, "error": "Ordem não encontrada"}
+
+    async def disconnect(self) -> None:
+        """Simula desconexão."""
+        self._connected = False
+        logger.info("Paper Broker desconectado")
 
 
 class BrokerAPI:

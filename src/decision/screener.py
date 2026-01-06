@@ -30,6 +30,11 @@ class ScreenerResult:
     passed: bool
     timestamp: datetime
 
+    @property
+    def passou(self) -> bool:
+        """Alias para 'passed' para compatibilidade."""
+        return self.passed
+
 
 class Screener:
     """

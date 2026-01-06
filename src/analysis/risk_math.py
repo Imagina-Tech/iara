@@ -107,7 +107,7 @@ class RiskCalculator:
             covariance = aligned.iloc[:, 0].cov(aligned.iloc[:, 1])
             variance = aligned.iloc[:, 1].var()
 
-            return covariance / variance if variance > 0 else 1.0
+            return float(covariance / variance) if variance > 0 else 1.0
 
         except Exception:
             return 1.0
@@ -120,7 +120,7 @@ class RiskCalculator:
 
     def _calculate_var(self, returns: pd.Series, confidence: float) -> float:
         """Calcula Value at Risk."""
-        return abs(np.percentile(returns, (1 - confidence) * 100)) * 100
+        return float(abs(np.percentile(returns, (1 - confidence) * 100))) * 100
 
     def _calculate_cvar(self, returns: pd.Series, confidence: float) -> float:
         """Calcula Conditional VaR (Expected Shortfall)."""

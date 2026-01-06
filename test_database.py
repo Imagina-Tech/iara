@@ -20,7 +20,7 @@ test_db_path = Path(__file__).parent / "data" / "test_iara.db"
 test_db_path.parent.mkdir(exist_ok=True)
 
 print(f"\n[1] Creating database at: {test_db_path}")
-db = Database(test_db_path)
+db = Database(str(test_db_path))
 print("[OK] Database created")
 
 # Test caching decision

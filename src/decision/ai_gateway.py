@@ -136,7 +136,7 @@ class OpenAIClient(BaseAIClient):
                 max_tokens=max_tokens
             )
 
-            content = response.choices[0].message.content
+            content = response.choices[0].message.content or ""
             parsed = self._try_parse_json(content)
 
             return AIResponse(

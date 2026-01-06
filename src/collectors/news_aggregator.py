@@ -53,7 +53,7 @@ class NewsAggregator:
             Lista de artigos (dicts)
         """
         try:
-            from gnews import GNews
+            from gnews import GNews  # type: ignore
 
             google_news = GNews(language='en', max_results=max_results)
             news = google_news.get_news(ticker)
@@ -156,7 +156,7 @@ Responda APENAS em JSON formato:
 
     async def find_catalyst_news(
         self,
-        keywords: List[str] = None
+        keywords: Optional[List[str]] = None
     ) -> List[NewsArticle]:
         """
         Busca notícias com catalisadores específicos.
@@ -175,7 +175,7 @@ Responda APENAS em JSON formato:
         catalyst_news = []
 
         try:
-            from gnews import GNews
+            from gnews import GNews  # type: ignore
             import re
 
             google_news = GNews(language='en', max_results=10)

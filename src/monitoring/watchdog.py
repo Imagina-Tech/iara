@@ -5,7 +5,7 @@ Loop de 1 minuto: Preço, Gap, Flash Crash
 
 import logging
 import asyncio
-from typing import Dict, List, Any, Optional, Callable
+from typing import Dict, List, Any, Optional, Callable, Union, Awaitable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
@@ -65,8 +65,8 @@ class Watchdog:
         self._price_history: Dict[str, List[Dict]] = {}  # WS6: Track price history for 5min window
         self._check_interval = self.phase5_config.get("watchdog_interval", 60)  # segundos
 
-    def add_alert_handler(self, handler: Callable[[PriceAlert], None]) -> None:
-        """Adiciona handler de alertas."""
+    def add_alert_handler(self, handler: Callable[[PriceAlert], Union[None, Awaitable[None]]]) -> None:
+        """Adiciona handler de alertas (sync ou async)."""
         self._alert_handlers.append(handler)
 
     async def start(self) -> None:

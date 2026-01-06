@@ -142,7 +142,7 @@ Responda em JSON com: decisao, nota_final, direcao, entry_price, stop_loss, take
                     justificativa=cached.get("justificativa", ""),
                     alertas=cached.get("alertas", []),
                     validade_horas=cached.get("validade_horas", 4),
-                    timestamp=datetime.fromisoformat(cached.get("timestamp"))
+                    timestamp=datetime.fromisoformat(cached.get("timestamp")) if cached.get("timestamp") else datetime.now()
                 )
 
             # WS4.2: Google Grounding Pre-Check (se news existe)
@@ -299,7 +299,7 @@ Responda em JSON com: decisao, nota_final, direcao, entry_price, stop_loss, take
         )
 
     def validate_decision(self, decision: TradeDecision,
-                          current_positions: List[Dict]) -> bool:
+                          current_positions: List[Any]) -> bool:
         """
         Valida decisão contra regras de negócio.
 
