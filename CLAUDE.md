@@ -2,6 +2,27 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## ⚠️ CRITICAL INSTRUCTION - READ FIRST
+
+**ALWAYS READ `ExplainToOwner.md` BEFORE STARTING ANY CODING TASK**
+
+Before making any modifications to the codebase:
+1. **Read** `ExplainToOwner.md` to understand current architecture and logic locations
+2. **Verify** which file is responsible for the functionality you're modifying
+3. **Check** the "Histórico de Modificações" section to see recent changes
+4. After making changes, **UPDATE** `ExplainToOwner.md` with:
+   - Modified file locations
+   - Changed logic descriptions
+   - New entry in "Histórico de Modificações" section with date and description
+
+**Golden Rule:** If you moved, modified, or created something → Document it in `ExplainToOwner.md` IMMEDIATELY
+
+The `ExplainToOwner.md` file is the single source of truth for:
+- Where each logic lives (file path + line numbers)
+- What each component does
+- How the 6-phase pipeline flows
+- Current system architecture
+
 ## Project Overview
 
 IARA (Institutional Automated Risk Analysis / Intelligent Automated Risk-Aware Trader) is an autonomous quantitative trading system focused on swing trading (3-5 days) with extreme capital protection. The system uses a hybrid architecture combining pure mathematics (Python local) for data and risk analysis with AI (cloud) for strategy and screening.
