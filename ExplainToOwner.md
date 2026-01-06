@@ -686,7 +686,26 @@ Nível 5: EMERGÊNCIA (Kill Switch)
 
 ## 📊 HISTÓRICO DE MODIFICAÇÕES
 
-### 2026-01-06 (Noite)
+### 2026-01-06 (Noite - Update 2)
+**Comando /buzz com Force Mode Implementado**
+- **FEATURE:** `debug_cli.py` - Comando `/buzz` forçado para testar TODAS as fontes
+  * `force_all=True` simula horário de mercado
+  * Testa watchlist, volume spikes, gap scanner E news catalysts
+  * Salva JSON em `data/outputs/buzz_candidates.json` (visualização manual)
+  * Exibe TOP 10 candidatos e resumo por fonte no terminal
+- **FEATURE:** `src/collectors/buzz_factory.py` - Parâmetro `force_all` adicionado
+  * `generate_daily_buzz(force_all=False)` - default False para produção
+  * `_scan_gaps(force=False)` - permite bypass de verificação horário
+  * Gap scanner só executa pré-mercado (08:00-09:30) OU quando force=True
+- **LOCALIZAÇÃO:**
+  * Teste forçado: `debug_cli.py` linhas 52-142 (função cmd_buzz)
+  * Force parameter: `buzz_factory.py` linha 50 (generate_daily_buzz)
+  * Gap force logic: `buzz_factory.py` linhas 276-304 (_scan_gaps)
+- **USO:** `python debug_cli.py /buzz` (executa teste completo)
+- **Output:** `data/outputs/buzz_candidates.json` - JSON completo para validação
+- **Status:** ✅ Sistema testando TODAS as fontes independente do horário
+
+### 2026-01-06 (Noite - Update 1)
 **Google Custom Search API Implementada**
 - **FEATURE:** `src/collectors/news_scraper.py` - Google Custom Search API completa
   * Classe `GoogleSearchRateLimiter`: Rate limiting inteligente (95 queries/dia)

@@ -47,9 +47,12 @@ class BuzzFactory:
         self.market_data = market_data
         self.news_scraper = news_scraper
 
-    async def generate_daily_buzz(self) -> List[BuzzCandidate]:
+    async def generate_daily_buzz(self, force_all: bool = False) -> List[BuzzCandidate]:
         """
         Gera a lista de oportunidades do dia.
+
+        Args:
+            force_all: Se True, força execução de TODAS as fontes independente do horário (para testes)
 
         Returns:
             Lista de candidatos ordenados por buzz_score
@@ -72,7 +75,7 @@ class BuzzFactory:
                 seen_tickers.add(c.ticker)
 
         # 3. Scan de Gaps
-        gap_candidates = await self._scan_gaps()
+        gap_candidates = await self._scan_gaps(force=force_all)
         for c in gap_candidates:
             if c.ticker not in seen_tickers:
                 candidates.append(c)
@@ -270,9 +273,12 @@ class BuzzFactory:
             "T", "VZ", "TMUS"
         ]
 
-    async def _scan_gaps(self) -> List[BuzzCandidate]:
+    async def _scan_gaps(self, force: bool = False) -> List[BuzzCandidate]:
         """
         Identifica gaps significativos no pré-mercado ou abertura.
+
+        Args:
+            force: Se True, executa mesmo fora do horário (para testes)
 
         Critério: Gap > 3% em relação ao fechamento anterior
         """
@@ -282,19 +288,20 @@ class BuzzFactory:
             phase0_config = self.config.get("phase0", {})
             gap_threshold = phase0_config.get("gap_threshold", 0.03)
 
-            # Verificar se é horário de pré-mercado ou abertura
-            now = datetime.now()
-            market_open_time = datetime.strptime("09:30", "%H:%M").time()
-            premarket_start = datetime.strptime("08:00", "%H:%M").time()
+            # Verificar se é horário de pré-mercado ou abertura (skip se force=True)
+            if not force:
+                now = datetime.now()
+                market_open_time = datetime.strptime("09:30", "%H:%M").time()
+                premarket_start = datetime.strptime("08:00", "%H:%M").time()
 
-            # Executar apenas durante pré-mercado (08:00-09:30) ou nos primeiros 30min após abertura
-            is_premarket = premarket_start <= now.time() < market_open_time
-            is_early_market = (now.time() >= market_open_time and
-                               (now - datetime.combine(now.date(), market_open_time)).seconds < 1800)
+                # Executar apenas durante pré-mercado (08:00-09:30) ou nos primeiros 30min após abertura
+                is_premarket = premarket_start <= now.time() < market_open_time
+                is_early_market = (now.time() >= market_open_time and
+                                   (now - datetime.combine(now.date(), market_open_time)).seconds < 1800)
 
-            if not (is_premarket or is_early_market):
-                logger.debug("Gap scan skipped: not in premarket/early market hours")
-                return candidates
+                if not (is_premarket or is_early_market):
+                    logger.debug("Gap scan skipped: not in premarket/early market hours")
+                    return candidates
 
             logger.info(f"Scanning gaps (>{gap_threshold*100:.1f}%)...")
 

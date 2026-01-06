@@ -17,7 +17,9 @@
       "Bash(git commit:*)",
       "Bash(test:*)",
       "Bash(timeout 10 python:*)",
-      "Bash(timeout 15 python:*)"
+      "Bash(timeout 15 python:*)",
+      "Bash(cmd /c \"python debug_cli.py /buzz\")",
+      "Bash(./run_buzz_test.bat)"
     ]
   }
 }

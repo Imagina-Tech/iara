@@ -50,19 +50,48 @@ def print_json(data, title=""):
     print(f"\n{'='*80}\n")
 
 async def cmd_buzz():
-    print("\n[1/3] Inicializando componentes...")
+    """
+    Executa Buzz Factory (Phase 0) com TODAS as fontes.
+    FORÇA execução completa independente do horário (simula horário de mercado).
+    """
+    print("\n" + "=" * 80)
+    print("  BUZZ FACTORY - PHASE 0 (MODO TESTE COMPLETO)")
+    print("=" * 80)
+    print("\n[AVISO] Simulando horário de mercado - TODAS as fontes serão executadas:")
+    print("  - Watchlist (sempre ativo)")
+    print("  - Volume Spikes (sempre ativo)")
+    print("  - Gap Scanner (FORCADO - normalmente só pré-mercado 08:00-09:30)")
+    print("  - News Catalysts (sempre ativo)\n")
+
+    print("[1/4] Inicializando componentes...")
     market_data = MarketDataCollector(config)
     news_scraper = NewsScraper(config)
     buzz_factory = BuzzFactory(config, market_data, news_scraper)
-    print("[2/3] Executando Buzz Factory (Phase 0)...")
-    candidates = await buzz_factory.generate_daily_buzz()
-    print("[3/3] Aplicando filtros...")
+
+    print("[2/4] Executando Buzz Factory com force_all=True...")
+    candidates = await buzz_factory.generate_daily_buzz(force_all=True)
+
+    print("[3/4] Aplicando filtros (liquidity, market cap, earnings, Friday)...")
     earnings_checker = EarningsChecker(config)
     filtered = await buzz_factory.apply_filters(candidates)
+
+    # Group by source
+    by_source = {}
+    for c in filtered:
+        by_source[c.source] = by_source.get(c.source, [])
+        by_source[c.source].append(c)
+
+    print("[4/4] Serializando para JSON...\n")
+
     result = {
-        "timestamp": datetime.now().isoformat(),
-        "total_candidates_raw": len(candidates),
-        "total_candidates_filtered": len(filtered),
+        "generated_at": datetime.now().isoformat(),
+        "test_mode": True,
+        "forced_all_sources": True,
+        "summary": {
+            "total_candidates_raw": len(candidates),
+            "total_candidates_filtered": len(filtered),
+            "by_source": {source: len(items) for source, items in by_source.items()}
+        },
         "candidates": [
             {
                 "ticker": c.ticker,
@@ -70,15 +99,46 @@ async def cmd_buzz():
                 "buzz_score": c.buzz_score,
                 "tier": c.tier,
                 "market_cap": c.market_cap,
+                "market_cap_billions": round(c.market_cap / 1e9, 2) if c.market_cap > 0 else 0,
                 "reason": c.reason,
                 "detected_at": c.detected_at.isoformat()
             }
             for c in filtered
         ]
     }
-    filepath = save_json(result, "buzz_factory")
-    print_json(result, "BUZZ FACTORY OUTPUT (Phase 0)")
-    print(f"[SAVED] {filepath}\n")
+
+    # Save to data/outputs (não debug_outputs)
+    output_path = Path("data/outputs/buzz_candidates.json")
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    with open(output_path, "w", encoding="utf-8") as f:
+        json.dump(result, f, indent=2, ensure_ascii=False)
+
+    # Display summary
+    print("=" * 80)
+    print("  RESUMO DOS CANDIDATOS")
+    print("=" * 80)
+    for source, items in by_source.items():
+        print(f"  {source:20s}: {len(items):3d} candidatos")
+    print(f"\n  TOTAL FILTRADO      : {len(filtered):3d} candidatos")
+    print(f"  TOTAL RAW           : {len(candidates):3d} candidatos")
+    print("=" * 80)
+
+    # Display top 10
+    print("\n" + "=" * 80)
+    print("  TOP 10 CANDIDATOS (por buzz_score)")
+    print("=" * 80)
+    for i, c in enumerate(filtered[:10], 1):
+        market_cap_b = c.market_cap / 1e9 if c.market_cap > 0 else 0
+        print(f"\n{i}. {c.ticker} (Score: {c.buzz_score:.1f})")
+        print(f"   Fonte: {c.source}")
+        print(f"   Tier: {c.tier}")
+        print(f"   Market Cap: ${market_cap_b:.2f}B")
+        print(f"   Razao: {c.reason[:80]}")
+
+    print("\n" + "=" * 80)
+    print(f"[SAVED] {output_path.absolute()}")
+    print("=" * 80 + "\n")
+
     return result
 
 async def cmd_technical(ticker):
