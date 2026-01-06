@@ -686,6 +686,24 @@ Nível 5: EMERGÊNCIA (Kill Switch)
 
 ## 📊 HISTÓRICO DE MODIFICAÇÕES
 
+### 2026-01-06 (Noite)
+**Google Custom Search API Implementada**
+- **FEATURE:** `src/collectors/news_scraper.py` - Google Custom Search API completa
+  * Classe `GoogleSearchRateLimiter`: Rate limiting inteligente (95 queries/dia)
+  * Persistent counter em `data/cache/google_search_counter.json`
+  * Reset automático à meia-noite
+  * Logging detalhado a cada 10 queries
+  * Fallback automático para GNews quando limite atingido
+  * Scraping completo com newspaper3k
+- **FEATURE:** `.env.example` criado com todas as variáveis necessárias
+  * `GOOGLE_SEARCH_API_KEY` - API key do Google Cloud
+  * `GOOGLE_CSE_ID` - Custom Search Engine ID
+- **Localização das Lógicas:**
+  * Rate limiting: `news_scraper.py` linhas 29-105 (classe GoogleSearchRateLimiter)
+  * Google Search integration: `news_scraper.py` linhas 163-247 (_fetch_from_google)
+  * Fallback GNews: `news_scraper.py` linhas 249-291 (_fallback_to_gnews)
+- **Status:** ✅ Sistema híbrido: Google Search (pago, 95/dia) + GNews (grátis, fallback)
+
 ### 2026-01-06 (Tarde)
 **Sistema Pronto para Execução**
 - **CRITICAL FIX:** `main.py` - Orchestrator agora recebe todos os componentes

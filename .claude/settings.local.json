@@ -14,7 +14,10 @@
       "Bash(git add:*)",
       "Bash(git push:*)",
       "Bash(python test_imports.py:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(test:*)",
+      "Bash(timeout 10 python:*)",
+      "Bash(timeout 15 python:*)"
     ]
   }
 }

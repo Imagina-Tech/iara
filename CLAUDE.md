@@ -23,6 +23,26 @@ The `ExplainToOwner.md` file is the single source of truth for:
 - How the 6-phase pipeline flows
 - Current system architecture
 
+## 🔧 GIT COMMIT GUIDELINES
+
+**NEVER use Unicode symbols/emojis in git commits** due to Windows compatibility issues.
+
+**Incorrect:**
+```
+✅ Feature implemented
+📊 Added logging
+🔍 Google Search API
+```
+
+**Correct:**
+```
+[OK] Feature implemented
+[LOG] Added logging
+[SEARCH] Google Search API
+```
+
+Use ASCII tags instead: [OK], [FIX], [FEATURE], [BUG], [LOG], [SEARCH], etc.
+
 ## Project Overview
 
 IARA (Institutional Automated Risk Analysis / Intelligent Automated Risk-Aware Trader) is an autonomous quantitative trading system focused on swing trading (3-5 days) with extreme capital protection. The system uses a hybrid architecture combining pure mathematics (Python local) for data and risk analysis with AI (cloud) for strategy and screening.
