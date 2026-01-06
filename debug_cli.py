@@ -5,6 +5,7 @@ Executa comandos de diagnóstico sem precisar inicializar o sistema completo
 
 import asyncio
 import sys
+import logging
 from pathlib import Path
 import yaml
 import json
@@ -13,6 +14,14 @@ from dotenv import load_dotenv
 
 # Load environment variables FIRST
 load_dotenv()
+
+# Configurar logging para exibir na console
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s | %(levelname)s | %(name)s | %(message)s',
+    datefmt='%H:%M:%S',
+    handlers=[logging.StreamHandler(sys.stdout)]
+)
 
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent))
