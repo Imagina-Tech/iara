@@ -5,6 +5,20 @@
 
 ---
 
+## ⚠️ INSTRUÇÃO CRÍTICA PARA IA
+
+**SEMPRE LEIA ESTE ARQUIVO ANTES DE COMEÇAR A PROGRAMAR**
+
+Este documento é o mapa completo do projeto. Antes de modificar qualquer código:
+1. Leia este arquivo para entender onde está a lógica atual
+2. Verifique qual arquivo é responsável pela funcionalidade
+3. Após fazer mudanças, ATUALIZE este documento com as modificações
+4. Adicione entrada no "Histórico de Modificações"
+
+**Regra de Ouro:** Se você moveu, modificou ou criou algo → Documente aqui IMEDIATAMENTE
+
+---
+
 ## 📋 ÍNDICE
 
 1. [Visão Geral](#visão-geral)
