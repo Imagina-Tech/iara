@@ -686,7 +686,18 @@ Nível 5: EMERGÊNCIA (Kill Switch)
 
 ## 📊 HISTÓRICO DE MODIFICAÇÕES
 
-### 2026-01-06
+### 2026-01-06 (Tarde)
+**Sistema Pronto para Execução**
+- **CRITICAL FIX:** `main.py` - Orchestrator agora recebe todos os componentes
+  * Adicionado: buzz_factory, screener, risk_calculator, correlation_analyzer
+  * Adicionado: judge, order_manager, position_sizer, state_manager
+  * Adicionado: earnings_checker, market_data
+  * Sistema testado e inicializando com sucesso
+- **Bug Fix:** `main.py` - Banner ASCII simples (sem Unicode)
+  * Resolve UnicodeEncodeError no console Windows
+- **Status:** ✅ Sistema rodando com `python main.py`
+
+### 2026-01-06 (Manhã)
 **Testes Completos Implementados**
 - Criado `test_phase2.py` - Beta, defensive, correlation, sector
 - Criado `test_phase3.py` - Judge cache, threshold, logging
@@ -694,6 +705,8 @@ Nível 5: EMERGÊNCIA (Kill Switch)
 - **Bug Fix:** `buzz_factory.py` linha 475 - Removido await de check_liquidity()
 - **Bug Fix:** `config/prompts/judge.md` - JSON braces escapados para .format()
 - Database: `data/iara.db` criado com tabelas decision_cache e decision_log
+- Criado `ExplainToOwner.md` - Documentação completa da arquitetura
+- Criado `CLAUDE.md` - Instruções críticas para IA ler ExplainToOwner.md
 
 ### 2026-01-05
 **Debug CLI Implementado**
