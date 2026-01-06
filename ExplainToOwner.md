@@ -686,6 +686,36 @@ Nível 5: EMERGÊNCIA (Kill Switch)
 
 ## 📊 HISTÓRICO DE MODIFICAÇÕES
 
+### 2026-01-06 (Noite - Update 5)
+**Market Data Robustez + Progress Logging Completo**
+- **BUG FIX:** `src/collectors/market_data.py` - Crash do TMO resolvido
+  * Erro: `'NoneType' object is not subscriptable` ao processar alguns tickers
+  * Causa: `stock.info` podia ser None, acessar `info["key"]` causava crash
+  * Fix: Defensive checks completos para todos os acessos
+- **FEATURE:** Progress logging com percentagens para todas as fontes do Buzz Factory
+  * Watchlist: Log por ticker (1/11, 2/11, etc.)
+  * Volume Spikes: Log a cada 10 tickers com percentual
+  * Gap Scanner: Log a cada 10 tickers com percentual
+  * News Catalyst: Log por tópico E por artigo dentro de cada tópico
+- **LOCALIZAÇÃO:**
+  * Market Data robustez: `market_data.py` linhas 60-103 (método get_stock_data)
+  * Watchlist progress: `buzz_factory.py` linhas 115-156
+  * Volume progress: `buzz_factory.py` linhas 177-231
+  * Gap progress: `buzz_factory.py` linhas 312-363
+  * Catalyst progress: `news_aggregator.py` linhas 188-267
+- **TÉCNICAS APLICADAS:**
+  * Defensive dict access: `info.get("key") or info.get("alt_key") or default`
+  * OHLCV extraction em try/except com tipos específicos (KeyError, IndexError, ValueError)
+  * Fallback chains múltiplos: currentPrice → regularMarketPrice → close
+  * Log level: debug para per-item, info para milestones
+  * Added `previous_close` field ao StockData (linha 30) para gap scanner
+- **COMPORTAMENTO:**
+  * Erros de ticker individual não matam o processo inteiro
+  * Progress visível em tempo real para debug
+  * Logs estruturados: `[SOURCE] X/Y (Z%) - Status...`
+  * Tickers problemáticos apenas geram logger.debug, não error
+- **Status:** ✅ Sistema robusto + debug completo com percentagens implementado
+
 ### 2026-01-06 (Noite - Update 4)
 **Debug CLI .env Loading Corrigido**
 - **BUG FIX:** `debug_cli.py` - Faltava carregar variáveis de ambiente do .env
