@@ -162,56 +162,100 @@ Responda APENAS em JSON formato:
         Busca notícias com catalisadores específicos.
 
         Args:
-            keywords: Lista de keywords (earnings, FDA, merger, etc.)
+            keywords: Lista de keywords para filtrar nos títulos (earnings, FDA, merger, etc.)
 
         Returns:
             Lista de NewsArticle com catalisadores
         """
         if keywords is None:
-            keywords = ["earnings", "FDA approval", "merger", "acquisition",
-                        "partnership", "breakthrough", "guidance", "buyback"]
+            # Keywords para filtrar nos títulos/descrições
+            keywords = ["earnings", "FDA", "approval", "merger", "acquisition",
+                        "partnership", "breakthrough", "guidance", "buyback", "announces"]
 
         catalyst_news = []
 
         try:
             from gnews import GNews
+            import re
 
-            google_news = GNews(language='en', max_results=20)
+            google_news = GNews(language='en', max_results=10)
 
-            for keyword in keywords:
+            # TÓPICOS VÁLIDOS do GNews (não keywords!)
+            # Usar apenas tópicos financeiros/business relevantes
+            topics = ["BUSINESS", "FINANCE", "TECHNOLOGY"]
+
+            for topic in topics:
                 try:
-                    # Buscar notícias por keyword
-                    news = google_news.get_news_by_topic(keyword)
+                    # Buscar notícias por TÓPICO válido
+                    news = google_news.get_news_by_topic(topic)
 
-                    for item in news[:5]:  # Limitar a 5 por keyword
-                        # Extrair tickers mencionados
+                    for item in news[:10]:  # Top 10 de cada tópico
                         title = item.get("title", "")
+                        description = item.get("description", "")
+                        full_text = f"{title} {description}".lower()
 
-                        # Tentar extrair ticker do título (regex simples)
-                        import re
-                        ticker_pattern = r'\b([A-Z]{1,5})\b'
-                        potential_tickers = re.findall(ticker_pattern, title)
+                        # Filtrar por keywords nos títulos/descrições
+                        has_catalyst = any(keyword.lower() in full_text for keyword in keywords)
 
-                        # Filtrar tickers válidos (evitar palavras comuns)
-                        common_words = {"CEO", "CFO", "IPO", "SEC", "FDA", "USA", "UK", "EU", "AI"}
-                        tickers = [t for t in potential_tickers if t not in common_words and len(t) <= 5]
+                        if has_catalyst:
+                            # Extrair tickers mencionados do título
+                            # Buscar padrões comuns: (TICKER), TICKER:, ou TICKER isolado
+                            ticker_patterns = [
+                                r'\(([A-Z]{2,5})\)',  # (AAPL)
+                                r'([A-Z]{2,5})(?:\s+stock|\s+shares)',  # AAPL stock
+                                r'\b([A-Z]{2,5})\b'  # AAPL (qualquer palavra maiúscula)
+                            ]
+                            potential_tickers = []
+                            for pattern in ticker_patterns:
+                                potential_tickers.extend(re.findall(pattern, title))
 
-                        if tickers:
-                            catalyst_news.append(NewsArticle(
-                                title=title,
-                                url=item.get("url", ""),
-                                published_date=None,
-                                source="GNews",
-                                summary=item.get("description", ""),
-                                tickers_mentioned=tickers,
-                                sentiment=None,
-                                relevance_score=8.0  # Alto score para catalysts
-                            ))
+                            # Lista expandida de não-tickers (siglas, eventos, mídias, palavras comuns)
+                            non_tickers = {
+                                # Corporate
+                                "CEO", "CFO", "CTO", "COO", "CMO", "CIO", "IPO", "M&A",
+                                # Government/Regulatory
+                                "SEC", "FDA", "FTC", "FCC", "EPA", "IRS", "DOJ", "FBI",
+                                # Financial Terms
+                                "ETF", "ESG", "NYSE", "NASDAQ", "DOW", "S&P", "GDP", "CPI",
+                                # Geography
+                                "USA", "UK", "EU", "US", "UAE", "UAE", "APAC",
+                                # Media/Events
+                                "CES", "NBC", "CBS", "ABC", "CNN", "BBC", "FOX", "HBO", "MTV",
+                                "NFL", "NBA", "MLB", "NHL", "UFC", "FIFA", "NCAA", "PGA", "WWE",
+                                # International Orgs
+                                "NATO", "UN", "WHO", "WTO", "OPEC", "IMF", "ASEAN", "BRICS",
+                                # Tech/Trends
+                                "AI", "ML", "AR", "VR", "IOT", "API", "SDK", "OS", "IT",
+                                # Common Words
+                                "THE", "AND", "FOR", "WITH", "FROM", "TO", "AT", "ON", "IN",
+                                "NEW", "SAYS", "AMID", "AFTER", "BEFORE", "JUST", "LIVE", "NEWS",
+                                "HERE", "WHAT", "WHY", "HOW", "WHEN", "WHERE", "WHO",
+                                # Energy/Commodities (not stocks)
+                                "OIL", "GAS", "GOLD"
+                            }
 
-                    await asyncio.sleep(2)  # Rate limiting
+                            # Filtrar e validar
+                            tickers = [
+                                t for t in set(potential_tickers)  # Remove duplicados
+                                if t not in non_tickers and 2 <= len(t) <= 5
+                            ]
+
+                            if tickers:
+                                catalyst_news.append(NewsArticle(
+                                    title=title,
+                                    url=item.get("url", ""),
+                                    published_date=None,
+                                    source=f"GNews-{topic}",
+                                    summary=description,
+                                    tickers_mentioned=tickers,
+                                    sentiment=None,
+                                    relevance_score=8.0  # Alto score para catalysts
+                                ))
+
+                    await asyncio.sleep(2)  # Rate limiting entre tópicos
 
                 except Exception as e:
-                    logger.error(f"Error searching keyword '{keyword}': {e}")
+                    logger.debug(f"Error fetching topic '{topic}': {e}")
                     continue
 
             logger.info(f"Catalyst scan: Found {len(catalyst_news)} relevant news")

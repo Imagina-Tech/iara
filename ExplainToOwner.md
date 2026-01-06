@@ -686,6 +686,26 @@ Nível 5: EMERGÊNCIA (Kill Switch)
 
 ## 📊 HISTÓRICO DE MODIFICAÇÕES
 
+### 2026-01-06 (Noite - Update 3)
+**News Catalyst Scanner Corrigido**
+- **BUG FIX:** `src/collectors/news_aggregator.py` - Método `find_catalyst_news()` corrigido
+  * Erro: Usava keywords ("earnings", "FDA") como tópicos do GNews (Invalid topic)
+  * Fix: Usa tópicos VÁLIDOS (BUSINESS, FINANCE, TECHNOLOGY) e filtra por keywords
+  * Melhorado: 3 padrões de regex para detectar tickers: (TICKER), TICKER stock, TICKER
+  * Melhorado: Lista de 60+ non-tickers (CES, NBC, CEO, FDA, etc.) para filtrar falsos positivos
+- **LOCALIZAÇÃO:**
+  * News Catalyst: `news_aggregator.py` linhas 157-239 (método find_catalyst_news)
+  * Tópicos válidos: linha 185 (topics = ["BUSINESS", "FINANCE", "TECHNOLOGY"])
+  * Filtro keywords: linha 198 (keywords nos títulos/descrições)
+  * Extração tickers: linhas 203-241 (3 patterns + non_tickers filter)
+- **COMPORTAMENTO:**
+  * Busca 10 notícias de cada tópico (BUSINESS, FINANCE, TECHNOLOGY)
+  * Filtra por keywords: earnings, FDA, approval, merger, acquisition, etc.
+  * Extrai tickers mencionados nos títulos
+  * Filtra siglas que não são tickers (eventos, mídias, etc.)
+  * Retorna apenas notícias com tickers VÁLIDOS identificados
+- **Status:** ✅ Sistema corrigido - sem mais erros "Invalid topic"
+
 ### 2026-01-06 (Noite - Update 2)
 **Comando /buzz com Force Mode Implementado**
 - **FEATURE:** `debug_cli.py` - Comando `/buzz` forçado para testar TODAS as fontes
