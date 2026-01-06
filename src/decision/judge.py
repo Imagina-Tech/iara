@@ -127,6 +127,14 @@ Responda em JSON com: decisao, nota_final, direcao, entry_price, stop_loss, take
             cached = self.db.get_cached_decision(ticker, max_age_hours=2)
             if cached:
                 logger.info(f"Cache HIT: {ticker} - reusing decision from {cached.get('timestamp')}")
+
+                # Extrair e validar timestamp antes de usar fromisoformat
+                cached_timestamp = cached.get("timestamp")
+                if isinstance(cached_timestamp, str):
+                    decision_time = datetime.fromisoformat(cached_timestamp)
+                else:
+                    decision_time = datetime.now()
+
                 # Convert cached dict to TradeDecision
                 return TradeDecision(
                     ticker=ticker,
@@ -142,7 +150,7 @@ Responda em JSON com: decisao, nota_final, direcao, entry_price, stop_loss, take
                     justificativa=cached.get("justificativa", ""),
                     alertas=cached.get("alertas", []),
                     validade_horas=cached.get("validade_horas", 4),
-                    timestamp=datetime.fromisoformat(cached.get("timestamp")) if cached.get("timestamp") else datetime.now()
+                    timestamp=decision_time
                 )
 
             # WS4.2: Google Grounding Pre-Check (se news existe)

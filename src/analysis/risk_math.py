@@ -104,10 +104,11 @@ class RiskCalculator:
             if len(aligned) < 20:
                 return 1.0
 
-            covariance = aligned.iloc[:, 0].cov(aligned.iloc[:, 1])
-            variance = aligned.iloc[:, 1].var()
+            # Converter para float antes de operações - .cov() e .var() retornam Scalar
+            covariance = float(aligned.iloc[:, 0].cov(aligned.iloc[:, 1]))
+            variance = float(aligned.iloc[:, 1].var())
 
-            return float(covariance / variance) if variance > 0 else 1.0
+            return covariance / variance if variance > 0 else 1.0
 
         except Exception:
             return 1.0

@@ -154,8 +154,8 @@ class EarningsChecker:
                             return parser.parse(next_date)
                     elif isinstance(next_date, datetime):
                         return next_date
-                    elif hasattr(next_date, 'to_pydatetime'):
-                        # pandas Timestamp
+                    elif isinstance(next_date, pd.Timestamp):
+                        # pandas Timestamp - verificação explícita de tipo
                         return next_date.to_pydatetime()
                     else:
                         return None

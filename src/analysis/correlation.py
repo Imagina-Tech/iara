@@ -213,9 +213,12 @@ class CorrelationAnalyzer:
         # Soma das correlações fora da diagonal
         total_corr: float = 0.0
         count = 0
+        # Usar .values para obter array numpy com tipos numéricos claros
+        corr_values = correlation_matrix.values
         for i in range(n):
             for j in range(i + 1, n):
-                total_corr += float(abs(correlation_matrix.iloc[i, j]))
+                # corr_values[i, j] é numpy.float64, conversão segura
+                total_corr += abs(float(corr_values[i, j]))
                 count += 1
 
         avg_corr = total_corr / count if count > 0 else 0

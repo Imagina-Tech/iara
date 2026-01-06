@@ -55,16 +55,18 @@ class GeminiClient(BaseAIClient):
                        temperature: float = 0.7, max_tokens: int = 2000) -> AIResponse:
         """Executa completion com Gemini."""
         try:
+            # Nota: google.generativeai está deprecated, mas os métodos existem e funcionam.
+            # Pylance não reconhece os exports devido a stubs de tipo incompletos na biblioteca.
             import google.generativeai as genai
 
-            genai.configure(api_key=self.api_key)
-            model = genai.GenerativeModel(self.model)
+            genai.configure(api_key=self.api_key)  # type: ignore[attr-defined]
+            model = genai.GenerativeModel(self.model)  # type: ignore[attr-defined]
 
             full_prompt = f"{system_prompt}\n\n{prompt}" if system_prompt else prompt
 
             response = model.generate_content(
                 full_prompt,
-                generation_config=genai.types.GenerationConfig(
+                generation_config=genai.types.GenerationConfig(  # type: ignore[attr-defined]
                     temperature=temperature,
                     max_output_tokens=max_tokens
                 )
