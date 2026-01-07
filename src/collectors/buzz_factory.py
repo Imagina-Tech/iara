@@ -25,47 +25,67 @@ from dataclasses import dataclass, field
 logger = logging.getLogger(__name__)
 
 
-class ProgressTracker:
+class ParallelProgressTracker:
     """
-    Rastreador de progresso global para Phase 0.
-    Exibe barra de progresso fixa de 0-100%.
+    Rastreador de progresso otimizado para execucao paralela.
+
+    Principios:
+    - NAO usa \\r durante processamento paralelo (causa conflito de output)
+    - Exibe apenas INICIO e FIM de cada fase
+    - Mostra contadores consolidados apos cada fase
+    - Thread-safe para atualizacao de contadores internos
     """
 
-    def __init__(self, total_steps: int):
-        self.total_steps = total_steps
-        self.completed_steps = 0
+    def __init__(self):
+        self.phases_completed = 0
+        self.total_phases = 4  # Watchlist, Volume, Gaps, News
         self.current_phase = ""
+        self.phase_results: Dict[str, int] = {}
         self.lock = asyncio.Lock()
+        self._start_time = datetime.now()
 
-    async def update(self, steps: int = 1, phase: Optional[str] = None):
-        """Atualiza progresso de forma thread-safe."""
+    def _get_elapsed(self) -> str:
+        """Retorna tempo decorrido formatado."""
+        elapsed = (datetime.now() - self._start_time).total_seconds()
+        return f"{elapsed:.1f}s"
+
+    def start_phase(self, phase_name: str, total_items: int):
+        """Inicia uma nova fase (chamado de forma sincrona, antes do gather)."""
+        self.current_phase = phase_name
+        # Box de inicio da fase
+        print(f"\n{'='*70}")
+        print(f"  [PHASE 0] {phase_name}")
+        print(f"  Processing {total_items} items in parallel...")
+        print(f"{'='*70}")
+
+    async def complete_phase(self, phase_name: str, found: int, total: int):
+        """Completa uma fase com resumo (chamado apos gather)."""
         async with self.lock:
-            self.completed_steps += steps
-            if phase:
-                self.current_phase = phase
-            self._render()
+            self.phases_completed += 1
+            self.phase_results[phase_name] = found
 
-    async def set_phase(self, phase: str):
-        """Define a fase atual."""
-        async with self.lock:
-            self.current_phase = phase
-            self._render()
+        # Indicador visual de conclusao
+        pct = (self.phases_completed / self.total_phases) * 100
+        status = "OK" if found > 0 else "--"
+        print(f"  [{status}] {phase_name}: {found} candidates found (from {total} scanned)")
+        print(f"  Progress: {self.phases_completed}/{self.total_phases} phases ({pct:.0f}%) | Elapsed: {self._get_elapsed()}")
 
-    def _render(self):
-        """Renderiza a barra de progresso."""
-        pct = min(100, (self.completed_steps / self.total_steps) * 100)
-        bar_width = 30
-        filled = int(bar_width * pct / 100)
-        bar = "=" * filled + "-" * (bar_width - filled)
-        # Usar \r para sobrescrever a linha
-        sys.stdout.write(f"\r[PHASE 0] [{bar}] {pct:5.1f}% | {self.current_phase:40s}")
-        sys.stdout.flush()
+    def print_summary(self):
+        """Imprime resumo final de todas as fases."""
+        print(f"\n{'='*70}")
+        print(f"  [PHASE 0] COMPLETE - Summary")
+        print(f"{'='*70}")
 
-    def finish(self):
-        """Finaliza e mostra 100%."""
-        self.completed_steps = self.total_steps
-        self._render()
-        print()  # Nova linha
+        total = 0
+        for phase, count in self.phase_results.items():
+            icon = "[+]" if count > 0 else "[ ]"
+            print(f"  {icon} {phase:25s}: {count:3d} candidates")
+            total += count
+
+        print(f"  {'-'*50}")
+        print(f"  TOTAL CANDIDATES: {total}")
+        print(f"  ELAPSED TIME: {self._get_elapsed()}")
+        print(f"{'='*70}\n")
 
 # Project root directory
 PROJECT_ROOT = Path(__file__).parent.parent.parent
@@ -126,7 +146,7 @@ class BuzzFactory:
         self._news_semaphore = asyncio.Semaphore(news_limit)
 
         # Progress tracker (inicializado em generate_daily_buzz)
-        self._progress: Optional[ProgressTracker] = None
+        self._progress: Optional[ParallelProgressTracker] = None
 
     def _get_news_aggregator(self):
         """Lazy initialization do NewsAggregator."""
@@ -331,8 +351,7 @@ class BuzzFactory:
         # Limpa caches do ciclo anterior
         self._clear_cycle_cache()
 
-        # Calcular total de steps para progress bar
-        # Watchlist: ~10 tickers, Universe: ~54 tickers, Gaps: ~54 tickers, News: ~30 artigos
+        # Contar items para cada fase
         watchlist_path = PROJECT_ROOT / "config" / "watchlist.json"
         watchlist_count = 0
         if watchlist_path.exists():
@@ -343,50 +362,65 @@ class BuzzFactory:
                         watchlist_count += len(tickers)
 
         universe_count = len(self._get_scan_universe())
-        # Total: watchlist + volume + gaps + news catalyst (~30 artigos estimados)
-        total_steps = watchlist_count + universe_count + universe_count + 30
 
-        # Inicializar progress tracker
-        self._progress = ProgressTracker(total_steps)
-        print()  # Linha em branco antes do progress bar
+        # Inicializar novo progress tracker
+        self._progress = ParallelProgressTracker()
 
         candidates: List[BuzzCandidate] = []
         seen_tickers: Set[str] = set()
 
-        # 1. Adiciona watchlist fixa (PARALELO)
-        await self._progress.set_phase("Watchlist: scanning...")
+        # =====================================================================
+        # FASE 1/4: WATCHLIST (PARALELO)
+        # =====================================================================
+        self._progress.start_phase("WATCHLIST", watchlist_count)
         watchlist_candidates = await self._scan_watchlist_parallel()
+        await self._progress.complete_phase("WATCHLIST", len(watchlist_candidates), watchlist_count)
+
         for c in watchlist_candidates:
             if c.ticker not in seen_tickers:
                 candidates.append(c)
                 seen_tickers.add(c.ticker)
 
-        # 2. Scan de Volume Spikes (PARALELO)
-        await self._progress.set_phase("Volume Spikes: scanning...")
+        # =====================================================================
+        # FASE 2/4: VOLUME SPIKES (PARALELO)
+        # =====================================================================
+        self._progress.start_phase("VOLUME SPIKES", universe_count)
         volume_candidates = await self._scan_volume_spikes_parallel()
+        await self._progress.complete_phase("VOLUME SPIKES", len(volume_candidates), universe_count)
+
         for c in volume_candidates:
             if c.ticker not in seen_tickers:
                 candidates.append(c)
                 seen_tickers.add(c.ticker)
 
-        # 3. Scan de Gaps (PARALELO)
-        await self._progress.set_phase("Gap Scanner: scanning...")
+        # =====================================================================
+        # FASE 3/4: GAP SCANNER (PARALELO)
+        # =====================================================================
+        self._progress.start_phase("GAP SCANNER", universe_count)
         gap_candidates = await self._scan_gaps_parallel(force=force_all)
+        await self._progress.complete_phase("GAP SCANNER", len(gap_candidates), universe_count)
+
         for c in gap_candidates:
             if c.ticker not in seen_tickers:
                 candidates.append(c)
                 seen_tickers.add(c.ticker)
 
-        # 4. Scan de Noticias com Alto Impacto
-        await self._progress.set_phase("News Catalysts: scanning...")
+        # =====================================================================
+        # FASE 4/4: NEWS CATALYSTS
+        # =====================================================================
+        self._progress.start_phase("NEWS CATALYSTS", 30)  # Estimativa
         news_candidates = await self._scan_news_catalysts()
+        await self._progress.complete_phase("NEWS CATALYSTS", len(news_candidates), 30)
+
         for c in news_candidates:
             if c.ticker not in seen_tickers:
                 candidates.append(c)
                 seen_tickers.add(c.ticker)
 
-        # Finalizar progress
-        self._progress.finish()
+        # =====================================================================
+        # RESUMO FINAL
+        # =====================================================================
+        self._progress.print_summary()
 
         # Ordena por buzz_score decrescente
         candidates.sort(key=lambda x: x.buzz_score, reverse=True)
@@ -782,10 +816,6 @@ class BuzzFactory:
 
             logger.info(f"News catalyst scan complete: {len(candidates)} candidates from {len(catalyst_news)} articles")
 
-            # Atualizar progress
-            if self._progress:
-                await self._progress.update(len(catalyst_news), "News Catalysts: done")
-
         except Exception as e:
             logger.error(f"Error in news catalyst scan: {e}")
 
@@ -840,10 +870,6 @@ class BuzzFactory:
                     tier = self._determine_tier(market_cap)
                     news_content = await self._fetch_news_parallel(ticker)
 
-                    # Atualizar progress
-                    if self._progress:
-                        await self._progress.update(1, f"Watchlist: {ticker}")
-
                     base_score = 5.0 if tier == "tier1_large_cap" else 4.0
                     return BuzzCandidate(
                         ticker=ticker,
@@ -857,8 +883,6 @@ class BuzzFactory:
                     )
                 except Exception as e:
                     logger.debug(f"[WATCHLIST] {ticker}: {e}")
-                    if self._progress:
-                        await self._progress.update(1)
                     return None
 
             # Processar todos em paralelo
@@ -905,8 +929,6 @@ class BuzzFactory:
                 try:
                     data = await self._get_market_data_parallel(ticker)
                     if not data:
-                        if self._progress:
-                            await self._progress.update(1)
                         return None
 
                     # Calcular volume ratio
@@ -925,9 +947,6 @@ class BuzzFactory:
                                     tier = self._determine_tier(market_cap)
                                     news = await self._fetch_news_parallel(ticker)
 
-                                    if self._progress:
-                                        await self._progress.update(1, f"Volume: {ticker} ({ratio:.1f}x)")
-
                                     return BuzzCandidate(
                                         ticker=ticker,
                                         source="volume_spike",
@@ -939,14 +958,10 @@ class BuzzFactory:
                                         news_content=news
                                     )
 
-                    if self._progress:
-                        await self._progress.update(1)
                     return None
 
                 except Exception as e:
                     logger.debug(f"[VOLUME] {ticker}: {e}")
-                    if self._progress:
-                        await self._progress.update(1)
                     return None
 
             # Processar em paralelo
@@ -993,8 +1008,6 @@ class BuzzFactory:
                 try:
                     data = await self._get_market_data_parallel(ticker)
                     if not data:
-                        if self._progress:
-                            await self._progress.update(1)
                         return None
 
                     if hasattr(data, 'price') and hasattr(data, 'previous_close'):
@@ -1008,9 +1021,6 @@ class BuzzFactory:
                                 tier = self._determine_tier(market_cap)
                                 news = await self._fetch_news_parallel(ticker)
 
-                                if self._progress:
-                                    await self._progress.update(1, f"Gap: {ticker} ({gap*100:.1f}%)")
-
                                 return BuzzCandidate(
                                     ticker=ticker,
                                     source="gap",
@@ -1022,14 +1032,10 @@ class BuzzFactory:
                                     news_content=news
                                 )
 
-                    if self._progress:
-                        await self._progress.update(1)
                     return None
 
                 except Exception as e:
                     logger.debug(f"[GAP] {ticker}: {e}")
-                    if self._progress:
-                        await self._progress.update(1)
                     return None
 
             # Processar em paralelo
