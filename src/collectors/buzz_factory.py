@@ -525,7 +525,8 @@ class BuzzFactory:
         universe_count = len(self._get_scan_universe())
 
         # Inicializar novo progress tracker
-        self._progress = ParallelProgressTracker()
+        progress = ParallelProgressTracker()
+        self._progress = progress
 
         candidates: List[BuzzCandidate] = []
         seen_tickers: Set[str] = set()
@@ -533,35 +534,35 @@ class BuzzFactory:
         # =====================================================================
         # TODAS AS 4 FASES RODAM EM PARALELO SIMULTANEAMENTE
         # =====================================================================
-        self._progress.logger.log("SYSTEM", f"Iniciando 4 fases em PARALELO...")
-        self._progress.logger.log("SYSTEM", f"  WATCHLIST: {watchlist_count} tickers")
-        self._progress.logger.log("SYSTEM", f"  VOLUME/GAPS: {universe_count} tickers cada")
-        self._progress.logger.log("SYSTEM", f"  NEWS: ~30 artigos estimados")
+        progress.logger.log("SYSTEM", f"Iniciando 4 fases em PARALELO...")
+        progress.logger.log("SYSTEM", f"  WATCHLIST: {watchlist_count} tickers")
+        progress.logger.log("SYSTEM", f"  VOLUME/GAPS: {universe_count} tickers cada")
+        progress.logger.log("SYSTEM", f"  NEWS: ~30 artigos estimados")
         print()  # Linha em branco para separar
 
         # Criar wrapper functions que logam inicio/fim de cada fase
         async def run_watchlist() -> List[BuzzCandidate]:
-            self._progress.start_phase("WATCHLIST", watchlist_count)
+            progress.start_phase("WATCHLIST", watchlist_count)
             result = await self._scan_watchlist_parallel()
-            await self._progress.complete_phase("WATCHLIST", len(result), watchlist_count)
+            await progress.complete_phase("WATCHLIST", len(result), watchlist_count)
             return result
 
         async def run_volume() -> List[BuzzCandidate]:
-            self._progress.start_phase("VOLUME", universe_count)
+            progress.start_phase("VOLUME", universe_count)
             result = await self._scan_volume_spikes_parallel()
-            await self._progress.complete_phase("VOLUME", len(result), universe_count)
+            await progress.complete_phase("VOLUME", len(result), universe_count)
             return result
 
         async def run_gaps() -> List[BuzzCandidate]:
-            self._progress.start_phase("GAPS", universe_count)
+            progress.start_phase("GAPS", universe_count)
             result = await self._scan_gaps_parallel(force=force_all)
-            await self._progress.complete_phase("GAPS", len(result), universe_count)
+            await progress.complete_phase("GAPS", len(result), universe_count)
             return result
 
         async def run_news() -> List[BuzzCandidate]:
-            self._progress.start_phase("NEWS", 30)
+            progress.start_phase("NEWS", 30)
             result = await self._scan_news_catalysts()
-            await self._progress.complete_phase("NEWS", len(result), 30)
+            await progress.complete_phase("NEWS", len(result), 30)
             return result
 
         # EXECUTAR TODAS AS 4 FASES EM PARALELO
@@ -577,7 +578,7 @@ class BuzzFactory:
         phase_names = ["WATCHLIST", "VOLUME", "GAPS", "NEWS"]
         for i, result in enumerate(all_results):
             if isinstance(result, Exception):
-                self._progress.logger.log(phase_names[i], f"ERRO: {result}")
+                progress.logger.log(phase_names[i], f"ERRO: {result}")
                 continue
             if isinstance(result, list):
                 for c in result:
@@ -589,7 +590,7 @@ class BuzzFactory:
         # RESUMO FINAL
         # =====================================================================
         print()  # Linha em branco antes do resumo
-        self._progress.print_summary()
+        progress.print_summary()
 
         # Ordena por buzz_score decrescente
         candidates.sort(key=lambda x: x.buzz_score, reverse=True)
