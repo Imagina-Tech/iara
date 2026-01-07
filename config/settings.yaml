@@ -59,6 +59,11 @@ phase0:
   gap_threshold: 0.03             # Gap > 3% = interessante
   friday_block: true              # Bloquear entradas na sexta
   earnings_proximity_days: 5      # Bloquear se earnings < 5 dias
+  news_per_ticker: 3              # Quantidade de noticias por ticker (headlines)
+  news_fetch_full_content: false  # Buscar conteudo completo (mais lento)
+  # Paralelismo (controle de concorrencia)
+  parallel_market_requests: 10    # Max requests simultaneos ao yfinance
+  parallel_news_requests: 3       # Max requests simultaneos ao GNews (rate limit)
 
 # --- PHASE 2: GESTÃO DE RISCO ---
 phase2:

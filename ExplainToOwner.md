@@ -1,6 +1,6 @@
 # IARA - Explicação da Estrutura do Projeto
 
-**Última Atualização:** 2026-01-06
+**Última Atualização:** 2026-01-07
 **Versão:** v25.0 "Atomic Survivor"
 
 ---
@@ -685,6 +685,163 @@ Nível 5: EMERGÊNCIA (Kill Switch)
 ---
 
 ## 📊 HISTÓRICO DE MODIFICAÇÕES
+
+### 2026-01-07 (Update 10)
+**News Scoring System - Qualidade de Fontes + Freshness + Pais**
+
+**PROBLEMA RESOLVIDO:**
+- Noticias antigas (varias semanas) apareciam para tickers brasileiros
+- Noticias de baixa qualidade misturadas com fontes premium
+- Noticias irrelevantes (de outros paises) para empresas locais
+
+**SOLUCOES IMPLEMENTADAS:**
+
+#### 1. Sistema de Scoring de Fontes
+- **Constante:** `SOURCE_QUALITY_SCORES: Dict[str, float]` - 40+ fontes mapeadas
+- **Scores:**
+  * TIER 1 Premium (1.3-1.5): reuters.com, bloomberg.com, wsj.com, infomoney.com.br, valor.globo.com
+  * TIER 2 Investimento (1.2-1.3): seekingalpha.com, benzinga.com, exame.com, moneytimes.com.br
+  * TIER 3 Noticias Gerais (1.0-1.1): cnn.com, bbc.com, g1.globo.com, folha.uol.com.br
+  * TIER 4 Gerais (0.7-0.9): yahoo.com, msn.com, google.com
+  * Desconhecidas: 0.5
+- **Localizacao:** `news_aggregator.py` linhas 28-82
+
+#### 2. Priorizacao por Pais
+- **Constante:** `TICKER_COUNTRY_MAP: Dict[str, str]` - Mapeamento ticker -> pais
+- **Constante:** `COUNTRY_DOMAINS: Dict[str, List[str]]` - Dominios por pais (BR, US)
+- **Metodo:** `_get_country_bonus(ticker, url)` - Retorna +0.3 se noticia e do pais da empresa
+- **Exemplo:** PETR4.SA + infomoney.com.br = bonus de +0.3
+- **Localizacao:** `news_aggregator.py` linhas 84-110, 243-262
+
+#### 3. Filtragem por Freshness (Timestamp)
+- **Config:** `max_news_age_hours` - Default 48h (configuravel)
+- **Metodo:** `_parse_published_date(str)` - Parseia 8+ formatos de data + formatos relativos
+  * Formatos: ISO 8601, GMT, BR, relativo ("2 hours ago", "ontem")
+- **Metodo:** `_get_freshness_score(published_str)` - Score 0.1-1.0 baseado em idade
+  * < 1h: 1.0, < 6h: 0.95, < 12h: 0.85, < 24h: 0.7, < 48h: 0.5, < 72h: 0.3, > 72h: 0.1
+- **Metodo:** `_is_news_fresh(published_str)` - Retorna bool (dentro do limite)
+- **Localizacao:** `news_aggregator.py` linhas 264-397
+
+#### 4. Busca Dual Idioma (EN + PT)
+- **Metodo atualizado:** `get_gnews(ticker, max_results, fetch_full_content)`
+- **Comportamento:**
+  * Busca em INGLES (global) para todos os tickers
+  * Busca em PORTUGUES (Brasil) para tickers .SA ou ADRs brasileiros
+  * Para PETR4.SA: busca "PETR4.SA" + "Petrobras"
+  * Para VALE3.SA: busca "VALE3.SA" + "Vale mineradora"
+- **Deduplicacao:** Remove duplicatas por URL
+- **Scoring:** Calcula score combinando: fonte × freshness + bonus_pais
+- **Ordenacao:** Retorna ordenado por score (melhor primeiro)
+- **Localizacao:** `news_aggregator.py` linhas 399-522
+
+#### 5. Formula de Score Final
+```python
+# Componentes:
+source_score = 0.5-1.5  # Qualidade da fonte
+freshness_score = 0.1-1.0  # Idade da noticia
+country_bonus = 0.0-0.3  # Bonus se mesmo pais
+
+# Formula:
+base = 5.0
+final_score = (base * source_score * freshness_score) + (country_bonus * 2)
+# Resultado: 0.0 - 10.0
+```
+
+**ARQUIVOS MODIFICADOS:**
+```
+news_aggregator.py:
+  + SOURCE_QUALITY_SCORES (constante)
+  + TICKER_COUNTRY_MAP (constante)
+  + COUNTRY_DOMAINS (constante)
+  + self.max_news_age_hours (atributo)
+  + _extract_domain(url) (metodo)
+  + _get_source_score(url) (metodo)
+  + _get_country_bonus(ticker, url) (metodo)
+  + _parse_published_date(str) (metodo)
+  + _get_freshness_score(str) (metodo)
+  + calculate_article_score(article, ticker) (metodo)
+  + _is_news_fresh(str) (metodo)
+  ~ get_gnews() (modificado - dual language + scoring + filtering)
+```
+
+**Status:** OK - Sistema de scoring completo e funcional
+
+---
+
+### 2026-01-07 (Update 9)
+**Phase 0 Parallelism + Progress Bar**
+
+**PROBLEMA RESOLVIDO:**
+- Phase 0 executava sequencialmente (lento)
+- Usuario nao tinha visibilidade do progresso
+- Volume spike calculava errado fora do horario de mercado (1 AM mostrava tudo como spike)
+
+**SOLUCOES IMPLEMENTADAS:**
+
+#### 1. ProgressTracker (Barra de Progresso 0-100%)
+- **Classe:** `ProgressTracker` - Rastreador global de progresso
+- **Atributos:** total_steps, completed_steps, current_phase, lock (asyncio.Lock)
+- **Metodo:** `update(steps, phase)` - Atualiza progresso thread-safe
+- **Metodo:** `_render()` - Renderiza barra: `[====------] 40.5% | Scanning volume spikes...`
+- **Localizacao:** `buzz_factory.py` linhas 25-50
+
+#### 2. Semaforos para Rate Limiting
+- **Atributo:** `_market_semaphore` - Limite de requests simultaneos ao yfinance (default: 10)
+- **Atributo:** `_news_semaphore` - Limite de requests simultaneos ao GNews (default: 3)
+- **Config:** `settings.yaml` → `phase0.parallel_market_requests` e `parallel_news_requests`
+- **Localizacao:** `buzz_factory.py` linhas 75-80
+
+#### 3. Scanners Paralelos
+- **Metodo:** `_scan_watchlist_parallel()` - Processa watchlist com asyncio.gather
+- **Metodo:** `_scan_volume_spikes_parallel()` - Escaneia volume em paralelo
+- **Metodo:** `_scan_gaps_parallel()` - Escaneia gaps em paralelo
+- **Metodo:** `_get_market_data_parallel(ticker)` - Busca dados com semaforo
+- **Comportamento:** Cada scanner atualiza ProgressTracker conforme avanca
+- **Localizacao:** `buzz_factory.py` linhas 200-400
+
+#### 4. Fix Volume Spike (Horario Fora do Mercado)
+- **Problema:** elapsed_fraction = 0.1 as 1 AM causava projecao 10x (tudo virava spike)
+- **Solucao:** elapsed_fraction = 1.0 fora do horario de mercado
+- **Logica:**
+  * Pre-mercado (antes 09:30): usa volume real (previous day)
+  * Durante mercado: projeta baseado no tempo decorrido
+  * Pos-mercado (depois 16:00): usa volume real (day complete)
+- **Localizacao:** `buzz_factory.py` linhas 250-280
+
+#### 5. Configuracao em settings.yaml
+```yaml
+phase0:
+  news_per_ticker: 3              # Headlines por ticker
+  news_fetch_full_content: false  # Scrape completo (mais lento)
+  parallel_market_requests: 10    # Max requests yfinance
+  parallel_news_requests: 3       # Max requests GNews
+```
+
+**ARQUIVOS MODIFICADOS:**
+```
+buzz_factory.py:
+  + ProgressTracker (classe)
+  + _market_semaphore (atributo)
+  + _news_semaphore (atributo)
+  + _get_market_data_parallel(ticker) (metodo async)
+  + _scan_watchlist_parallel() (metodo async)
+  + _scan_volume_spikes_parallel() (metodo async)
+  + _scan_gaps_parallel() (metodo async)
+  ~ _calculate_elapsed_fraction() (modificado - fix horario)
+
+settings.yaml:
+  + phase0.news_per_ticker
+  + phase0.news_fetch_full_content
+  + phase0.parallel_market_requests
+  + phase0.parallel_news_requests
+
+watchlist.json:
+  ~ tier2_mid_cap (modificado - adicionado sufixo .SA para tickers brasileiros)
+```
+
+**Status:** OK - Phase 0 com parallelism + progress bar funcionando
+
+---
 
 ### 2026-01-06 (Noite - Update 8)
 **BuzzFactory - Otimizacoes de Performance e Arquitetura**

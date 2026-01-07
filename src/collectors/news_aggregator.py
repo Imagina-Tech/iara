@@ -1,15 +1,113 @@
 """
-NEWS AGGREGATOR - Agregação e Tratamento de Notícias
-Combina GNews API + newspaper3k + Gemini NLP para extração de tickers
+NEWS AGGREGATOR - Agregacao e Tratamento de Noticias
+Combina GNews API + newspaper3k + Gemini NLP para extracao de tickers
+
+Sistema de Scoring (2026-01-07):
+- Fontes de investimento: score alto (1.0-1.5)
+- Fontes de noticias gerais: score medio (0.8-1.0)
+- Fontes desconhecidas: score baixo (0.5)
+- Bonus para noticias do pais da empresa
+- Penalidade para noticias antigas (>24h)
 """
 
 import asyncio
 import logging
-from datetime import datetime
-from typing import Dict, List, Optional, Any
+import re
+from datetime import datetime, timedelta
+from typing import Dict, List, Optional, Any, Tuple
 from dataclasses import dataclass
 
 logger = logging.getLogger(__name__)
+
+
+# === SISTEMA DE SCORING DE FONTES ===
+# Fontes de investimento/financeiras premium (score 1.2-1.5)
+# Fontes de noticias gerais (score 0.8-1.0)
+# Fontes desconhecidas (score 0.5)
+
+SOURCE_QUALITY_SCORES: Dict[str, float] = {
+    # === TIER 1: FONTES PREMIUM DE INVESTIMENTO (1.3-1.5) ===
+    # Global
+    "reuters.com": 1.5,
+    "bloomberg.com": 1.5,
+    "wsj.com": 1.5,
+    "ft.com": 1.4,  # Financial Times
+    "cnbc.com": 1.4,
+    "marketwatch.com": 1.4,
+    "finance.yahoo.com": 1.3,
+    "seekingalpha.com": 1.3,
+    "investing.com": 1.3,
+    "barrons.com": 1.3,
+    "fool.com": 1.2,  # Motley Fool
+    "benzinga.com": 1.2,
+    "thestreet.com": 1.2,
+
+    # === TIER 2: FONTES BRASILEIRAS DE INVESTIMENTO (1.3-1.5) ===
+    "infomoney.com.br": 1.5,
+    "valor.globo.com": 1.5,
+    "exame.com": 1.4,
+    "moneytimes.com.br": 1.4,
+    "einvestidor.estadao.com.br": 1.3,
+    "investnews.com.br": 1.3,
+    "suno.com.br": 1.3,
+    "seudinheiro.com": 1.2,
+    "trademap.com.br": 1.2,
+    "statusinvest.com.br": 1.2,
+    "fundamentus.com.br": 1.2,
+    "guiainvest.com.br": 1.2,
+    "br.investing.com": 1.3,
+
+    # === TIER 3: GRANDES PORTAIS DE NOTICIA (1.0-1.1) ===
+    # Global
+    "cnn.com": 1.1,
+    "bbc.com": 1.1,
+    "nytimes.com": 1.1,
+    "forbes.com": 1.1,
+    "businessinsider.com": 1.0,
+    "techcrunch.com": 1.0,
+    # Brasil
+    "g1.globo.com": 1.1,
+    "uol.com.br": 1.0,
+    "folha.uol.com.br": 1.1,
+    "estadao.com.br": 1.1,
+    "oglobo.globo.com": 1.0,
+    "terra.com.br": 0.9,
+    "r7.com": 0.9,
+
+    # === TIER 4: NOTICIAS GERAIS (0.7-0.9) ===
+    "yahoo.com": 0.9,
+    "google.com": 0.8,
+    "msn.com": 0.8,
+    "aol.com": 0.7,
+}
+
+# === MAPEAMENTO DE TICKERS PARA PAIS ===
+# Usado para priorizar noticias do pais da empresa
+TICKER_COUNTRY_MAP: Dict[str, str] = {
+    # Brasil - B3
+    "PETR4.SA": "BR", "PETR3.SA": "BR", "VALE3.SA": "BR", "ITUB4.SA": "BR",
+    "BBDC4.SA": "BR", "WEGE3.SA": "BR", "B3SA3.SA": "BR", "RENT3.SA": "BR",
+    "MGLU3.SA": "BR", "PRIO3.SA": "BR", "ABEV3.SA": "BR", "BBAS3.SA": "BR",
+    "SUZB3.SA": "BR", "GGBR4.SA": "BR", "CSNA3.SA": "BR", "JBSS3.SA": "BR",
+    # Brasil - ADRs
+    "PBR": "BR", "VALE": "BR", "ITUB": "BR", "BBD": "BR", "NU": "BR", "XP": "BR",
+    # USA - Default para tickers sem .SA
+}
+
+# Dominios por pais (para bonus de localizacao)
+COUNTRY_DOMAINS: Dict[str, List[str]] = {
+    "BR": [
+        "infomoney.com.br", "valor.globo.com", "exame.com", "moneytimes.com.br",
+        "g1.globo.com", "uol.com.br", "folha.uol.com.br", "estadao.com.br",
+        "oglobo.globo.com", "br.investing.com", "suno.com.br", "investnews.com.br",
+        "einvestidor.estadao.com.br", "seudinheiro.com", "trademap.com.br",
+    ],
+    "US": [
+        "reuters.com", "bloomberg.com", "wsj.com", "cnbc.com", "marketwatch.com",
+        "finance.yahoo.com", "seekingalpha.com", "benzinga.com", "thestreet.com",
+        "cnn.com", "nytimes.com", "forbes.com", "businessinsider.com",
+    ],
+}
 
 # === MAPEAMENTO DE NOMES DE EMPRESAS PARA TICKERS ===
 # Permite detectar empresas mesmo quando o ticker não aparece no texto
@@ -99,51 +197,325 @@ class NewsAggregator:
         Inicializa o agregador.
 
         Args:
-            config: Configurações do sistema
+            config: Configuracoes do sistema
             ai_gateway: Gateway de IA para processamento (opcional)
         """
         self.config = config
         self.ai_gateway = ai_gateway
 
+        # Configuracao de freshness (max idade em horas)
+        self.max_news_age_hours = config.get("news", {}).get("max_age_hours", 48)
+
+    def _extract_domain(self, url: str) -> str:
+        """Extrai dominio de uma URL."""
+        try:
+            from urllib.parse import urlparse
+            parsed = urlparse(url)
+            domain = parsed.netloc.lower()
+            # Remover www.
+            if domain.startswith("www."):
+                domain = domain[4:]
+            return domain
+        except Exception:
+            return ""
+
+    def _get_source_score(self, url: str) -> float:
+        """
+        Retorna score de qualidade da fonte (0.5-1.5).
+        Fontes premium de investimento: 1.3-1.5
+        Fontes gerais: 0.8-1.0
+        Desconhecidas: 0.5
+        """
+        domain = self._extract_domain(url)
+
+        # Verificar score direto
+        if domain in SOURCE_QUALITY_SCORES:
+            return SOURCE_QUALITY_SCORES[domain]
+
+        # Verificar subdomains (ex: economia.uol.com.br)
+        for known_domain, score in SOURCE_QUALITY_SCORES.items():
+            if domain.endswith(known_domain):
+                return score
+
+        # Fonte desconhecida
+        return 0.5
+
+    def _get_country_bonus(self, ticker: str, url: str) -> float:
+        """
+        Retorna bonus se noticia e do mesmo pais da empresa.
+        Bonus: +0.3 se for do mesmo pais
+        """
+        # Determinar pais do ticker
+        ticker_country = TICKER_COUNTRY_MAP.get(ticker.upper())
+        if not ticker_country:
+            # Default: BR se termina com .SA, senao US
+            ticker_country = "BR" if ticker.upper().endswith(".SA") else "US"
+
+        # Verificar se dominio e do pais do ticker
+        domain = self._extract_domain(url)
+        country_domains = COUNTRY_DOMAINS.get(ticker_country, [])
+
+        for country_domain in country_domains:
+            if domain.endswith(country_domain) or country_domain in domain:
+                return 0.3  # Bonus de localizacao
+
+        return 0.0
+
+    def _parse_published_date(self, published_str: str) -> Optional[datetime]:
+        """
+        Parseia string de data de publicacao em varios formatos.
+        """
+        if not published_str:
+            return None
+
+        # Formatos comuns
+        formats = [
+            "%a, %d %b %Y %H:%M:%S %Z",  # "Mon, 06 Jan 2026 10:30:00 GMT"
+            "%a, %d %b %Y %H:%M:%S %z",  # Com timezone offset
+            "%Y-%m-%dT%H:%M:%SZ",         # ISO 8601
+            "%Y-%m-%dT%H:%M:%S%z",        # ISO 8601 com timezone
+            "%Y-%m-%d %H:%M:%S",          # Simples
+            "%Y-%m-%d",                    # Apenas data
+            "%d/%m/%Y %H:%M",             # BR format
+            "%d/%m/%Y",                    # BR format sem hora
+        ]
+
+        for fmt in formats:
+            try:
+                return datetime.strptime(published_str.strip(), fmt)
+            except ValueError:
+                continue
+
+        # Tentar parsear formatos relativos (ex: "2 hours ago")
+        try:
+            published_lower = published_str.lower()
+            now = datetime.now()
+
+            if "hour" in published_lower or "hora" in published_lower:
+                match = re.search(r"(\d+)", published_str)
+                if match:
+                    hours = int(match.group(1))
+                    return now - timedelta(hours=hours)
+
+            if "minute" in published_lower or "minuto" in published_lower:
+                match = re.search(r"(\d+)", published_str)
+                if match:
+                    minutes = int(match.group(1))
+                    return now - timedelta(minutes=minutes)
+
+            if "day" in published_lower or "dia" in published_lower:
+                match = re.search(r"(\d+)", published_str)
+                if match:
+                    days = int(match.group(1))
+                    return now - timedelta(days=days)
+
+            if "yesterday" in published_lower or "ontem" in published_lower:
+                return now - timedelta(days=1)
+
+        except Exception:
+            pass
+
+        return None
+
+    def _get_freshness_score(self, published_str: str) -> float:
+        """
+        Retorna score baseado na freshness da noticia.
+        Noticias recentes: 1.0
+        Noticias antigas: 0.3-0.8
+        Sem data: 0.5
+        """
+        pub_date = self._parse_published_date(published_str)
+        if not pub_date:
+            return 0.5  # Sem data conhecida
+
+        now = datetime.now()
+
+        # Ajustar para timezone se necessario
+        if pub_date.tzinfo:
+            pub_date = pub_date.replace(tzinfo=None)
+
+        age_hours = (now - pub_date).total_seconds() / 3600
+
+        if age_hours < 0:
+            # Data no futuro (provavelmente erro de parsing)
+            return 0.5
+
+        if age_hours <= 1:
+            return 1.0  # Ultima hora
+        elif age_hours <= 6:
+            return 0.95  # Ultimas 6 horas
+        elif age_hours <= 12:
+            return 0.85  # Ultimas 12 horas
+        elif age_hours <= 24:
+            return 0.7  # Ultimo dia
+        elif age_hours <= 48:
+            return 0.5  # Ultimos 2 dias
+        elif age_hours <= 72:
+            return 0.3  # Ultimos 3 dias
+        else:
+            return 0.1  # Muito antiga
+
+    def calculate_article_score(self, article: Dict[str, Any], ticker: str) -> float:
+        """
+        Calcula score total de um artigo combinando todos os fatores.
+
+        Score = base_score * source_quality * freshness + country_bonus
+
+        Args:
+            article: Dicionario do artigo
+            ticker: Ticker para verificar bonus de pais
+
+        Returns:
+            Score final (0-10)
+        """
+        url = article.get("url", "")
+        published = article.get("published", "")
+
+        # Componentes do score
+        source_score = self._get_source_score(url)  # 0.5-1.5
+        freshness_score = self._get_freshness_score(published)  # 0.1-1.0
+        country_bonus = self._get_country_bonus(ticker, url)  # 0.0-0.3
+
+        # Base score (5.0) * multipliers + bonus
+        base = 5.0
+        final_score = (base * source_score * freshness_score) + (country_bonus * 2)
+
+        # Clamp entre 0 e 10
+        return max(0.0, min(10.0, final_score))
+
+    def _is_news_fresh(self, published_str: str) -> bool:
+        """Verifica se noticia esta dentro do limite de idade."""
+        pub_date = self._parse_published_date(published_str)
+        if not pub_date:
+            return True  # Sem data, assume que e recente
+
+        now = datetime.now()
+        if pub_date.tzinfo:
+            pub_date = pub_date.replace(tzinfo=None)
+
+        age_hours = (now - pub_date).total_seconds() / 3600
+        return age_hours <= self.max_news_age_hours
+
     async def get_gnews(self, ticker: str, max_results: int = 5, fetch_full_content: bool = False) -> List[Dict[str, Any]]:
         """
-        Busca notícias do GNews API.
+        Busca noticias do GNews API com scoring e filtragem inteligente.
+
+        Funcionalidades:
+        - Busca em ingles E no idioma do pais da empresa
+        - Filtra noticias antigas (>48h por default)
+        - Calcula score baseado em: fonte, freshness, pais
+        - Ordena por score (melhores primeiro)
 
         Args:
             ticker: Ticker do ativo
-            max_results: Número máximo de resultados
+            max_results: Numero maximo de resultados
             fetch_full_content: Se True, faz scrape completo do artigo (mais lento)
 
         Returns:
-            Lista de artigos (dicts)
+            Lista de artigos ordenados por score (dicts)
         """
         try:
             from gnews import GNews  # type: ignore
 
-            google_news = GNews(language='en', max_results=max_results)
-            news = google_news.get_news(ticker)
+            # Determinar pais do ticker para busca localizada
+            is_brazilian = ticker.upper().endswith(".SA") or ticker.upper() in ["PBR", "VALE", "ITUB", "BBD", "NU", "XP"]
 
-            articles = []
-            for item in (news or []):
-                article_data = {
-                    "title": item.get("title", ""),
-                    "url": item.get("url", ""),
-                    "published": item.get("published date", ""),
-                    "description": item.get("description", ""),
-                    "source": "GNews",
-                    "full_content": ""
-                }
+            all_articles = []
 
-                # Scrape conteúdo completo se solicitado (para o Judge)
-                if fetch_full_content and article_data["url"]:
-                    full_content = await self._scrape_article_content(article_data["url"])
-                    if full_content:
-                        article_data["full_content"] = full_content
+            # Buscar mais do que o necessario (para filtrar depois)
+            fetch_count = max_results * 3
 
-                articles.append(article_data)
+            # Busca 1: Ingles (global)
+            try:
+                google_news_en = GNews(language='en', country='US', max_results=fetch_count)
+                news_en = google_news_en.get_news(ticker) or []
+                for item in news_en:
+                    all_articles.append({
+                        "title": item.get("title", ""),
+                        "url": item.get("url", ""),
+                        "published": item.get("published date", ""),
+                        "description": item.get("description", ""),
+                        "source": item.get("publisher", {}).get("title", "GNews"),
+                        "language": "en"
+                    })
+            except Exception as e:
+                logger.debug(f"GNews EN failed for {ticker}: {e}")
 
-            logger.info(f"GNews: Found {len(articles)} articles for {ticker}")
-            return articles
+            # Busca 2: Portugues (se ticker brasileiro)
+            if is_brazilian:
+                try:
+                    google_news_pt = GNews(language='pt', country='BR', max_results=fetch_count)
+                    # Buscar por nome da empresa tambem
+                    search_terms = [ticker]
+                    if ticker == "PETR4.SA" or ticker == "PETR3.SA":
+                        search_terms.append("Petrobras")
+                    elif ticker == "VALE3.SA" or ticker == "VALE":
+                        search_terms.append("Vale mineradora")
+                    elif ticker == "ITUB4.SA" or ticker == "ITUB":
+                        search_terms.append("Itau Unibanco")
+
+                    for term in search_terms:
+                        news_pt = google_news_pt.get_news(term) or []
+                        for item in news_pt:
+                            all_articles.append({
+                                "title": item.get("title", ""),
+                                "url": item.get("url", ""),
+                                "published": item.get("published date", ""),
+                                "description": item.get("description", ""),
+                                "source": item.get("publisher", {}).get("title", "GNews-BR"),
+                                "language": "pt"
+                            })
+                except Exception as e:
+                    logger.debug(f"GNews PT failed for {ticker}: {e}")
+
+            # Remover duplicatas (por URL)
+            seen_urls = set()
+            unique_articles = []
+            for art in all_articles:
+                url = art.get("url", "")
+                if url and url not in seen_urls:
+                    seen_urls.add(url)
+                    unique_articles.append(art)
+
+            # Filtrar por freshness
+            fresh_articles = [
+                art for art in unique_articles
+                if self._is_news_fresh(art.get("published", ""))
+            ]
+
+            # Calcular score para cada artigo
+            scored_articles = []
+            for art in fresh_articles:
+                score = self.calculate_article_score(art, ticker)
+                art["relevance_score"] = round(score, 2)
+                art["source_quality"] = round(self._get_source_score(art.get("url", "")), 2)
+                art["freshness_score"] = round(self._get_freshness_score(art.get("published", "")), 2)
+                scored_articles.append(art)
+
+            # Ordenar por score (maior primeiro)
+            scored_articles.sort(key=lambda x: x.get("relevance_score", 0), reverse=True)
+
+            # Pegar top results
+            top_articles = scored_articles[:max_results]
+
+            # Buscar conteudo completo se solicitado
+            if fetch_full_content:
+                for art in top_articles:
+                    if art.get("url"):
+                        full_content = await self._scrape_article_content(art["url"])
+                        art["full_content"] = full_content if full_content else ""
+
+            # Log detalhado
+            if top_articles:
+                best = top_articles[0]
+                logger.info(
+                    f"GNews: {len(top_articles)}/{len(unique_articles)} articles for {ticker} "
+                    f"(best: {best.get('relevance_score', 0):.1f} from {self._extract_domain(best.get('url', ''))})"
+                )
+            else:
+                logger.info(f"GNews: No fresh articles for {ticker}")
+
+            return top_articles
 
         except Exception as e:
             logger.error(f"Error fetching GNews for {ticker}: {e}")

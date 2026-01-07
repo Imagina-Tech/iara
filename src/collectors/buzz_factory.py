@@ -6,16 +6,66 @@ Arquitetura de Cache (2026-01-06):
 - _market_data_cache: Cache de dados de mercado por ticker (limpo a cada ciclo)
 - _news_cache: Cache de noticias por ticker (limpo a cada ciclo)
 - Evita chamadas duplicadas ao yfinance durante um ciclo de scan
+
+Paralelismo (2026-01-07):
+- Semaphores para controle de concorrencia (evita sobrecarregar APIs)
+- Processamento em batches paralelos
+- Progress bar global de 0-100%
 """
 
 import json
 import logging
+import asyncio
+import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Any, Set
+from typing import Dict, List, Optional, Any, Set, Callable
 from dataclasses import dataclass, field
 
 logger = logging.getLogger(__name__)
+
+
+class ProgressTracker:
+    """
+    Rastreador de progresso global para Phase 0.
+    Exibe barra de progresso fixa de 0-100%.
+    """
+
+    def __init__(self, total_steps: int):
+        self.total_steps = total_steps
+        self.completed_steps = 0
+        self.current_phase = ""
+        self.lock = asyncio.Lock()
+
+    async def update(self, steps: int = 1, phase: str = None):
+        """Atualiza progresso de forma thread-safe."""
+        async with self.lock:
+            self.completed_steps += steps
+            if phase:
+                self.current_phase = phase
+            self._render()
+
+    async def set_phase(self, phase: str):
+        """Define a fase atual."""
+        async with self.lock:
+            self.current_phase = phase
+            self._render()
+
+    def _render(self):
+        """Renderiza a barra de progresso."""
+        pct = min(100, (self.completed_steps / self.total_steps) * 100)
+        bar_width = 30
+        filled = int(bar_width * pct / 100)
+        bar = "=" * filled + "-" * (bar_width - filled)
+        # Usar \r para sobrescrever a linha
+        sys.stdout.write(f"\r[PHASE 0] [{bar}] {pct:5.1f}% | {self.current_phase:40s}")
+        sys.stdout.flush()
+
+    def finish(self):
+        """Finaliza e mostra 100%."""
+        self.completed_steps = self.total_steps
+        self._render()
+        print()  # Nova linha
 
 # Project root directory
 PROJECT_ROOT = Path(__file__).parent.parent.parent
@@ -67,6 +117,17 @@ class BuzzFactory:
         # NewsAggregator para buscar noticias (lazy initialization)
         self._news_aggregator = None
 
+        # Semaphores para controle de concorrencia (evita sobrecarregar APIs)
+        # Valores configuraveis via settings.yaml
+        phase0_config = config.get("phase0", {})
+        market_limit = phase0_config.get("parallel_market_requests", 10)
+        news_limit = phase0_config.get("parallel_news_requests", 3)
+        self._market_semaphore = asyncio.Semaphore(market_limit)
+        self._news_semaphore = asyncio.Semaphore(news_limit)
+
+        # Progress tracker (inicializado em generate_daily_buzz)
+        self._progress: Optional[ProgressTracker] = None
+
     def _get_news_aggregator(self):
         """Lazy initialization do NewsAggregator."""
         if self._news_aggregator is None:
@@ -114,6 +175,104 @@ class BuzzFactory:
         else:
             return "unknown"
 
+    async def _get_market_data_parallel(self, ticker: str) -> Optional[Any]:
+        """
+        Busca dados de mercado com semaphore para controle de concorrencia.
+        Usa cache para evitar chamadas duplicadas.
+        """
+        if ticker in self._market_data_cache:
+            return self._market_data_cache[ticker]
+
+        async with self._market_semaphore:
+            # Verificar cache novamente (outro task pode ter preenchido)
+            if ticker in self._market_data_cache:
+                return self._market_data_cache[ticker]
+
+            # Executar em thread pool (yfinance e bloqueante)
+            loop = asyncio.get_event_loop()
+            data = await loop.run_in_executor(None, self.market_data.get_stock_data, ticker)
+            self._market_data_cache[ticker] = data
+            return data
+
+    async def _fetch_news_parallel(self, ticker: str) -> str:
+        """
+        Busca noticias com semaphore para controle de rate limiting.
+        """
+        if ticker in self._news_cache:
+            return self._news_cache[ticker]
+
+        async with self._news_semaphore:
+            # Verificar cache novamente
+            if ticker in self._news_cache:
+                return self._news_cache[ticker]
+
+            # Ler config de noticias
+            phase0_config = self.config.get("phase0", {})
+            news_per_ticker = phase0_config.get("news_per_ticker", 3)
+            fetch_full = phase0_config.get("news_fetch_full_content", False)
+
+            news_content = ""
+            try:
+                aggregator = self._get_news_aggregator()
+                articles = await aggregator.get_gnews(ticker, max_results=news_per_ticker, fetch_full_content=fetch_full)
+
+                if articles:
+                    parts = [f"Recent news for {ticker}:"]
+                    for art in articles[:news_per_ticker]:
+                        title = art.get("title", "")
+                        source = art.get("source", "")
+                        if title:
+                            parts.append(f"- [{source}] {title}")
+                    news_content = "\n".join(parts)
+            except Exception as e:
+                logger.debug(f"[NEWS] {ticker}: Erro - {e}")
+
+            self._news_cache[ticker] = news_content
+            return news_content
+
+    async def _process_ticker_complete(self, ticker: str, source: str,
+                                        score_func: Callable, reason_func: Callable,
+                                        skip_market_data: bool = False) -> Optional[BuzzCandidate]:
+        """
+        Processa um ticker completo (market data + news) em paralelo.
+        Retorna BuzzCandidate ou None se nao passar nos criterios.
+        """
+        try:
+            # 1. Buscar market data (se necessario)
+            data = None
+            if not skip_market_data:
+                data = await self._get_market_data_parallel(ticker)
+                if not data:
+                    return None
+
+            # 2. Calcular score e verificar criterios
+            score = score_func(data) if data else 0
+            if score <= 0:
+                return None
+
+            # 3. Buscar noticias em paralelo
+            news_content = await self._fetch_news_parallel(ticker)
+
+            # 4. Determinar tier
+            market_cap = data.market_cap if data and hasattr(data, 'market_cap') and data.market_cap else 0.0
+            tier = self._determine_tier(market_cap)
+
+            # 5. Criar candidato
+            return BuzzCandidate(
+                ticker=ticker,
+                source=source,
+                buzz_score=score,
+                reason=reason_func(data) if data else "",
+                detected_at=datetime.now(),
+                tier=tier,
+                market_cap=market_cap,
+                news_content=news_content
+            )
+
+        except Exception as e:
+            logger.debug(f"[PARALLEL] {ticker}: Erro - {e}")
+            return None
+
     async def _fetch_news_for_ticker(self, ticker: str) -> str:
         """
         Busca noticias para um ticker com cache.
@@ -128,14 +287,19 @@ class BuzzFactory:
         if ticker in self._news_cache:
             return self._news_cache[ticker]
 
+        # Ler config de noticias (com defaults)
+        phase0_config = self.config.get("phase0", {})
+        news_per_ticker = phase0_config.get("news_per_ticker", 3)
+        fetch_full = phase0_config.get("news_fetch_full_content", False)
+
         news_content = ""
         try:
             aggregator = self._get_news_aggregator()
-            articles = await aggregator.get_gnews(ticker, max_results=3, fetch_full_content=False)
+            articles = await aggregator.get_gnews(ticker, max_results=news_per_ticker, fetch_full_content=fetch_full)
 
             if articles:
                 parts = [f"Recent news for {ticker}:"]
-                for art in articles[:3]:
+                for art in articles[:news_per_ticker]:
                     title = art.get("title", "")
                     source = art.get("source", "")
                     if title:
@@ -155,7 +319,7 @@ class BuzzFactory:
 
     async def generate_daily_buzz(self, force_all: bool = False, max_candidates: int = 25) -> List[BuzzCandidate]:
         """
-        Gera a lista de oportunidades do dia.
+        Gera a lista de oportunidades do dia com processamento paralelo.
 
         Args:
             force_all: Se True, forca execucao de TODAS as fontes independente do horario (para testes)
@@ -167,41 +331,67 @@ class BuzzFactory:
         # Limpa caches do ciclo anterior
         self._clear_cycle_cache()
 
+        # Calcular total de steps para progress bar
+        # Watchlist: ~10 tickers, Universe: ~54 tickers, Gaps: ~54 tickers, News: ~30 artigos
+        watchlist_path = PROJECT_ROOT / "config" / "watchlist.json"
+        watchlist_count = 0
+        if watchlist_path.exists():
+            with open(watchlist_path, "r") as f:
+                wl_data = json.load(f)
+                for tickers in wl_data.values():
+                    if isinstance(tickers, list):
+                        watchlist_count += len(tickers)
+
+        universe_count = len(self._get_scan_universe())
+        # Total: watchlist + volume + gaps + news catalyst (~30 artigos estimados)
+        total_steps = watchlist_count + universe_count + universe_count + 30
+
+        # Inicializar progress tracker
+        self._progress = ProgressTracker(total_steps)
+        print()  # Linha em branco antes do progress bar
+
         candidates: List[BuzzCandidate] = []
         seen_tickers: Set[str] = set()
 
-        # 1. Adiciona watchlist fixa (Tier 1)
-        watchlist_candidates = await self._scan_watchlist()
+        # 1. Adiciona watchlist fixa (PARALELO)
+        await self._progress.set_phase("Watchlist: scanning...")
+        watchlist_candidates = await self._scan_watchlist_parallel()
         for c in watchlist_candidates:
             if c.ticker not in seen_tickers:
                 candidates.append(c)
                 seen_tickers.add(c.ticker)
 
-        # 2. Scan de Volume Spikes
-        volume_candidates = await self._scan_volume_spikes()
+        # 2. Scan de Volume Spikes (PARALELO)
+        await self._progress.set_phase("Volume Spikes: scanning...")
+        volume_candidates = await self._scan_volume_spikes_parallel()
         for c in volume_candidates:
             if c.ticker not in seen_tickers:
                 candidates.append(c)
                 seen_tickers.add(c.ticker)
 
-        # 3. Scan de Gaps
-        gap_candidates = await self._scan_gaps(force=force_all)
+        # 3. Scan de Gaps (PARALELO)
+        await self._progress.set_phase("Gap Scanner: scanning...")
+        gap_candidates = await self._scan_gaps_parallel(force=force_all)
         for c in gap_candidates:
             if c.ticker not in seen_tickers:
                 candidates.append(c)
                 seen_tickers.add(c.ticker)
 
-        # 4. Scan de Notícias com Alto Impacto
+        # 4. Scan de Noticias com Alto Impacto
+        await self._progress.set_phase("News Catalysts: scanning...")
         news_candidates = await self._scan_news_catalysts()
         for c in news_candidates:
             if c.ticker not in seen_tickers:
                 candidates.append(c)
                 seen_tickers.add(c.ticker)
 
+        # Finalizar progress
+        self._progress.finish()
+
         # Ordena por buzz_score decrescente
         candidates.sort(key=lambda x: x.buzz_score, reverse=True)
 
-        # Limita ao máximo de candidatos
+        # Limita ao maximo de candidatos
         total_found = len(candidates)
         candidates = candidates[:max_candidates]
 
@@ -592,8 +782,266 @@ class BuzzFactory:
 
             logger.info(f"News catalyst scan complete: {len(candidates)} candidates from {len(catalyst_news)} articles")
 
+            # Atualizar progress
+            if self._progress:
+                await self._progress.update(len(catalyst_news), "News Catalysts: done")
+
         except Exception as e:
             logger.error(f"Error in news catalyst scan: {e}")
+
+        return candidates
+
+    # =========================================================================
+    # METODOS DE SCAN PARALELO (otimizados para performance)
+    # =========================================================================
+
+    async def _scan_watchlist_parallel(self) -> List[BuzzCandidate]:
+        """
+        Escaneia watchlist com processamento paralelo.
+        Usa semaphores para controlar concorrencia.
+        """
+        candidates = []
+
+        try:
+            watchlist_path = PROJECT_ROOT / "config" / "watchlist.json"
+            if not watchlist_path.exists():
+                return candidates
+
+            with open(watchlist_path, "r") as f:
+                watchlist_data = json.load(f)
+
+            # Coletar todos os tickers com tier
+            all_tickers = []
+            for tier_name, tickers in watchlist_data.items():
+                if isinstance(tickers, list):
+                    for ticker in tickers:
+                        all_tickers.append((ticker, tier_name))
+
+            if not all_tickers:
+                return candidates
+
+            async def process_watchlist_ticker(ticker: str, expected_tier: str) -> Optional[BuzzCandidate]:
+                """Processa um ticker da watchlist em paralelo."""
+                try:
+                    # Buscar market data em paralelo
+                    data = await self._get_market_data_parallel(ticker)
+                    if not data:
+                        return None
+
+                    # Verificar market cap
+                    market_cap = data.market_cap if hasattr(data, 'market_cap') and data.market_cap else 0.0
+                    tier_config = self.config.get("tiers", {}).get(expected_tier, {})
+                    min_cap = tier_config.get("min_market_cap", 0)
+
+                    if market_cap < min_cap:
+                        return None
+
+                    # Determinar tier e buscar news em paralelo
+                    tier = self._determine_tier(market_cap)
+                    news_content = await self._fetch_news_parallel(ticker)
+
+                    # Atualizar progress
+                    if self._progress:
+                        await self._progress.update(1, f"Watchlist: {ticker}")
+
+                    base_score = 5.0 if tier == "tier1_large_cap" else 4.0
+                    return BuzzCandidate(
+                        ticker=ticker,
+                        source="watchlist",
+                        buzz_score=base_score,
+                        reason=f"{tier.replace('_', ' ').title()} watchlist (${market_cap/1e9:.1f}B)",
+                        detected_at=datetime.now(),
+                        tier=tier,
+                        market_cap=market_cap,
+                        news_content=news_content
+                    )
+                except Exception as e:
+                    logger.debug(f"[WATCHLIST] {ticker}: {e}")
+                    if self._progress:
+                        await self._progress.update(1)
+                    return None
+
+            # Processar todos em paralelo
+            tasks = [process_watchlist_ticker(t, tier) for t, tier in all_tickers]
+            results = await asyncio.gather(*tasks, return_exceptions=True)
+
+            # Filtrar resultados validos
+            for r in results:
+                if isinstance(r, BuzzCandidate):
+                    candidates.append(r)
+
+        except Exception as e:
+            logger.error(f"Error in parallel watchlist scan: {e}")
+
+        return candidates
+
+    async def _scan_volume_spikes_parallel(self) -> List[BuzzCandidate]:
+        """
+        Identifica ativos com volume anormal usando processamento paralelo.
+        """
+        candidates = []
+
+        try:
+            phase0_config = self.config.get("phase0", {})
+            volume_multiplier = phase0_config.get("volume_spike_multiplier", 2.0)
+            min_dollar_volume = self.config.get("liquidity", {}).get("min_dollar_volume", 15_000_000)
+
+            # Calcular elapsed_fraction
+            from datetime import time as dt_time
+            now = datetime.now()
+            market_open = datetime.combine(now.date(), dt_time(9, 30))
+            market_close = datetime.combine(now.date(), dt_time(16, 0))
+
+            if now < market_open or now > market_close:
+                elapsed_fraction = 1.0
+            else:
+                elapsed_minutes = (now - market_open).seconds / 60
+                elapsed_fraction = max(0.1, min(1.0, elapsed_minutes / 390))
+
+            universe = self._get_scan_universe()
+
+            async def process_volume_ticker(ticker: str) -> Optional[BuzzCandidate]:
+                """Processa um ticker para volume spike em paralelo."""
+                try:
+                    data = await self._get_market_data_parallel(ticker)
+                    if not data:
+                        if self._progress:
+                            await self._progress.update(1)
+                        return None
+
+                    # Calcular volume ratio
+                    if hasattr(data, 'volume') and hasattr(data, 'avg_volume'):
+                        current_vol = data.volume or 0
+                        avg_vol = data.avg_volume or 0
+
+                        if avg_vol > 0 and elapsed_fraction > 0:
+                            projected = current_vol / elapsed_fraction
+                            ratio = projected / avg_vol
+
+                            if ratio >= volume_multiplier:
+                                dollar_vol = projected * (data.price if hasattr(data, 'price') else 0)
+                                if dollar_vol >= min_dollar_volume:
+                                    market_cap = data.market_cap if hasattr(data, 'market_cap') and data.market_cap else 0.0
+                                    tier = self._determine_tier(market_cap)
+                                    news = await self._fetch_news_parallel(ticker)
+
+                                    if self._progress:
+                                        await self._progress.update(1, f"Volume: {ticker} ({ratio:.1f}x)")
+
+                                    return BuzzCandidate(
+                                        ticker=ticker,
+                                        source="volume_spike",
+                                        buzz_score=7.0 + min(ratio, 5.0),
+                                        reason=f"Volume spike {ratio:.1f}x (${dollar_vol/1e6:.1f}M)",
+                                        detected_at=datetime.now(),
+                                        tier=tier,
+                                        market_cap=market_cap,
+                                        news_content=news
+                                    )
+
+                    if self._progress:
+                        await self._progress.update(1)
+                    return None
+
+                except Exception as e:
+                    logger.debug(f"[VOLUME] {ticker}: {e}")
+                    if self._progress:
+                        await self._progress.update(1)
+                    return None
+
+            # Processar em paralelo
+            tasks = [process_volume_ticker(t) for t in universe]
+            results = await asyncio.gather(*tasks, return_exceptions=True)
+
+            for r in results:
+                if isinstance(r, BuzzCandidate):
+                    candidates.append(r)
+
+        except Exception as e:
+            logger.error(f"Error in parallel volume scan: {e}")
+
+        return candidates
+
+    async def _scan_gaps_parallel(self, force: bool = False) -> List[BuzzCandidate]:
+        """
+        Identifica gaps significativos usando processamento paralelo.
+        """
+        candidates = []
+
+        try:
+            phase0_config = self.config.get("phase0", {})
+            gap_threshold = phase0_config.get("gap_threshold", 0.03)
+
+            # Verificar horario (a menos que force=True)
+            if not force:
+                from datetime import time as dt_time
+                now = datetime.now()
+                market_open_time = dt_time(9, 30)
+                premarket_start = dt_time(8, 0)
+
+                is_premarket = premarket_start <= now.time() < market_open_time
+                is_early = (now.time() >= market_open_time and
+                            (now - datetime.combine(now.date(), market_open_time)).seconds < 1800)
+
+                if not (is_premarket or is_early):
+                    return candidates
+
+            universe = self._get_scan_universe()
+
+            async def process_gap_ticker(ticker: str) -> Optional[BuzzCandidate]:
+                """Processa um ticker para gap em paralelo."""
+                try:
+                    data = await self._get_market_data_parallel(ticker)
+                    if not data:
+                        if self._progress:
+                            await self._progress.update(1)
+                        return None
+
+                    if hasattr(data, 'price') and hasattr(data, 'previous_close'):
+                        prev = data.previous_close
+                        if prev and prev > 0:
+                            gap = (data.price - prev) / prev
+
+                            if abs(gap) >= gap_threshold:
+                                direction = "up" if gap > 0 else "down"
+                                market_cap = data.market_cap if hasattr(data, 'market_cap') and data.market_cap else 0.0
+                                tier = self._determine_tier(market_cap)
+                                news = await self._fetch_news_parallel(ticker)
+
+                                if self._progress:
+                                    await self._progress.update(1, f"Gap: {ticker} ({gap*100:.1f}%)")
+
+                                return BuzzCandidate(
+                                    ticker=ticker,
+                                    source="gap",
+                                    buzz_score=8.0 + min(abs(gap) * 10, 5.0),
+                                    reason=f"Gap {direction} {gap*100:.1f}%",
+                                    detected_at=datetime.now(),
+                                    tier=tier,
+                                    market_cap=market_cap,
+                                    news_content=news
+                                )
+
+                    if self._progress:
+                        await self._progress.update(1)
+                    return None
+
+                except Exception as e:
+                    logger.debug(f"[GAP] {ticker}: {e}")
+                    if self._progress:
+                        await self._progress.update(1)
+                    return None
+
+            # Processar em paralelo
+            tasks = [process_gap_ticker(t) for t in universe]
+            results = await asyncio.gather(*tasks, return_exceptions=True)
+
+            for r in results:
+                if isinstance(r, BuzzCandidate):
+                    candidates.append(r)
+
+        except Exception as e:
+            logger.error(f"Error in parallel gap scan: {e}")
 
         return candidates
 

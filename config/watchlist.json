@@ -1,11 +1,15 @@
 {
   "tier1_large_cap": [
-    "PETR4",
-    "PETR3",
+    "AAPL",
     "MSFT",
     "NVDA",
     "GOOGL",
     "AMZN"
   ],
-  "tier2_mid_cap": []
+  "tier2_mid_cap": [
+    "PETR4.SA",
+    "PETR3.SA",
+    "VALE3.SA",
+    "ITUB4.SA"
+  ]
 }
