@@ -205,13 +205,9 @@ class Orchestrator:
                             logger.info(f"[PHASE1] {ticker}: Buscando noticias (cache miss)...")
                             gnews_articles = await news_aggregator.get_gnews(ticker, max_results=3)
                             if gnews_articles:
-                                news_texts = []
-                                for art in gnews_articles[:3]:
-                                    # Incluir score no log para análise
-                                    score = art.get('relevance_score', 0)
-                                    news_texts.append(f"- [{score:.1f}] {art.get('title', '')}")
-                                news_summary = f"Recent news for {ticker}:\n" + "\n".join(news_texts)
-                                logger.info(f"[PHASE1] {ticker}: {len(gnews_articles)} noticias com scoring aplicado")
+                                # USA METODO CENTRALIZADO - mesmo formato que debug_cli
+                                news_summary = news_aggregator.format_news_for_screener(ticker, gnews_articles)
+                                logger.info(f"[PHASE1] {ticker}: {len(gnews_articles)} noticias formatadas para Screener")
                         except Exception as news_err:
                             logger.warning(f"[PHASE1] {ticker}: Erro buscando noticias - {news_err}")
 
@@ -403,21 +399,10 @@ class Orchestrator:
                         gnews_articles = await news_aggregator.get_gnews(ticker, max_results=5)
 
                         if gnews_articles:
-                            news_parts = [f"=== NEWS FOR {ticker} (SCORED) ==="]
-                            for i, art in enumerate(gnews_articles[:5], 1):
-                                title = art.get('title', 'No title')
-                                desc = art.get('description', '')[:200] if art.get('description') else ''
-                                source = art.get('source', 'Unknown')
-                                score = art.get('relevance_score', 0)
-                                freshness = art.get('freshness_score', 0)
-                                news_parts.append(f"\n[{i}] SCORE={score:.1f} (fresh={freshness:.2f}) | {title}")
-                                if desc:
-                                    news_parts.append(f"    Summary: {desc}")
-                                news_parts.append(f"    Source: {source}")
-
-                            news_details = "\n".join(news_parts)
+                            # USA METODO CENTRALIZADO - EXATAMENTE o mesmo formato que debug_cli
+                            news_details = news_aggregator.format_news_for_judge(ticker, gnews_articles)
                             logger.info(
-                                f"[PHASE3] {ticker}: {len(gnews_articles)} noticias para Judge | "
+                                f"[PHASE3] {ticker}: {len(gnews_articles)} noticias formatadas para Judge | "
                                 f"Best score: {gnews_articles[0].get('relevance_score', 0):.1f}"
                             )
                         else:

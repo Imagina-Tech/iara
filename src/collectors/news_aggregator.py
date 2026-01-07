@@ -540,6 +540,71 @@ class NewsAggregator:
             logger.error(f"Error fetching GNews for {ticker}: {e}")
             return []
 
+    def format_news_for_screener(self, ticker: str, articles: List[Dict[str, Any]]) -> str:
+        """
+        Formata noticias para o SCREENER (Phase 1).
+        Formato resumido: apenas titulos com score.
+
+        ESTE METODO E USADO TANTO NO CODIGO DE PRODUCAO QUANTO NO DEBUG.
+
+        Args:
+            ticker: Ticker do ativo
+            articles: Lista de artigos do get_gnews()
+
+        Returns:
+            String formatada para incluir no prompt do Screener
+        """
+        if not articles:
+            return f"No recent news found for {ticker}"
+
+        lines = [f"Recent news for {ticker} (scored by relevance):"]
+        for art in articles[:3]:
+            score = art.get('relevance_score', 0)
+            title = art.get('title', 'No title')
+            lines.append(f"- [{score:.1f}] {title}")
+
+        return "\n".join(lines)
+
+    def format_news_for_judge(self, ticker: str, articles: List[Dict[str, Any]]) -> str:
+        """
+        Formata noticias para o JUDGE (Phase 3).
+        Formato detalhado: titulo, score, fonte, descricao.
+
+        ESTE METODO E USADO TANTO NO CODIGO DE PRODUCAO QUANTO NO DEBUG.
+
+        Args:
+            ticker: Ticker do ativo
+            articles: Lista de artigos do get_gnews()
+
+        Returns:
+            String formatada para incluir no prompt do Judge
+        """
+        if not articles:
+            return f"No recent news found for {ticker}"
+
+        lines = [f"=== NEWS FOR {ticker} (SCORED BY RELEVANCE) ==="]
+        lines.append(f"Total articles analyzed: {len(articles)}")
+        lines.append("")
+
+        for i, art in enumerate(articles[:5], 1):
+            title = art.get('title', 'No title')
+            desc = art.get('description', '')[:300] if art.get('description') else ''
+            source = art.get('source', 'Unknown')
+            score = art.get('relevance_score', 0)
+            freshness = art.get('freshness_score', 0)
+            source_quality = art.get('source_quality', 0)
+            published = art.get('published', 'Unknown')
+
+            lines.append(f"[{i}] RELEVANCE SCORE: {score:.1f}/10")
+            lines.append(f"    Title: {title}")
+            lines.append(f"    Source: {source} (quality={source_quality:.2f})")
+            lines.append(f"    Published: {published} (freshness={freshness:.2f})")
+            if desc:
+                lines.append(f"    Summary: {desc}")
+            lines.append("")
+
+        return "\n".join(lines)
+
     def _decode_google_news_url(self, google_url: str) -> str:
         """
         Decodifica URL do Google News para URL real do artigo.

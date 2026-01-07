@@ -115,37 +115,15 @@ async def cmd_buzz():
         print(f"\r[NEWS] {idx}/{total_candidates} - Buscando noticias para {ticker}...          ", end="", flush=True)
 
         try:
-            # SCREENER (Phase 1) - apenas títulos, rápido
-            gnews_simple = await news_aggregator.get_gnews(ticker, max_results=3, fetch_full_content=False)
+            # Buscar notícias com scoring (mesmo método usado na produção)
+            gnews_articles = await news_aggregator.get_gnews(ticker, max_results=5, fetch_full_content=False)
 
-            # JUDGE (Phase 3) - conteúdo completo, mais lento
-            gnews_full = await news_aggregator.get_gnews(ticker, max_results=2, fetch_full_content=True)
-
-            if gnews_simple:
-                # Formato para SCREENER (Phase 1) - resumido
-                news_summary_parts = [f"Recent news for {ticker}:"]
-                for art in gnews_simple[:3]:
-                    news_summary_parts.append(f"- {art.get('title', 'No title')}")
-                news_summary = "\n".join(news_summary_parts)
-
-                # Formato para JUDGE (Phase 3) - conteúdo completo
-                news_details_parts = [f"=== DETAILED NEWS FOR {ticker} ==="]
-                for i, art in enumerate(gnews_full[:2], 1):
-                    news_details_parts.append(f"\n{'='*60}")
-                    news_details_parts.append(f"[ARTICLE {i}] {art.get('title', 'No title')}")
-                    news_details_parts.append(f"Source: {art.get('source', 'Unknown')}")
-                    news_details_parts.append(f"Published: {art.get('published', 'Unknown')}")
-                    news_details_parts.append(f"\nCONTENT:")
-                    if art.get('full_content'):
-                        news_details_parts.append(art['full_content'])
-                    else:
-                        news_details_parts.append(art.get('description', 'No description'))
-                news_details = "\n".join(news_details_parts)
-
+            if gnews_articles:
+                # USA METODOS CENTRALIZADOS - EXATAMENTE o mesmo formato usado no orchestrator.py
                 news_for_candidates[ticker] = {
-                    "screener_format": news_summary,
-                    "judge_format": news_details,
-                    "raw_articles": gnews_simple
+                    "screener_format": news_aggregator.format_news_for_screener(ticker, gnews_articles),
+                    "judge_format": news_aggregator.format_news_for_judge(ticker, gnews_articles),
+                    "raw_articles": gnews_articles
                 }
             else:
                 news_for_candidates[ticker] = None
