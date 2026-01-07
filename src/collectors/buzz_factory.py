@@ -37,7 +37,7 @@ class ProgressTracker:
         self.current_phase = ""
         self.lock = asyncio.Lock()
 
-    async def update(self, steps: int = 1, phase: str = None):
+    async def update(self, steps: int = 1, phase: Optional[str] = None):
         """Atualiza progresso de forma thread-safe."""
         async with self.lock:
             self.completed_steps += steps

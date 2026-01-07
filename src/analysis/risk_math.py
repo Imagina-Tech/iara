@@ -107,8 +107,9 @@ class RiskCalculator:
             # Converter para float antes de operações - .cov() e .var() retornam Scalar
             cov_val = aligned.iloc[:, 0].cov(aligned.iloc[:, 1])
             var_val = aligned.iloc[:, 1].var()
-            covariance = float(cov_val) if cov_val is not None else 0.0
-            variance = float(var_val) if var_val is not None else 0.0
+            # pd.Series.cov() e .var() retornam float, não complex (Pylance Scalar type é over-strict)
+            covariance = float(cov_val) if pd.notna(cov_val) else 0.0  # type: ignore[arg-type]
+            variance = float(var_val) if pd.notna(var_val) else 0.0  # type: ignore[arg-type]
 
             return covariance / variance if variance > 0 else 1.0
 
