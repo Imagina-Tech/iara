@@ -8,6 +8,7 @@ Suporta output colorido para melhor visualizacao do progresso paralelo.
 import asyncio
 import sys
 import os
+import signal
 import logging
 from pathlib import Path
 import yaml
@@ -79,8 +80,12 @@ async def cmd_buzz():
     FORÇA execução completa independente do horário (simula horário de mercado).
     Mostra exatamente o que será passado para Screener e Judge.
     """
+    # Timer global
+    START_TIME = datetime.now()
+
     print("\n" + "=" * 80)
     print("  BUZZ FACTORY - PHASE 0 (MODO TESTE COMPLETO)")
+    print(f"  Inicio: {START_TIME.strftime('%H:%M:%S')}")
     print("=" * 80)
     print("\n[AVISO] Simulando horário de mercado - TODAS as fontes serão executadas:")
     print("  - Watchlist (sempre ativo)")
@@ -289,7 +294,30 @@ async def cmd_buzz():
 
     print("\n" + "=" * 80)
     print(f"[SAVED] {output_path.absolute()}")
-    print("=" * 80 + "\n")
+    print("=" * 80)
+
+    # ==========================================================================
+    # ENCERRAMENTO MAJESTOSO
+    # ==========================================================================
+    END_TIME = datetime.now()
+    TOTAL_ELAPSED = (END_TIME - START_TIME).total_seconds()
+
+    minutes = int(TOTAL_ELAPSED // 60)
+    seconds = int(TOTAL_ELAPSED % 60)
+
+    print("\n")
+    print("=" * 80)
+    print("  " + "=" * 76)
+    print("  ||" + " " * 72 + "||")
+    print("  ||" + "IARA - PHASE 0 COMPLETO".center(72) + "||")
+    print("  ||" + " " * 72 + "||")
+    print("  ||" + f"Inicio: {START_TIME.strftime('%H:%M:%S')}  |  Fim: {END_TIME.strftime('%H:%M:%S')}  |  Total: {minutes}m {seconds}s".center(72) + "||")
+    print("  ||" + " " * 72 + "||")
+    print("  ||" + f"{len(filtered)} candidatos prontos para o Screener (Phase 1)".center(72) + "||")
+    print("  ||" + " " * 72 + "||")
+    print("  " + "=" * 76)
+    print("=" * 80)
+    print("\n")
 
     return result
 
@@ -433,4 +461,18 @@ async def main():
         traceback.print_exc()
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        print("\n")
+        print("=" * 80)
+        print("  " + "=" * 76)
+        print("  ||" + " " * 72 + "||")
+        print("  ||" + "IARA - PROCESSO INTERROMPIDO (Ctrl+C)".center(72) + "||")
+        print("  ||" + " " * 72 + "||")
+        print("  ||" + "Encerrando graciosamente...".center(72) + "||")
+        print("  ||" + " " * 72 + "||")
+        print("  " + "=" * 76)
+        print("=" * 80)
+        print("\n")
+        sys.exit(0)
