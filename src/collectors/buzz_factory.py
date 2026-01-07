@@ -302,7 +302,7 @@ class BuzzFactory:
         # Valores configuraveis via settings.yaml
         phase0_config = config.get("phase0", {})
         market_limit = phase0_config.get("parallel_market_requests", 10)
-        news_limit = phase0_config.get("parallel_news_requests", 3)
+        news_limit = phase0_config.get("parallel_news_requests", 4)  # Aumentado para testar limite
         self._market_semaphore = asyncio.Semaphore(market_limit)
         self._news_semaphore = asyncio.Semaphore(news_limit)
 
