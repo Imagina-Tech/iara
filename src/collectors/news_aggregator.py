@@ -11,6 +11,70 @@ from dataclasses import dataclass
 
 logger = logging.getLogger(__name__)
 
+# === MAPEAMENTO DE NOMES DE EMPRESAS PARA TICKERS ===
+# Permite detectar empresas mesmo quando o ticker não aparece no texto
+COMPANY_TO_TICKER = {
+    # Big Tech
+    "apple": "AAPL", "microsoft": "MSFT", "google": "GOOGL", "alphabet": "GOOGL",
+    "amazon": "AMZN", "meta": "META", "facebook": "META", "nvidia": "NVDA",
+    "tesla": "TSLA",
+    # Finance
+    "jpmorgan": "JPM", "jp morgan": "JPM", "goldman": "GS", "goldman sachs": "GS",
+    "bank of america": "BAC",
+    # Healthcare
+    "johnson & johnson": "JNJ", "j&j": "JNJ", "pfizer": "PFE", "eli lilly": "LLY",
+    "unitedhealth": "UNH",
+    # Consumer
+    "walmart": "WMT", "home depot": "HD", "disney": "DIS", "nike": "NKE",
+    "starbucks": "SBUX", "mcdonald": "MCD", "mcdonalds": "MCD",
+    # Energy
+    "exxon": "XOM", "exxonmobil": "XOM", "chevron": "CVX", "conocophillips": "COP",
+    # Industrial
+    "boeing": "BA", "caterpillar": "CAT", "general electric": "GE",
+    # Semiconductors
+    "amd": "AMD", "intel": "INTC", "qualcomm": "QCOM", "broadcom": "AVGO",
+    "micron": "MU", "taiwan semi": "TSM", "tsmc": "TSM",
+    # Software
+    "salesforce": "CRM", "adobe": "ADBE", "oracle": "ORCL", "palantir": "PLTR",
+    # Crypto/Popular
+    "coinbase": "COIN", "microstrategy": "MSTR", "gamestop": "GME",
+    # Brasil - ADRs
+    "petrobras": "PBR", "vale": "VALE", "itau": "ITUB", "nubank": "NU", "xp inc": "XP",
+    # Brasil - B3
+    "magazine luiza": "MGLU3.SA", "magalu": "MGLU3.SA", "weg": "WEGE3.SA",
+    "b3": "B3SA3.SA", "localiza": "RENT3.SA", "petro rio": "PRIO3.SA", "prio": "PRIO3.SA",
+}
+
+# === LISTA DE TICKERS VÁLIDOS PARA VALIDAÇÃO ===
+# Tickers que podem ser extraídos de notícias (só aceita se estiver nesta lista)
+VALID_TICKERS = {
+    # USA - Big Tech
+    "AAPL", "MSFT", "GOOGL", "GOOG", "AMZN", "META", "NVDA", "TSLA",
+    # USA - Finance
+    "JPM", "BAC", "GS", "WFC", "C", "MS",
+    # USA - Healthcare
+    "JNJ", "UNH", "PFE", "LLY", "ABBV", "MRK",
+    # USA - Consumer
+    "WMT", "HD", "DIS", "NKE", "SBUX", "MCD", "KO", "PEP",
+    # USA - Energy
+    "XOM", "CVX", "COP", "SLB", "EOG",
+    # USA - Industrial
+    "BA", "CAT", "GE", "HON", "UPS", "LMT",
+    # USA - Tech/Semiconductors
+    "AMD", "INTC", "QCOM", "AVGO", "MU", "TSM", "TXN", "AMAT",
+    # USA - Software/Cloud
+    "CRM", "ADBE", "ORCL", "NOW", "SNOW", "PLTR",
+    # USA - Crypto/Volatil/Popular
+    "COIN", "MSTR", "GME", "AMC", "HOOD",
+    # USA - Other Large Cap
+    "V", "MA", "PYPL", "SQ", "BRK.A", "BRK.B", "T", "VZ",
+    # Brasil - ADRs
+    "PBR", "VALE", "ITUB", "BBD", "NU", "XP",
+    # Brasil - B3
+    "PETR4.SA", "VALE3.SA", "ITUB4.SA", "BBDC4.SA", "WEGE3.SA",
+    "B3SA3.SA", "RENT3.SA", "MGLU3.SA", "PRIO3.SA", "ABEV3.SA",
+}
+
 
 @dataclass
 class NewsArticle:
@@ -60,7 +124,7 @@ class NewsAggregator:
             news = google_news.get_news(ticker)
 
             articles = []
-            for item in news:
+            for item in (news or []):
                 article_data = {
                     "title": item.get("title", ""),
                     "url": item.get("url", ""),
@@ -85,36 +149,112 @@ class NewsAggregator:
             logger.error(f"Error fetching GNews for {ticker}: {e}")
             return []
 
+    def _decode_google_news_url(self, google_url: str) -> str:
+        """
+        Decodifica URL do Google News para URL real do artigo.
+
+        O GNews retorna URLs no formato:
+        https://news.google.com/rss/articles/CBMi[protobuf_base64]...
+
+        A URL real está codificada em Protocol Buffers + base64.
+        """
+        if 'news.google.com' not in google_url:
+            return google_url
+
+        try:
+            from googlenewsdecoder import new_decoderv1
+            decoded = new_decoderv1(google_url)
+            if decoded and decoded.get('decoded_url'):
+                return decoded['decoded_url']
+        except ImportError:
+            logger.debug("googlenewsdecoder not installed, using original URL")
+        except Exception as e:
+            logger.debug(f"Failed to decode Google News URL: {e}")
+
+        return google_url
+
     async def _scrape_article_content(self, url: str, max_chars: int = 2000) -> str:
         """
-        Faz scrape do conteúdo completo de um artigo usando newspaper3k.
+        Faz scrape do conteúdo completo de um artigo.
+
+        Usa múltiplos métodos em ordem de preferência:
+        1. cloudscraper (bypass anti-bot) + trafilatura (extração)
+        2. trafilatura direto
+        3. newspaper3k como fallback
 
         Args:
-            url: URL do artigo
+            url: URL do artigo (pode ser URL do Google News)
             max_chars: Máximo de caracteres a retornar
 
         Returns:
             Texto do artigo (truncado se necessário)
         """
+        # Primeiro, decodificar URL do Google News se necessário
+        real_url = self._decode_google_news_url(url)
+        if real_url != url:
+            logger.debug(f"Decoded Google URL: {url[:50]}... -> {real_url[:50]}...")
+
+        content = ""
+
+        # Método 1: cloudscraper + trafilatura (mais robusto)
         try:
-            from newspaper import Article
+            import cloudscraper
+            import trafilatura
 
-            article = Article(url)
-            article.download()
-            article.parse()
+            scraper = cloudscraper.create_scraper(
+                browser={'browser': 'chrome', 'platform': 'windows', 'desktop': True}
+            )
+            response = scraper.get(real_url, timeout=20)
 
-            # Combinar título + texto
-            content = article.text or ""
+            if response.status_code == 200:
+                content = trafilatura.extract(response.text) or ""
+                if content:
+                    logger.debug(f"Scraped {len(content)} chars via cloudscraper+trafilatura")
 
-            # Truncar se muito longo
-            if len(content) > max_chars:
-                content = content[:max_chars] + "..."
-
-            return content
-
+        except ImportError:
+            logger.debug("cloudscraper/trafilatura not installed, trying alternatives")
         except Exception as e:
-            logger.debug(f"Failed to scrape {url}: {e}")
-            return ""
+            logger.debug(f"cloudscraper failed: {e}")
+
+        # Método 2: trafilatura direto (se cloudscraper falhou)
+        if not content:
+            try:
+                import trafilatura
+                downloaded = trafilatura.fetch_url(real_url)
+                if downloaded:
+                    content = trafilatura.extract(downloaded) or ""
+                    if content:
+                        logger.debug(f"Scraped {len(content)} chars via trafilatura direct")
+            except ImportError:
+                pass
+            except Exception as e:
+                logger.debug(f"trafilatura direct failed: {e}")
+
+        # Método 3: newspaper3k como fallback
+        if not content:
+            try:
+                from newspaper import Article, Config
+
+                config = Config()
+                config.browser_user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                config.request_timeout = 15
+
+                article = Article(real_url, config=config)
+                article.download()
+                article.parse()
+                content = article.text or ""
+
+                if content:
+                    logger.debug(f"Scraped {len(content)} chars via newspaper3k")
+
+            except Exception as e:
+                logger.debug(f"newspaper3k failed: {e}")
+
+        # Truncar se muito longo
+        if content and len(content) > max_chars:
+            content = content[:max_chars] + "..."
+
+        return content
 
     async def extract_tickers_and_sentiment(
         self,
@@ -293,53 +433,42 @@ Responda APENAS em JSON formato:
                             has_catalyst = any(keyword.lower() in full_text for keyword in keywords)
 
                             if has_catalyst:
-                                # Extrair tickers do TÍTULO E DESCRIÇÃO (não só título)
+                                # === NOVA LÓGICA DE EXTRAÇÃO DE TICKERS ===
                                 text_to_scan = f"{title} {description}"
+                                text_lower = text_to_scan.lower()
+                                found_tickers = set()
 
-                                # Padrões para extrair tickers
+                                # 1. PRIMEIRO: Buscar NOMES de empresas (mais confiável)
+                                for company_name, ticker in COMPANY_TO_TICKER.items():
+                                    if company_name in text_lower:
+                                        found_tickers.add(ticker)
+                                        logger.debug(f"[CATALYST] Found '{company_name}' -> {ticker}")
+
+                                # 2. SEGUNDO: Extrair tickers com padrões específicos
                                 ticker_patterns = [
                                     r'\(([A-Z]{2,5})\)',  # (AAPL)
                                     r'([A-Z]{2,5})(?:\s+stock|\s+shares)',  # AAPL stock
-                                    r'([A-Z]{3,5}[0-9])',  # PETR4, VALE3 (Brasil)
-                                    r'\b([A-Z]{2,5})\b'  # AAPL (qualquer palavra maiúscula)
+                                    r'\$([A-Z]{2,5})\b',  # $AAPL
+                                    r'([A-Z]{3,5}[0-9])\.SA\b',  # PETR4.SA
+                                    r'\b([A-Z]{3,5}[0-9])\b',  # PETR4, VALE3
                                 ]
-                                potential_tickers = []
                                 for pattern in ticker_patterns:
-                                    potential_tickers.extend(re.findall(pattern, text_to_scan))
+                                    matches = re.findall(pattern, text_to_scan)
+                                    for m in matches:
+                                        # Validar contra lista de tickers conhecidos
+                                        if m in VALID_TICKERS:
+                                            found_tickers.add(m)
+                                        elif f"{m}.SA" in VALID_TICKERS:
+                                            found_tickers.add(f"{m}.SA")
 
-                                # Lista de não-tickers (siglas comuns)
-                                non_tickers = {
-                                    # Corporate
-                                    "CEO", "CFO", "CTO", "COO", "CMO", "CIO", "IPO",
-                                    # Government/Regulatory
-                                    "SEC", "FDA", "FTC", "FCC", "EPA", "IRS", "DOJ", "FBI",
-                                    "CVM", "BC", "PIB",
-                                    # Financial Terms
-                                    "ETF", "ESG", "NYSE", "NASDAQ", "DOW", "GDP", "CPI",
-                                    # Geography
-                                    "USA", "UK", "EU", "US", "UAE", "APAC", "BR", "EUA",
-                                    # Media
-                                    "CNN", "BBC", "FOX", "HBO", "UOL",
-                                    # Sports
-                                    "NFL", "NBA", "MLB", "NHL", "UFC", "FIFA",
-                                    # International Orgs
-                                    "NATO", "UN", "WHO", "WTO", "OPEC", "IMF",
-                                    # Tech
-                                    "AI", "ML", "AR", "VR", "IOT", "API", "SDK",
-                                    # Common English
-                                    "THE", "AND", "FOR", "WITH", "FROM", "AT", "ON", "IN",
-                                    "NEW", "SAYS", "AMID", "AFTER", "JUST", "NEWS", "CEO",
-                                    "WHY", "HOW", "WHEN", "WHERE", "WHO", "WHAT",
-                                    # Common Portuguese
-                                    "COM", "POR", "PARA", "QUE", "NAO", "MAIS", "COMO",
-                                    "SOBRE", "APOS", "PODE", "DIZ", "VER", "SER", "TEM"
-                                }
+                                # 3. TERCEIRO: Buscar tickers conhecidos diretamente no texto
+                                for valid_ticker in VALID_TICKERS:
+                                    # Buscar ticker exato (com word boundary)
+                                    base_ticker = valid_ticker.replace(".SA", "")
+                                    if re.search(rf'\b{re.escape(base_ticker)}\b', text_to_scan):
+                                        found_tickers.add(valid_ticker)
 
-                                # Filtrar e validar
-                                tickers = [
-                                    t for t in set(potential_tickers)
-                                    if t not in non_tickers and 2 <= len(t) <= 6
-                                ]
+                                tickers = list(found_tickers)
 
                                 if tickers:
                                     total_found += 1

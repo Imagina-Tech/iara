@@ -101,63 +101,91 @@ async def cmd_buzz():
     from src.collectors.news_aggregator import NewsAggregator
     news_aggregator = NewsAggregator(config)
 
-    # Buscar notícias para top 5 candidatos (simulando Phase 1 e 3)
+    # Buscar notícias para TODOS os candidatos (o Judge precisa de contexto completo)
     print("=" * 80)
-    print("  SIMULANDO BUSCA DE NOTICIAS (como acontece em Phase 1 e 3)")
+    print("  BUSCANDO NOTICIAS PARA TODOS OS CANDIDATOS")
+    print("  (O Judge precisa de contexto de notícias para TODOS os tickers)")
     print("=" * 80)
 
     news_for_candidates = {}
-    top_candidates = filtered[:3]  # Reduzido para 3 (scraping é lento)
+    total_candidates = len(filtered)
 
-    for c in top_candidates:
+    for idx, c in enumerate(filtered, 1):
         ticker = c.ticker
-        print(f"\n--- Buscando noticias para {ticker} ---")
+        print(f"\r[NEWS] {idx}/{total_candidates} - Buscando noticias para {ticker}...          ", end="", flush=True)
 
-        # SCREENER (Phase 1) - apenas títulos, rápido
-        gnews_simple = await news_aggregator.get_gnews(ticker, max_results=3, fetch_full_content=False)
+        try:
+            # SCREENER (Phase 1) - apenas títulos, rápido
+            gnews_simple = await news_aggregator.get_gnews(ticker, max_results=3, fetch_full_content=False)
 
-        # JUDGE (Phase 3) - conteúdo completo, mais lento
-        print(f"    Fazendo scrape do conteudo completo (para o Judge)...")
-        gnews_full = await news_aggregator.get_gnews(ticker, max_results=2, fetch_full_content=True)
+            # JUDGE (Phase 3) - conteúdo completo, mais lento
+            gnews_full = await news_aggregator.get_gnews(ticker, max_results=2, fetch_full_content=True)
 
-        if gnews_simple:
-            # Formato para SCREENER (Phase 1) - resumido
-            news_summary_parts = [f"Recent news for {ticker}:"]
-            for art in gnews_simple[:3]:
-                news_summary_parts.append(f"- {art.get('title', 'No title')}")
-            news_summary = "\n".join(news_summary_parts)
+            if gnews_simple:
+                # Formato para SCREENER (Phase 1) - resumido
+                news_summary_parts = [f"Recent news for {ticker}:"]
+                for art in gnews_simple[:3]:
+                    news_summary_parts.append(f"- {art.get('title', 'No title')}")
+                news_summary = "\n".join(news_summary_parts)
 
-            # Formato para JUDGE (Phase 3) - conteúdo completo
-            news_details_parts = [f"=== DETAILED NEWS FOR {ticker} ==="]
-            for i, art in enumerate(gnews_full[:2], 1):
-                news_details_parts.append(f"\n{'='*60}")
-                news_details_parts.append(f"[ARTICLE {i}] {art.get('title', 'No title')}")
-                news_details_parts.append(f"Source: {art.get('source', 'Unknown')}")
-                news_details_parts.append(f"Published: {art.get('published', 'Unknown')}")
-                news_details_parts.append(f"\nCONTENT:")
-                if art.get('full_content'):
-                    news_details_parts.append(art['full_content'])
-                else:
-                    news_details_parts.append(f"[Scrape failed - using description]")
-                    news_details_parts.append(art.get('description', 'No description'))
-            news_details = "\n".join(news_details_parts)
+                # Formato para JUDGE (Phase 3) - conteúdo completo
+                news_details_parts = [f"=== DETAILED NEWS FOR {ticker} ==="]
+                for i, art in enumerate(gnews_full[:2], 1):
+                    news_details_parts.append(f"\n{'='*60}")
+                    news_details_parts.append(f"[ARTICLE {i}] {art.get('title', 'No title')}")
+                    news_details_parts.append(f"Source: {art.get('source', 'Unknown')}")
+                    news_details_parts.append(f"Published: {art.get('published', 'Unknown')}")
+                    news_details_parts.append(f"\nCONTENT:")
+                    if art.get('full_content'):
+                        news_details_parts.append(art['full_content'])
+                    else:
+                        news_details_parts.append(art.get('description', 'No description'))
+                news_details = "\n".join(news_details_parts)
 
-            news_for_candidates[ticker] = {
-                "screener_format": news_summary,
-                "judge_format": news_details,
-                "raw_articles": gnews_simple
-            }
+                news_for_candidates[ticker] = {
+                    "screener_format": news_summary,
+                    "judge_format": news_details,
+                    "raw_articles": gnews_simple
+                }
+            else:
+                news_for_candidates[ticker] = None
 
-            print(f"\n[SCREENER INPUT] O que Phase 1 recebe:")
-            print("-" * 40)
-            print(news_summary)
-
-            print(f"\n[JUDGE INPUT] O que Phase 3 recebe:")
-            print("-" * 40)
-            print(news_details[:1500] + "..." if len(news_details) > 1500 else news_details)
-        else:
-            print(f"  Nenhuma noticia encontrada para {ticker}")
+        except Exception as e:
+            print(f"\r[NEWS] {idx}/{total_candidates} - {ticker}: Erro - {str(e)[:50]}          ")
             news_for_candidates[ticker] = None
+
+    print(f"\r[NEWS] Completo: {sum(1 for v in news_for_candidates.values() if v)}/{total_candidates} tickers com noticias          ")
+    print()
+
+    # Função para formatar notícias de forma legível (quebra em linhas)
+    def format_news_readable(news_text):
+        """Formata notícia como lista de linhas para melhor leitura no JSON."""
+        if not news_text:
+            return []
+        # Quebra por linhas e remove vazias
+        lines = [line.strip() for line in news_text.split('\n') if line.strip()]
+        return lines
+
+    # Função para estruturar artigos de forma organizada
+    def structure_articles(ticker):
+        """Retorna artigos estruturados para um ticker."""
+        news_data = news_for_candidates.get(ticker)
+        if not news_data or not news_data.get("raw_articles"):
+            return []
+
+        articles = []
+        for art in news_data.get("raw_articles", []):
+            articles.append({
+                "titulo": art.get("title", ""),
+                "fonte": art.get("source", ""),
+                "data": art.get("published", ""),
+                "resumo": art.get("description", ""),
+                "conteudo_completo": art.get("full_content", "")[:500] + "..." if art.get("full_content") and len(art.get("full_content", "")) > 500 else art.get("full_content", "")
+            })
+        return articles
+
+    # Contar quantos têm notícias
+    candidates_with_news_count = sum(1 for c in filtered if news_for_candidates.get(c.ticker))
 
     result = {
         "generated_at": datetime.now().isoformat(),
@@ -167,7 +195,7 @@ async def cmd_buzz():
             "total_candidates_raw": len(candidates),
             "total_candidates_filtered": len(filtered),
             "by_source": {source: len(items) for source, items in by_source.items()},
-            "candidates_with_news": sum(1 for c in filtered if hasattr(c, 'news_content') and c.news_content)
+            "candidates_with_news": candidates_with_news_count
         },
         "candidates": [
             {
@@ -179,9 +207,10 @@ async def cmd_buzz():
                 "market_cap_billions": round(c.market_cap / 1e9, 2) if c.market_cap > 0 else 0,
                 "reason": c.reason,
                 "detected_at": c.detected_at.isoformat(),
-                "news_content": c.news_content if hasattr(c, 'news_content') else "",
-                "news_for_screener": (news_for_candidates.get(c.ticker) or {}).get("screener_format", "") if c.ticker in [x.ticker for x in top_candidates] else "",
-                "news_for_judge": (news_for_candidates.get(c.ticker) or {}).get("judge_format", "") if c.ticker in [x.ticker for x in top_candidates] else ""
+                "news_content": format_news_readable(c.news_content) if hasattr(c, 'news_content') else [],
+                "news_articles": structure_articles(c.ticker),
+                "news_for_screener": format_news_readable((news_for_candidates.get(c.ticker) or {}).get("screener_format", "")),
+                "news_for_judge": format_news_readable((news_for_candidates.get(c.ticker) or {}).get("judge_format", ""))
             }
             for c in filtered
         ]
@@ -193,35 +222,60 @@ async def cmd_buzz():
     with open(output_path, "w", encoding="utf-8") as f:
         json.dump(result, f, indent=2, ensure_ascii=False)
 
-    # Display summary
+    # Display summary por fonte
     print("\n" + "=" * 80)
-    print("  RESUMO DOS CANDIDATOS")
-    print("=" * 80)
-    for source, items in by_source.items():
-        print(f"  {source:20s}: {len(items):3d} candidatos")
-    print(f"\n  TOTAL FILTRADO      : {len(filtered):3d} candidatos")
-    print(f"  TOTAL RAW           : {len(candidates):3d} candidatos")
-    candidates_with_news = sum(1 for c in filtered if hasattr(c, 'news_content') and c.news_content)
-    print(f"  COM NEWS_CATALYST   : {candidates_with_news:3d} candidatos")
-    print(f"  COM GNEWS BUSCADO   : {len([t for t in news_for_candidates if news_for_candidates[t]])} candidatos (top 5)")
+    print("  RESUMO DOS CANDIDATOS POR FONTE")
     print("=" * 80)
 
-    # Display top 10
-    print("\n" + "=" * 80)
-    print("  TOP 10 CANDIDATOS (por buzz_score)")
+    # Definir ícones para cada fonte
+    source_icons = {
+        "watchlist": "[W]",
+        "volume_spike": "[V]",
+        "gap": "[G]",
+        "news_catalyst": "[N]"
+    }
+
+    for source, items in sorted(by_source.items()):
+        icon = source_icons.get(source, "[?]")
+        print(f"\n  {icon} {source.upper()} ({len(items)} candidatos):")
+        print(f"  " + "-" * 40)
+        for c in items[:5]:  # Mostrar top 5 de cada fonte
+            market_cap_b = c.market_cap / 1e9 if c.market_cap > 0 else 0
+            print(f"      {c.ticker:8s} | Score: {c.buzz_score:5.1f} | ${market_cap_b:7.1f}B | {c.reason[:40]}")
+        if len(items) > 5:
+            print(f"      ... e mais {len(items) - 5} candidatos")
+
+    print(f"\n  " + "=" * 60)
+    print(f"  TOTAIS:")
+    print(f"  " + "-" * 60)
+    print(f"  [W] Watchlist      : {len(by_source.get('watchlist', [])):3d} (ativos fixos monitorados)")
+    print(f"  [V] Volume Spikes  : {len(by_source.get('volume_spike', [])):3d} (volume > 2x media projetado)")
+    print(f"  [G] Gaps           : {len(by_source.get('gap', [])):3d} (gap > 3% na abertura)")
+    print(f"  [N] News Catalysts : {len(by_source.get('news_catalyst', [])):3d} (noticias com keywords)")
+    print(f"  " + "-" * 60)
+    print(f"  TOTAL ENCONTRADOS  : {len(candidates):3d}")
+    print(f"  TOTAL FILTRADOS    : {len(filtered):3d} (max 25)")
     print("=" * 80)
-    for i, c in enumerate(filtered[:10], 1):
+
+    # Display TODOS os candidatos
+    print("\n" + "=" * 80)
+    print(f"  TODOS OS {len(filtered)} CANDIDATOS (ordenados por buzz_score)")
+    print("=" * 80)
+    print(f"  {'#':>2} | {'TICKER':8s} | {'FONTE':14s} | {'SCORE':>5} | {'MKT CAP':>10} | {'NEWS':>4} | RAZAO")
+    print("  " + "-" * 90)
+    for i, c in enumerate(filtered, 1):
         market_cap_b = c.market_cap / 1e9 if c.market_cap > 0 else 0
-        print(f"\n{i}. {c.ticker} (Score: {c.buzz_score:.1f})")
-        print(f"   Fonte: {c.source}")
-        print(f"   Tier: {c.tier}")
-        print(f"   Market Cap: ${market_cap_b:.2f}B")
-        print(f"   Razao: {c.reason[:80]}")
-        # Mostrar news_content se disponível (do catalyst scan)
-        if hasattr(c, 'news_content') and c.news_content:
-            print(f"   [NEWS CATALYST]:")
-            for line in c.news_content.split('\n')[:3]:
-                print(f"      {line}")
+        icon = source_icons.get(c.source, "[?]")
+        has_news = "SIM" if news_for_candidates.get(c.ticker) else "NAO"
+        print(f"  {i:2d} | {c.ticker:8s} | {icon} {c.source:10s} | {c.buzz_score:5.1f} | ${market_cap_b:8.1f}B | {has_news:>4} | {c.reason[:30]}")
+
+    # Mostrar resumo de notícias
+    print(f"\n  " + "-" * 90)
+    tickers_with_news = [c.ticker for c in filtered if news_for_candidates.get(c.ticker)]
+    tickers_without_news = [c.ticker for c in filtered if not news_for_candidates.get(c.ticker)]
+    print(f"  NOTICIAS: {len(tickers_with_news)}/{len(filtered)} candidatos com cobertura de noticias")
+    if tickers_without_news:
+        print(f"  SEM NOTICIAS: {', '.join(tickers_without_news[:10])}" + ("..." if len(tickers_without_news) > 10 else ""))
 
     print("\n" + "=" * 80)
     print(f"[SAVED] {output_path.absolute()}")

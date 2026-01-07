@@ -20,7 +20,17 @@
       "Bash(timeout 15 python:*)",
       "Bash(cmd /c \"python debug_cli.py /buzz\")",
       "Bash(./run_buzz_test.bat)",
-      "Bash(del pylint_output.txt)"
+      "Bash(del pylint_output.txt)",
+      "Bash(timeout 60 python:*)",
+      "Bash(cmd //c \"python debug_cli.py /buzz\")",
+      "Bash(timeout 300 python:*)",
+      "Bash(cmd //c \"cd C:\\\\Users\\\\Trindade\\\\Desktop\\\\iara && python debug_cli.py /buzz\")",
+      "Bash(cat:*)",
+      "Bash(.venv/Scripts/pip install:*)",
+      "Bash(.venvScriptspython debug_cli.py /buzz)",
+      "Bash(.venvScriptspython.exe debug_cli.py /buzz)",
+      "Bash(cmd /c \".venv\\\\Scripts\\\\python.exe debug_cli.py /buzz\")",
+      "Bash(del \"C:\\\\Users\\\\Trindade\\\\Desktop\\\\iara\\\\debug_news_extraction.py\")"
     ]
   }
 }

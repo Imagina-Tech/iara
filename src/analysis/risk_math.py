@@ -105,8 +105,10 @@ class RiskCalculator:
                 return 1.0
 
             # Converter para float antes de operações - .cov() e .var() retornam Scalar
-            covariance = float(aligned.iloc[:, 0].cov(aligned.iloc[:, 1]))
-            variance = float(aligned.iloc[:, 1].var())
+            cov_val = aligned.iloc[:, 0].cov(aligned.iloc[:, 1])
+            var_val = aligned.iloc[:, 1].var()
+            covariance = float(cov_val) if cov_val is not None else 0.0
+            variance = float(var_val) if var_val is not None else 0.0
 
             return covariance / variance if variance > 0 else 1.0
 
