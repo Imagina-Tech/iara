@@ -435,11 +435,28 @@ class NewsAggregator:
 
             # Buscar mais do que o necessario (para filtrar depois)
             fetch_count = max_results * 3
+            loop = asyncio.get_event_loop()
 
-            # Busca 1: Ingles (global)
+            # Funcoes sincronas para rodar em thread pool
+            def fetch_gnews_en(search_ticker: str):
+                """Busca GNews em ingles (bloqueante)."""
+                try:
+                    google_news = GNews(language='en', country='US', max_results=fetch_count)
+                    return google_news.get_news(search_ticker) or []
+                except Exception:
+                    return []
+
+            def fetch_gnews_pt(search_term: str):
+                """Busca GNews em portugues (bloqueante)."""
+                try:
+                    google_news = GNews(language='pt', country='BR', max_results=fetch_count)
+                    return google_news.get_news(search_term) or []
+                except Exception:
+                    return []
+
+            # Busca 1: Ingles (global) - em thread separada
             try:
-                google_news_en = GNews(language='en', country='US', max_results=fetch_count)
-                news_en = google_news_en.get_news(ticker) or []
+                news_en = await loop.run_in_executor(None, fetch_gnews_en, ticker)
                 for item in news_en:
                     all_articles.append({
                         "title": item.get("title", ""),
@@ -452,10 +469,9 @@ class NewsAggregator:
             except Exception as e:
                 logger.debug(f"GNews EN failed for {ticker}: {e}")
 
-            # Busca 2: Portugues (se ticker brasileiro)
+            # Busca 2: Portugues (se ticker brasileiro) - em thread separada
             if is_brazilian:
                 try:
-                    google_news_pt = GNews(language='pt', country='BR', max_results=fetch_count)
                     # Buscar por nome da empresa tambem
                     search_terms = [ticker]
                     if ticker == "PETR4.SA" or ticker == "PETR3.SA":
@@ -466,7 +482,7 @@ class NewsAggregator:
                         search_terms.append("Itau Unibanco")
 
                     for term in search_terms:
-                        news_pt = google_news_pt.get_news(term) or []
+                        news_pt = await loop.run_in_executor(None, fetch_gnews_pt, term)
                         for item in news_pt:
                             all_articles.append({
                                 "title": item.get("title", ""),
