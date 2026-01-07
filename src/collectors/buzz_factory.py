@@ -25,67 +25,228 @@ from dataclasses import dataclass, field
 logger = logging.getLogger(__name__)
 
 
+# =============================================================================
+# SISTEMA DE LOGS COLORIDOS PARA EXECUCAO PARALELA
+# =============================================================================
+
+class PhaseColors:
+    """
+    Cores ANSI para cada fase do Phase 0.
+    Compativel com Windows cmd.exe e PowerShell.
+    """
+    RESET = "\033[0m"
+    BOLD = "\033[1m"
+
+    # Cores por fase
+    WATCHLIST = "\033[96m"   # Cyan claro
+    VOLUME = "\033[93m"      # Amarelo
+    GAPS = "\033[95m"        # Magenta
+    NEWS = "\033[92m"        # Verde
+
+    # Status
+    SYSTEM = "\033[97m"      # Branco
+    WAITING = "\033[90m"     # Cinza
+    SUCCESS = "\033[92m"     # Verde
+    ERROR = "\033[91m"       # Vermelho
+    INFO = "\033[94m"        # Azul
+
+
+class ColoredPhaseLogger:
+    """
+    Logger colorido por fase para visualizacao em terminal unico.
+
+    Cada fase tem uma cor distinta, permitindo identificar facilmente
+    qual fase gerou cada linha de log mesmo com output intercalado.
+
+    Uso:
+        logger = ColoredPhaseLogger()
+        logger.log("WATCHLIST", "Processando AAPL...")
+        logger.success("WATCHLIST", "5 candidatos encontrados")
+        logger.waiting("GAPS", "WATCHLIST")
+    """
+
+    PHASE_COLORS = {
+        "WATCHLIST": PhaseColors.WATCHLIST,
+        "VOLUME": PhaseColors.VOLUME,
+        "GAPS": PhaseColors.GAPS,
+        "NEWS": PhaseColors.NEWS,
+        "SYSTEM": PhaseColors.SYSTEM,
+        "WAITING": PhaseColors.WAITING,
+    }
+
+    def __init__(self, enabled: bool = True):
+        """
+        Inicializa o logger colorido.
+
+        Args:
+            enabled: Se True, usa cores ANSI. Se False, output plain text.
+        """
+        self.enabled = enabled
+        if enabled:
+            self._enable_windows_ansi()
+
+    def _enable_windows_ansi(self):
+        """Habilita suporte a cores ANSI no Windows cmd.exe."""
+        import os as _os
+        if sys.platform == "win32":
+            _os.system("")  # Hack que ativa ANSI escape sequences no Windows
+
+    def _get_timestamp(self) -> str:
+        """Retorna timestamp formatado."""
+        return datetime.now().strftime("%H:%M:%S")
+
+    def log(self, phase: str, message: str):
+        """
+        Loga mensagem com cor da fase.
+
+        Args:
+            phase: Nome da fase (WATCHLIST, VOLUME, GAPS, NEWS)
+            message: Mensagem a logar
+        """
+        timestamp = self._get_timestamp()
+
+        if not self.enabled:
+            print(f"[{timestamp}] [{phase:10s}] {message}")
+            return
+
+        color = self.PHASE_COLORS.get(phase, PhaseColors.SYSTEM)
+        print(f"{color}[{timestamp}] [{phase:10s}]{PhaseColors.RESET} {message}")
+
+    def success(self, phase: str, message: str):
+        """Loga mensagem de sucesso (verde)."""
+        timestamp = self._get_timestamp()
+
+        if not self.enabled:
+            print(f"[{timestamp}] [{phase:10s}] OK: {message}")
+            return
+
+        color = self.PHASE_COLORS.get(phase, PhaseColors.SUCCESS)
+        print(f"{color}[{timestamp}] [{phase:10s}]{PhaseColors.RESET} {PhaseColors.SUCCESS}OK:{PhaseColors.RESET} {message}")
+
+    def error(self, phase: str, message: str):
+        """Loga mensagem de erro (vermelho)."""
+        timestamp = self._get_timestamp()
+
+        if not self.enabled:
+            print(f"[{timestamp}] [{phase:10s}] ERROR: {message}")
+            return
+
+        color = self.PHASE_COLORS.get(phase, PhaseColors.ERROR)
+        print(f"{color}[{timestamp}] [{phase:10s}]{PhaseColors.RESET} {PhaseColors.ERROR}ERROR:{PhaseColors.RESET} {message}")
+
+    def waiting(self, phase: str, waiting_for: str):
+        """Mostra que fase esta aguardando outra (cinza)."""
+        timestamp = self._get_timestamp()
+
+        if not self.enabled:
+            print(f"[{timestamp}] [{phase:10s}] Aguardando {waiting_for}...")
+            return
+
+        print(f"{PhaseColors.WAITING}[{timestamp}] [{phase:10s}] Aguardando {waiting_for}...{PhaseColors.RESET}")
+
+    def phase_start(self, phase: str, total_items: int):
+        """Anuncia inicio de uma fase."""
+        self.log(phase, f"Iniciando scan ({total_items} items em paralelo)...")
+
+    def phase_complete(self, phase: str, found: int, total: int, elapsed: float):
+        """Anuncia conclusao de uma fase."""
+        if found > 0:
+            self.success(phase, f"{found} candidatos de {total} ({elapsed:.1f}s)")
+        else:
+            self.log(phase, f"0 candidatos de {total} ({elapsed:.1f}s)")
+
+    def ticker_processing(self, phase: str, ticker: str):
+        """Log de ticker sendo processado (nivel DEBUG - so mostra se verbose)."""
+        # Por padrao nao mostra cada ticker individual para nao poluir
+        # Descomente a linha abaixo para debug detalhado:
+        # self.log(phase, f"Processando {ticker}...")
+        pass
+
+    def ticker_found(self, phase: str, ticker: str, detail: str):
+        """Log de candidato encontrado."""
+        self.log(phase, f"{PhaseColors.BOLD}{ticker}{PhaseColors.RESET}: {detail}")
+
+
 class ParallelProgressTracker:
     """
     Rastreador de progresso otimizado para execucao paralela.
 
+    Usa ColoredPhaseLogger para output colorido por fase.
+
     Principios:
-    - NAO usa \\r durante processamento paralelo (causa conflito de output)
-    - Exibe apenas INICIO e FIM de cada fase
-    - Mostra contadores consolidados apos cada fase
+    - Cada fase tem cor distinta (WATCHLIST=cyan, VOLUME=amarelo, etc)
+    - Mostra inicio e fim de cada fase com timestamps
     - Thread-safe para atualizacao de contadores internos
+    - Resumo final colorido com totais
     """
 
-    def __init__(self):
+    def __init__(self, colored: bool = True):
         self.phases_completed = 0
         self.total_phases = 4  # Watchlist, Volume, Gaps, News
         self.current_phase = ""
         self.phase_results: Dict[str, int] = {}
+        self.phase_times: Dict[str, float] = {}
         self.lock = asyncio.Lock()
         self._start_time = datetime.now()
+        self._phase_start_time: Optional[datetime] = None
 
-    def _get_elapsed(self) -> str:
-        """Retorna tempo decorrido formatado."""
-        elapsed = (datetime.now() - self._start_time).total_seconds()
-        return f"{elapsed:.1f}s"
+        # Logger colorido
+        self.logger = ColoredPhaseLogger(enabled=colored)
+
+    def _get_elapsed(self) -> float:
+        """Retorna tempo total decorrido em segundos."""
+        return (datetime.now() - self._start_time).total_seconds()
+
+    def _get_phase_elapsed(self) -> float:
+        """Retorna tempo da fase atual em segundos."""
+        if self._phase_start_time:
+            return (datetime.now() - self._phase_start_time).total_seconds()
+        return 0.0
 
     def start_phase(self, phase_name: str, total_items: int):
         """Inicia uma nova fase (chamado de forma sincrona, antes do gather)."""
         self.current_phase = phase_name
-        # Box de inicio da fase
-        print(f"\n{'='*70}")
-        print(f"  [PHASE 0] {phase_name}")
-        print(f"  Processing {total_items} items in parallel...")
-        print(f"{'='*70}")
+        self._phase_start_time = datetime.now()
+
+        # Log colorido de inicio
+        self.logger.phase_start(phase_name, total_items)
 
     async def complete_phase(self, phase_name: str, found: int, total: int):
         """Completa uma fase com resumo (chamado apos gather)."""
+        phase_elapsed = self._get_phase_elapsed()
+
         async with self.lock:
             self.phases_completed += 1
             self.phase_results[phase_name] = found
+            self.phase_times[phase_name] = phase_elapsed
 
-        # Indicador visual de conclusao
+        # Log colorido de conclusao
+        self.logger.phase_complete(phase_name, found, total, phase_elapsed)
+
+        # Progresso geral
         pct = (self.phases_completed / self.total_phases) * 100
-        status = "OK" if found > 0 else "--"
-        print(f"  [{status}] {phase_name}: {found} candidates found (from {total} scanned)")
-        print(f"  Progress: {self.phases_completed}/{self.total_phases} phases ({pct:.0f}%) | Elapsed: {self._get_elapsed()}")
+        self.logger.log("SYSTEM", f"Progresso: {self.phases_completed}/{self.total_phases} fases ({pct:.0f}%) | Total: {self._get_elapsed():.1f}s")
 
     def print_summary(self):
-        """Imprime resumo final de todas as fases."""
-        print(f"\n{'='*70}")
-        print(f"  [PHASE 0] COMPLETE - Summary")
-        print(f"{'='*70}")
+        """Imprime resumo final colorido de todas as fases."""
+        total_elapsed = self._get_elapsed()
 
-        total = 0
+        print(f"\n{PhaseColors.INFO}{'='*70}")
+        print(f"  [PHASE 0] RESUMO FINAL")
+        print(f"{'='*70}{PhaseColors.RESET}")
+
+        total_candidates = 0
         for phase, count in self.phase_results.items():
-            icon = "[+]" if count > 0 else "[ ]"
-            print(f"  {icon} {phase:25s}: {count:3d} candidates")
-            total += count
+            color = ColoredPhaseLogger.PHASE_COLORS.get(phase, PhaseColors.SYSTEM)
+            time_spent = self.phase_times.get(phase, 0)
+            icon = f"{PhaseColors.SUCCESS}[+]{PhaseColors.RESET}" if count > 0 else f"{PhaseColors.WAITING}[ ]{PhaseColors.RESET}"
+            print(f"  {icon} {color}{phase:20s}{PhaseColors.RESET}: {count:3d} candidatos ({time_spent:.1f}s)")
+            total_candidates += count
 
         print(f"  {'-'*50}")
-        print(f"  TOTAL CANDIDATES: {total}")
-        print(f"  ELAPSED TIME: {self._get_elapsed()}")
-        print(f"{'='*70}\n")
+        print(f"  {PhaseColors.BOLD}TOTAL CANDIDATOS: {total_candidates}{PhaseColors.RESET}")
+        print(f"  {PhaseColors.BOLD}TEMPO TOTAL: {total_elapsed:.1f}s{PhaseColors.RESET}")
+        print(f"{PhaseColors.INFO}{'='*70}{PhaseColors.RESET}\n")
 
 # Project root directory
 PROJECT_ROOT = Path(__file__).parent.parent.parent
@@ -812,6 +973,13 @@ class BuzzFactory:
                             news_content=news_text  # Salvar conteudo para pipeline
                         ))
 
+                        # Log colorido de catalyst encontrado
+                        if self._progress:
+                            self._progress.logger.ticker_found(
+                                "NEWS", ticker,
+                                f"Catalyst: {article.title[:50]}..."
+                            )
+
                         logger.debug(f"{ticker}: Catalyst news detected - {article.title[:50]}...")
 
             logger.info(f"News catalyst scan complete: {len(candidates)} candidates from {len(catalyst_news)} articles")
@@ -871,6 +1039,14 @@ class BuzzFactory:
                     news_content = await self._fetch_news_parallel(ticker)
 
                     base_score = 5.0 if tier == "tier1_large_cap" else 4.0
+
+                    # Log colorido de candidato encontrado
+                    if self._progress:
+                        self._progress.logger.ticker_found(
+                            "WATCHLIST", ticker,
+                            f"${market_cap/1e9:.1f}B | {tier.replace('_', ' ')}"
+                        )
+
                     return BuzzCandidate(
                         ticker=ticker,
                         source="watchlist",
@@ -947,6 +1123,13 @@ class BuzzFactory:
                                     tier = self._determine_tier(market_cap)
                                     news = await self._fetch_news_parallel(ticker)
 
+                                    # Log colorido de spike encontrado
+                                    if self._progress:
+                                        self._progress.logger.ticker_found(
+                                            "VOLUME", ticker,
+                                            f"{ratio:.1f}x spike | ${dollar_vol/1e6:.1f}M volume"
+                                        )
+
                                     return BuzzCandidate(
                                         ticker=ticker,
                                         source="volume_spike",
@@ -1020,6 +1203,14 @@ class BuzzFactory:
                                 market_cap = data.market_cap if hasattr(data, 'market_cap') and data.market_cap else 0.0
                                 tier = self._determine_tier(market_cap)
                                 news = await self._fetch_news_parallel(ticker)
+
+                                # Log colorido de gap encontrado
+                                if self._progress:
+                                    arrow = "+" if gap > 0 else ""
+                                    self._progress.logger.ticker_found(
+                                        "GAPS", ticker,
+                                        f"Gap {arrow}{gap*100:.1f}% | ${data.price:.2f}"
+                                    )
 
                                 return BuzzCandidate(
                                     ticker=ticker,

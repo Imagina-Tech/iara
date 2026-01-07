@@ -1,16 +1,27 @@
 """
 IARA Debug CLI - Sistema de Inspeção de JSONs
 Executa comandos de diagnóstico sem precisar inicializar o sistema completo
+
+Suporta output colorido para melhor visualizacao do progresso paralelo.
 """
 
 import asyncio
 import sys
+import os
 import logging
 from pathlib import Path
 import yaml
 import json
 from datetime import datetime
 from dotenv import load_dotenv
+
+# =============================================================================
+# HABILITAR CORES ANSI NO WINDOWS
+# =============================================================================
+# Esse hack ativa suporte a escape sequences ANSI no cmd.exe e PowerShell
+# Necessario para exibir cores no terminal Windows
+if sys.platform == "win32":
+    os.system("")  # Ativa ANSI escape sequences
 
 # Load environment variables FIRST
 load_dotenv()
