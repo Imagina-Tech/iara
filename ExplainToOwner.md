@@ -686,6 +686,61 @@ Nível 5: EMERGÊNCIA (Kill Switch)
 
 ## 📊 HISTÓRICO DE MODIFICAÇÕES
 
+### 2026-01-07 (Update 13)
+**Phase 0 - Paralelismo VERDADEIRO das 4 Fases**
+
+**PROBLEMA RESOLVIDO:**
+As 4 fases do Phase 0 (WATCHLIST, VOLUME, GAPS, NEWS) estavam rodando SEQUENCIALMENTE.
+Cada await esperava a fase anterior terminar antes de comecar a proxima.
+
+**ANTES (Sequencial):**
+```python
+watchlist_candidates = await self._scan_watchlist_parallel()  # Espera terminar
+volume_candidates = await self._scan_volume_spikes_parallel()  # So depois comeca
+gap_candidates = await self._scan_gaps_parallel()              # So depois comeca
+news_candidates = await self._scan_news_catalysts()            # So depois comeca
+# Tempo total = soma de todas as fases (~1697s)
+```
+
+**DEPOIS (Paralelo):**
+```python
+all_results = await asyncio.gather(
+    run_watchlist(),
+    run_volume(),
+    run_gaps(),
+    run_news(),
+    return_exceptions=True
+)
+# Tempo total = fase mais lenta (~542s)
+```
+
+**RESULTADOS DO TESTE:**
+```
+[02:56:31] Todas as 4 fases iniciam simultaneamente
+
+Fase       | Tempo   | Candidatos
+-----------|---------|------------
+WATCHLIST  | 281.5s  | 9
+NEWS       | 358.0s  | 13
+VOLUME     | 514.7s  | 1
+GAPS       | 542.4s  | 13
+TOTAL      | 542.5s  | 36
+
+Ganho: 3.1x mais rapido (1697s -> 542s)
+```
+
+**ARQUIVOS MODIFICADOS:**
+```
+buzz_factory.py:501-592
+  ~ generate_daily_buzz() agora usa asyncio.gather() para as 4 fases
+  + Wrapper functions para cada fase (run_watchlist, run_volume, run_gaps, run_news)
+  + Tratamento de excecoes por fase
+```
+
+**Status:** OK - Fases rodam em paralelo verdadeiro
+
+---
+
 ### 2026-01-07 (Update 12)
 **Sistema de Logs Coloridos para Execucao Paralela**
 
