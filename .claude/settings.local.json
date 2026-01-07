@@ -30,7 +30,10 @@
       "Bash(.venvScriptspython debug_cli.py /buzz)",
       "Bash(.venvScriptspython.exe debug_cli.py /buzz)",
       "Bash(cmd /c \".venv\\\\Scripts\\\\python.exe debug_cli.py /buzz\")",
-      "Bash(del \"C:\\\\Users\\\\Trindade\\\\Desktop\\\\iara\\\\debug_news_extraction.py\")"
+      "Bash(del \"C:\\\\Users\\\\Trindade\\\\Desktop\\\\iara\\\\debug_news_extraction.py\")",
+      "Bash(.venv/Scripts/python.exe:*)",
+      "Bash(timeout 45 .venv\\\\Scripts\\\\python.exe:*)",
+      "Bash(C:/Users/Trindade/Desktop/iara/.venv/Scripts/python.exe:*)"
     ]
   }
 }

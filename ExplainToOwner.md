@@ -686,6 +686,56 @@ Nível 5: EMERGÊNCIA (Kill Switch)
 
 ## 📊 HISTÓRICO DE MODIFICAÇÕES
 
+### 2026-01-07 (Update 12)
+**Sistema de Logs Coloridos para Execucao Paralela**
+
+**FUNCIONALIDADE:**
+Logs coloridos por fase para visualizar execucao paralela do Phase 0 em terminal unico.
+
+**CORES POR FASE:**
+```
+WATCHLIST = Cyan claro     (\033[96m)
+VOLUME    = Amarelo        (\033[93m)
+GAPS      = Magenta        (\033[95m)
+NEWS      = Verde          (\033[92m)
+SYSTEM    = Branco         (\033[97m)
+```
+
+**CLASSES ADICIONADAS:**
+
+#### PhaseColors (buzz_factory.py:32-51)
+Constantes ANSI para cores. Compativel com Windows cmd.exe e PowerShell.
+
+#### ColoredPhaseLogger (buzz_factory.py:54-167)
+- `log(phase, message)` - Log com cor da fase
+- `success(phase, message)` - Log de sucesso (verde)
+- `ticker_found(phase, ticker, detail)` - Candidato encontrado
+- `phase_start()` / `phase_complete()` - Inicio/fim de fase
+
+**OUTPUT ESPERADO:**
+```
+[14:32:01] [WATCHLIST ] Iniciando scan (9 items em paralelo)...
+[14:32:02] [WATCHLIST ] AAPL: $2.8T | tier1 large cap
+[14:32:02] [VOLUME    ] NVDA: 2.3x spike | $125.4M volume
+[14:32:03] [GAPS      ] TSLA: Gap +5.2% | $245.30
+```
+
+**ARQUIVOS MODIFICADOS:**
+```
+buzz_factory.py:
+  + class PhaseColors
+  + class ColoredPhaseLogger
+  ~ class ParallelProgressTracker (usa logger colorido)
+  ~ Metodos de scan paralelo (logs de candidatos encontrados)
+
+debug_cli.py:
+  + Habilita ANSI no Windows
+```
+
+**Status:** OK - Logs coloridos funcionando
+
+---
+
 ### 2026-01-07 (Update 11)
 **Centralizacao de Formatacao de Noticias - Debug = Producao**
 

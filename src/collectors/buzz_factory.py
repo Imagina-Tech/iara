@@ -531,56 +531,64 @@ class BuzzFactory:
         seen_tickers: Set[str] = set()
 
         # =====================================================================
-        # FASE 1/4: WATCHLIST (PARALELO)
+        # TODAS AS 4 FASES RODAM EM PARALELO SIMULTANEAMENTE
         # =====================================================================
-        self._progress.start_phase("WATCHLIST", watchlist_count)
-        watchlist_candidates = await self._scan_watchlist_parallel()
-        await self._progress.complete_phase("WATCHLIST", len(watchlist_candidates), watchlist_count)
+        self._progress.logger.log("SYSTEM", f"Iniciando 4 fases em PARALELO...")
+        self._progress.logger.log("SYSTEM", f"  WATCHLIST: {watchlist_count} tickers")
+        self._progress.logger.log("SYSTEM", f"  VOLUME/GAPS: {universe_count} tickers cada")
+        self._progress.logger.log("SYSTEM", f"  NEWS: ~30 artigos estimados")
+        print()  # Linha em branco para separar
 
-        for c in watchlist_candidates:
-            if c.ticker not in seen_tickers:
-                candidates.append(c)
-                seen_tickers.add(c.ticker)
+        # Criar wrapper functions que logam inicio/fim de cada fase
+        async def run_watchlist() -> List[BuzzCandidate]:
+            self._progress.start_phase("WATCHLIST", watchlist_count)
+            result = await self._scan_watchlist_parallel()
+            await self._progress.complete_phase("WATCHLIST", len(result), watchlist_count)
+            return result
 
-        # =====================================================================
-        # FASE 2/4: VOLUME SPIKES (PARALELO)
-        # =====================================================================
-        self._progress.start_phase("VOLUME SPIKES", universe_count)
-        volume_candidates = await self._scan_volume_spikes_parallel()
-        await self._progress.complete_phase("VOLUME SPIKES", len(volume_candidates), universe_count)
+        async def run_volume() -> List[BuzzCandidate]:
+            self._progress.start_phase("VOLUME", universe_count)
+            result = await self._scan_volume_spikes_parallel()
+            await self._progress.complete_phase("VOLUME", len(result), universe_count)
+            return result
 
-        for c in volume_candidates:
-            if c.ticker not in seen_tickers:
-                candidates.append(c)
-                seen_tickers.add(c.ticker)
+        async def run_gaps() -> List[BuzzCandidate]:
+            self._progress.start_phase("GAPS", universe_count)
+            result = await self._scan_gaps_parallel(force=force_all)
+            await self._progress.complete_phase("GAPS", len(result), universe_count)
+            return result
 
-        # =====================================================================
-        # FASE 3/4: GAP SCANNER (PARALELO)
-        # =====================================================================
-        self._progress.start_phase("GAP SCANNER", universe_count)
-        gap_candidates = await self._scan_gaps_parallel(force=force_all)
-        await self._progress.complete_phase("GAP SCANNER", len(gap_candidates), universe_count)
+        async def run_news() -> List[BuzzCandidate]:
+            self._progress.start_phase("NEWS", 30)
+            result = await self._scan_news_catalysts()
+            await self._progress.complete_phase("NEWS", len(result), 30)
+            return result
 
-        for c in gap_candidates:
-            if c.ticker not in seen_tickers:
-                candidates.append(c)
-                seen_tickers.add(c.ticker)
+        # EXECUTAR TODAS AS 4 FASES EM PARALELO
+        all_results = await asyncio.gather(
+            run_watchlist(),
+            run_volume(),
+            run_gaps(),
+            run_news(),
+            return_exceptions=True
+        )
 
-        # =====================================================================
-        # FASE 4/4: NEWS CATALYSTS
-        # =====================================================================
-        self._progress.start_phase("NEWS CATALYSTS", 30)  # Estimativa
-        news_candidates = await self._scan_news_catalysts()
-        await self._progress.complete_phase("NEWS CATALYSTS", len(news_candidates), 30)
-
-        for c in news_candidates:
-            if c.ticker not in seen_tickers:
-                candidates.append(c)
-                seen_tickers.add(c.ticker)
+        # Processar resultados
+        phase_names = ["WATCHLIST", "VOLUME", "GAPS", "NEWS"]
+        for i, result in enumerate(all_results):
+            if isinstance(result, Exception):
+                self._progress.logger.log(phase_names[i], f"ERRO: {result}")
+                continue
+            if isinstance(result, list):
+                for c in result:
+                    if c.ticker not in seen_tickers:
+                        candidates.append(c)
+                        seen_tickers.add(c.ticker)
 
         # =====================================================================
         # RESUMO FINAL
         # =====================================================================
+        print()  # Linha em branco antes do resumo
         self._progress.print_summary()
 
         # Ordena por buzz_score decrescente
