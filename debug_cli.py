@@ -114,36 +114,57 @@ async def cmd_buzz():
 
     # Buscar notícias para TODOS os candidatos (o Judge precisa de contexto completo)
     print("=" * 80)
-    print("  BUSCANDO NOTICIAS PARA TODOS OS CANDIDATOS")
+    print("  BUSCANDO NOTICIAS PARA TODOS OS CANDIDATOS (4 em paralelo)")
     print("  (O Judge precisa de contexto de notícias para TODOS os tickers)")
     print("=" * 80)
 
     news_for_candidates = {}
     total_candidates = len(filtered)
+    completed_count = 0
+    news_semaphore = asyncio.Semaphore(4)  # 4 requisicoes em paralelo
 
-    for idx, c in enumerate(filtered, 1):
-        ticker = c.ticker
-        print(f"\r[NEWS] {idx}/{total_candidates} - Buscando noticias para {ticker}...          ", end="", flush=True)
+    async def fetch_news_for_ticker(candidate):
+        """Busca noticias para um ticker com controle de concorrencia."""
+        nonlocal completed_count
+        ticker = candidate.ticker
 
-        try:
-            # Buscar notícias com scoring (mesmo método usado na produção)
-            gnews_articles = await news_aggregator.get_gnews(ticker, max_results=5, fetch_full_content=False)
+        async with news_semaphore:
+            try:
+                # Buscar notícias com scoring (mesmo método usado na produção)
+                gnews_articles = await news_aggregator.get_gnews(ticker, max_results=5, fetch_full_content=False)
 
-            if gnews_articles:
-                # USA METODOS CENTRALIZADOS - EXATAMENTE o mesmo formato usado no orchestrator.py
-                news_for_candidates[ticker] = {
-                    "screener_format": news_aggregator.format_news_for_screener(ticker, gnews_articles),
-                    "judge_format": news_aggregator.format_news_for_judge(ticker, gnews_articles),
-                    "raw_articles": gnews_articles
-                }
-            else:
-                news_for_candidates[ticker] = None
+                completed_count += 1
+                if gnews_articles:
+                    # USA METODOS CENTRALIZADOS - EXATAMENTE o mesmo formato usado no orchestrator.py
+                    result = {
+                        "screener_format": news_aggregator.format_news_for_screener(ticker, gnews_articles),
+                        "judge_format": news_aggregator.format_news_for_judge(ticker, gnews_articles),
+                        "raw_articles": gnews_articles
+                    }
+                    print(f"[NEWS] {completed_count}/{total_candidates} - {ticker}: {len(gnews_articles)} artigos")
+                    return ticker, result
+                else:
+                    print(f"[NEWS] {completed_count}/{total_candidates} - {ticker}: sem noticias")
+                    return ticker, None
 
-        except Exception as e:
-            print(f"\r[NEWS] {idx}/{total_candidates} - {ticker}: Erro - {str(e)[:50]}          ")
-            news_for_candidates[ticker] = None
+            except Exception as e:
+                completed_count += 1
+                print(f"[NEWS] {completed_count}/{total_candidates} - {ticker}: Erro - {str(e)[:50]}")
+                return ticker, None
 
-    print(f"\r[NEWS] Completo: {sum(1 for v in news_for_candidates.values() if v)}/{total_candidates} tickers com noticias          ")
+    # Executar todas as buscas em paralelo (limitado pelo semaphore)
+    tasks = [fetch_news_for_ticker(c) for c in filtered]
+    results = await asyncio.gather(*tasks, return_exceptions=True)
+
+    # Processar resultados
+    for result in results:
+        if isinstance(result, tuple):
+            ticker, news_data = result
+            news_for_candidates[ticker] = news_data
+        elif isinstance(result, Exception):
+            print(f"[NEWS] Erro inesperado: {result}")
+
+    print(f"\n[NEWS] Completo: {sum(1 for v in news_for_candidates.values() if v)}/{total_candidates} tickers com noticias")
     print()
 
     # Função para formatar notícias de forma legível (quebra em linhas)
