@@ -686,6 +686,57 @@ Nível 5: EMERGÊNCIA (Kill Switch)
 
 ## 📊 HISTÓRICO DE MODIFICAÇÕES
 
+### 2026-01-07 (Update 11)
+**Centralizacao de Formatacao de Noticias - Debug = Producao**
+
+**PROBLEMA RESOLVIDO:**
+- O debug_cli.py mostrava um formato de noticias
+- O orchestrator.py usava outro formato diferente
+- O campo `news_for_judge` no debug NAO era o mesmo que o Judge recebia na producao
+
+**SOLUCAO IMPLEMENTADA:**
+
+#### Metodos Centralizados em news_aggregator.py
+```python
+# Para Screener (Phase 1) - resumido
+format_news_for_screener(ticker, articles) -> str
+
+# Para Judge (Phase 3) - detalhado com scores
+format_news_for_judge(ticker, articles) -> str
+```
+
+#### Uso Unificado
+```
+news_aggregator.py          <- METODOS CENTRALIZADOS
+      ^                            ^
+      |                            |
+orchestrator.py             debug_cli.py
+(producao)                  (debug)
+      |                            |
+      v                            v
+MESMO FORMATO              MESMO FORMATO
+```
+
+**ARQUIVOS MODIFICADOS:**
+```
+news_aggregator.py:
+  + format_news_for_screener(ticker, articles)
+  + format_news_for_judge(ticker, articles)
+
+orchestrator.py:
+  ~ _phase_1_screener() - usa format_news_for_screener()
+  ~ _phase_3_judge() - usa format_news_for_judge()
+
+debug_cli.py:
+  ~ cmd_buzz() - usa os mesmos metodos centralizados
+```
+
+**GARANTIA:** O que voce ve no JSON do debug e EXATAMENTE o que o Judge recebe na producao.
+
+**Status:** OK - Debug e producao 100% sincronizados
+
+---
+
 ### 2026-01-07 (Update 10)
 **News Scoring System - Qualidade de Fontes + Freshness + Pais**
 
