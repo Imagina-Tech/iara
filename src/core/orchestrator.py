@@ -116,11 +116,27 @@ class Orchestrator:
         try:
             # 1. Gerar buzz candidates
             candidates = await self.buzz_factory.generate_daily_buzz()
-            logger.info(f"Buzz Factory gerou {len(candidates)} candidatos brutos")
+            logger.info(f"[PHASE0] Buzz Factory gerou {len(candidates)} candidatos brutos")
+
+            # Log por fonte
+            by_source = {}
+            for c in candidates:
+                by_source[c.source] = by_source.get(c.source, 0) + 1
+            for source, count in by_source.items():
+                logger.info(f"  - {source}: {count} candidatos")
 
             # 2. Aplicar filtros (market cap, liquidity, Friday blocking, earnings)
             filtered = await self.buzz_factory.apply_filters(candidates)
-            logger.info(f"Após filtros: {len(filtered)} candidatos válidos")
+            logger.info(f"[PHASE0] Após filtros: {len(filtered)} candidatos válidos")
+
+            # Log detalhado dos candidatos filtrados
+            for c in filtered[:10]:
+                has_news = "SIM" if hasattr(c, 'news_content') and c.news_content else "NAO"
+                logger.info(
+                    f"  [OK] {c.ticker:8s} | {c.source:15s} | score={c.buzz_score:.1f} | news={has_news}"
+                )
+            if len(filtered) > 10:
+                logger.info(f"  ... e mais {len(filtered) - 10} candidatos")
 
             # 3. Armazenar para Phase 1
             self.phase0_candidates = filtered
@@ -182,19 +198,22 @@ class Orchestrator:
                     if hasattr(candidate, 'news_content') and candidate.news_content:
                         # Usar notícias já coletadas na Phase 0
                         news_summary = candidate.news_content
-                        logger.debug(f"{ticker}: Usando notícias da Phase 0")
+                        logger.info(f"[PHASE1] {ticker}: Usando noticias da Phase 0 (cache hit)")
                     else:
                         # Buscar notícias fresh para candidatos sem news_content
                         try:
+                            logger.info(f"[PHASE1] {ticker}: Buscando noticias (cache miss)...")
                             gnews_articles = await news_aggregator.get_gnews(ticker, max_results=3)
                             if gnews_articles:
                                 news_texts = []
                                 for art in gnews_articles[:3]:
-                                    news_texts.append(f"- {art.get('title', '')}")
+                                    # Incluir score no log para análise
+                                    score = art.get('relevance_score', 0)
+                                    news_texts.append(f"- [{score:.1f}] {art.get('title', '')}")
                                 news_summary = f"Recent news for {ticker}:\n" + "\n".join(news_texts)
-                                logger.debug(f"{ticker}: Buscou {len(gnews_articles)} notícias do GNews")
+                                logger.info(f"[PHASE1] {ticker}: {len(gnews_articles)} noticias com scoring aplicado")
                         except Exception as news_err:
-                            logger.debug(f"{ticker}: Erro buscando notícias - {news_err}")
+                            logger.warning(f"[PHASE1] {ticker}: Erro buscando noticias - {news_err}")
 
                     screener_input.append({
                         "market_data": market_data,
@@ -377,31 +396,36 @@ class Orchestrator:
                     macro_data = {"vix": 20, "spy_trend": "neutral"}
                     correlation_data = {"max_correlation": 0, "sector_exposure": 0}
 
-                    # Buscar notícias DETALHADAS para o Judge
+                    # Buscar notícias DETALHADAS para o Judge (com scoring aplicado)
                     news_details = ""
                     try:
-                        logger.info(f"{ticker}: Buscando notícias detalhadas para o Judge...")
+                        logger.info(f"[PHASE3] {ticker}: Buscando noticias detalhadas para Judge...")
                         gnews_articles = await news_aggregator.get_gnews(ticker, max_results=5)
 
                         if gnews_articles:
-                            news_parts = [f"=== NEWS FOR {ticker} ==="]
+                            news_parts = [f"=== NEWS FOR {ticker} (SCORED) ==="]
                             for i, art in enumerate(gnews_articles[:5], 1):
                                 title = art.get('title', 'No title')
                                 desc = art.get('description', '')[:200] if art.get('description') else ''
                                 source = art.get('source', 'Unknown')
-                                news_parts.append(f"\n[{i}] {title}")
+                                score = art.get('relevance_score', 0)
+                                freshness = art.get('freshness_score', 0)
+                                news_parts.append(f"\n[{i}] SCORE={score:.1f} (fresh={freshness:.2f}) | {title}")
                                 if desc:
                                     news_parts.append(f"    Summary: {desc}")
                                 news_parts.append(f"    Source: {source}")
 
                             news_details = "\n".join(news_parts)
-                            logger.info(f"{ticker}: {len(gnews_articles)} notícias encontradas para Judge")
+                            logger.info(
+                                f"[PHASE3] {ticker}: {len(gnews_articles)} noticias para Judge | "
+                                f"Best score: {gnews_articles[0].get('relevance_score', 0):.1f}"
+                            )
                         else:
                             news_details = f"No recent news found for {ticker}"
-                            logger.info(f"{ticker}: Nenhuma notícia encontrada")
+                            logger.info(f"[PHASE3] {ticker}: Nenhuma noticia recente encontrada")
 
                     except Exception as news_err:
-                        logger.warning(f"{ticker}: Erro buscando notícias - {news_err}")
+                        logger.warning(f"[PHASE3] {ticker}: Erro buscando noticias - {news_err}")
                         news_details = "News fetch failed"
 
                     # Get portfolio prices for correlation validation

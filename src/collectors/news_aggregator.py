@@ -370,6 +370,7 @@ class NewsAggregator:
         """
         url = article.get("url", "")
         published = article.get("published", "")
+        title = article.get("title", "")[:50]
 
         # Componentes do score
         source_score = self._get_source_score(url)  # 0.5-1.5
@@ -381,7 +382,17 @@ class NewsAggregator:
         final_score = (base * source_score * freshness_score) + (country_bonus * 2)
 
         # Clamp entre 0 e 10
-        return max(0.0, min(10.0, final_score))
+        final_score = max(0.0, min(10.0, final_score))
+
+        # Log detalhado do scoring
+        domain = self._extract_domain(url)
+        logger.debug(
+            f"[SCORE] {ticker} | {domain:25s} | "
+            f"src={source_score:.2f} fresh={freshness_score:.2f} country={country_bonus:.1f} "
+            f"-> FINAL={final_score:.2f} | {title}..."
+        )
+
+        return final_score
 
     def _is_news_fresh(self, published_str: str) -> bool:
         """Verifica se noticia esta dentro do limite de idade."""
@@ -505,15 +516,23 @@ class NewsAggregator:
                         full_content = await self._scrape_article_content(art["url"])
                         art["full_content"] = full_content if full_content else ""
 
-            # Log detalhado
+            # Log detalhado do resultado final
             if top_articles:
                 best = top_articles[0]
                 logger.info(
-                    f"GNews: {len(top_articles)}/{len(unique_articles)} articles for {ticker} "
-                    f"(best: {best.get('relevance_score', 0):.1f} from {self._extract_domain(best.get('url', ''))})"
+                    f"[NEWS] {ticker}: {len(top_articles)}/{len(unique_articles)} artigos "
+                    f"(filtrados de {len(all_articles)} brutos) | "
+                    f"Best: {best.get('relevance_score', 0):.1f} pts de {self._extract_domain(best.get('url', ''))}"
                 )
+                # Log resumo dos top artigos selecionados
+                for i, art in enumerate(top_articles[:3], 1):
+                    logger.info(
+                        f"  [{i}] Score={art.get('relevance_score', 0):.1f} | "
+                        f"{self._extract_domain(art.get('url', '')):20s} | "
+                        f"{art.get('title', '')[:60]}..."
+                    )
             else:
-                logger.info(f"GNews: No fresh articles for {ticker}")
+                logger.info(f"[NEWS] {ticker}: Nenhum artigo fresco encontrado (max_age={self.max_news_age_hours}h)")
 
             return top_articles
 
