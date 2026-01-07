@@ -114,14 +114,14 @@ async def cmd_buzz():
 
     # Buscar notícias para TODOS os candidatos (o Judge precisa de contexto completo)
     print("=" * 80)
-    print("  BUSCANDO NOTICIAS PARA TODOS OS CANDIDATOS (4 em paralelo)")
+    print("  BUSCANDO NOTICIAS PARA TODOS OS CANDIDATOS (12 em paralelo)")
     print("  (O Judge precisa de contexto de notícias para TODOS os tickers)")
     print("=" * 80)
 
     news_for_candidates = {}
     total_candidates = len(filtered)
     completed_count = 0
-    news_semaphore = asyncio.Semaphore(4)  # 4 requisicoes em paralelo
+    news_semaphore = asyncio.Semaphore(12)  # 12 requisicoes em paralelo
 
     async def fetch_news_for_ticker(candidate):
         """Busca noticias para um ticker com controle de concorrencia."""

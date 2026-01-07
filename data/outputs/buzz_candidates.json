@@ -1,17 +1,17 @@
 {
-  "generated_at": "2026-01-07T03:05:24.964922",
+  "generated_at": "2026-01-07T03:56:47.356275",
   "test_mode": true,
   "forced_all_sources": true,
   "summary": {
-    "total_candidates_raw": 24,
-    "total_candidates_filtered": 24,
+    "total_candidates_raw": 25,
+    "total_candidates_filtered": 25,
     "by_source": {
       "volume_spike": 1,
       "gap": 10,
-      "news_catalyst": 4,
+      "news_catalyst": 5,
       "watchlist": 9
     },
-    "candidates_with_news": 21
+    "candidates_with_news": 22
   },
   "candidates": [
     {
@@ -22,7 +22,7 @@
       "market_cap": 315400290304,
       "market_cap_billions": 315.4,
       "reason": "Volume spike 2.5x ($3211.9M)",
-      "detected_at": "2026-01-07T02:46:47.079628",
+      "detected_at": "2026-01-07T03:38:56.142939",
       "news_content": [
         "Recent news for CVX:",
         "- [Seeking Alpha] Chevron slides by most since April, reversing big Venezuela-fueled gain (CVX:NYSE) - Seeking Alpha",
@@ -110,19 +110,19 @@
       "market_cap": 386533621760,
       "market_cap_billions": 386.53,
       "reason": "Gap up 10.0%",
-      "detected_at": "2026-01-07T02:48:13.073149",
+      "detected_at": "2026-01-07T03:40:31.592729",
       "news_content": [
         "Recent news for MU:",
+        "- [Insider Monkey] Micron (MU) Shares Get Bullish Target Hike as DRAM Prices Accelerate - Insider Monkey",
         "- [simplywall.st] Why Micron Technology (MU) Is Up 6.7% After Fully Booking Its 2026 HBM Capacity And What’s Next - simplywall.st",
-        "- [WSAZ] MU’s Speer named POW - WSAZ",
-        "- [Quiver Quantitative] Micron Technology Stock (MU) Opinions on Record High and AI Demand - Quiver Quantitative"
+        "- [WSAZ] MU’s Speer named POW - WSAZ"
       ],
       "news_articles": [
         {
-          "titulo": "Micron (MU) Shares Skyrocket, What You Need To Know - Yahoo Finance",
-          "fonte": "Yahoo Finance",
-          "data": "Tue, 06 Jan 2026 20:55:39 GMT",
-          "resumo": "Micron (MU) Shares Skyrocket, What You Need To Know  Yahoo Finance",
+          "titulo": "Micron (MU) Shares Get Bullish Target Hike as DRAM Prices Accelerate - Insider Monkey",
+          "fonte": "Insider Monkey",
+          "data": "Wed, 07 Jan 2026 03:40:19 GMT",
+          "resumo": "Micron (MU) Shares Get Bullish Target Hike as DRAM Prices Accelerate  Insider Monkey",
           "conteudo_completo": ""
         },
         {
@@ -156,18 +156,18 @@
       ],
       "news_for_screener": [
         "Recent news for MU (scored by relevance):",
-        "- [3.8] Micron (MU) Shares Skyrocket, What You Need To Know - Yahoo Finance",
+        "- [4.0] Micron (MU) Shares Get Bullish Target Hike as DRAM Prices Accelerate - Insider Monkey",
         "- [3.4] Why Micron Technology (MU) Is Up 6.7% After Fully Booking Its 2026 HBM Capacity And What’s Next - simplywall.st",
         "- [3.4] MU’s Speer named POW - WSAZ"
       ],
       "news_for_judge": [
         "=== NEWS FOR MU (SCORED BY RELEVANCE) ===",
         "Total articles analyzed: 5",
-        "[1] RELEVANCE SCORE: 3.8/10",
-        "Title: Micron (MU) Shares Skyrocket, What You Need To Know - Yahoo Finance",
-        "Source: Yahoo Finance (quality=0.80)",
-        "Published: Tue, 06 Jan 2026 20:55:39 GMT (freshness=0.95)",
-        "Summary: Micron (MU) Shares Skyrocket, What You Need To Know  Yahoo Finance",
+        "[1] RELEVANCE SCORE: 4.0/10",
+        "Title: Micron (MU) Shares Get Bullish Target Hike as DRAM Prices Accelerate - Insider Monkey",
+        "Source: Insider Monkey (quality=0.80)",
+        "Published: Wed, 07 Jan 2026 03:40:19 GMT (freshness=1.00)",
+        "Summary: Micron (MU) Shares Get Bullish Target Hike as DRAM Prices Accelerate  Insider Monkey",
         "[2] RELEVANCE SCORE: 3.4/10",
         "Title: Why Micron Technology (MU) Is Up 6.7% After Fully Booking Its 2026 HBM Capacity And What’s Next - simplywall.st",
         "Source: simplywall.st (quality=0.80)",
@@ -198,26 +198,26 @@
       "market_cap": 60632948736,
       "market_cap_billions": 60.63,
       "reason": "Gap up 4.5%",
-      "detected_at": "2026-01-07T02:49:21.168956",
+      "detected_at": "2026-01-07T03:41:41.683645",
       "news_content": [
         "Recent news for VALE:",
-        "- [StocksToTrade] Vale Stock Surge: Time to Buy or Wait? - StocksToTrade",
         "- [The Motley Fool] Stock Market Today, Jan. 6: Vale Shares Jump on Strong Day for Mining Stocks - The Motley Fool",
-        "- [timothysykes.com] Vale’s Surge: Time to Consider Buying? - timothysykes.com"
+        "- [StocksToTrade] Vale Stock Surge: Time to Buy or Wait? - StocksToTrade",
+        "- [InfoMoney] Vale (VALE3) e siderúrgicas sobem até 4% após minério atingir máxima em 5 meses - InfoMoney"
       ],
       "news_articles": [
-        {
-          "titulo": "Vale Stock Surge: Time to Buy or Wait? - StocksToTrade",
-          "fonte": "StocksToTrade",
-          "data": "Wed, 07 Jan 2026 02:04:00 GMT",
-          "resumo": "Vale Stock Surge: Time to Buy or Wait?  StocksToTrade",
-          "conteudo_completo": ""
-        },
         {
           "titulo": "Stock Market Today, Jan. 6: Vale Shares Jump on Strong Day for Mining Stocks - The Motley Fool",
           "fonte": "The Motley Fool",
           "data": "Tue, 06 Jan 2026 22:44:00 GMT",
           "resumo": "Stock Market Today, Jan. 6: Vale Shares Jump on Strong Day for Mining Stocks  The Motley Fool",
+          "conteudo_completo": ""
+        },
+        {
+          "titulo": "Vale Stock Surge: Time to Buy or Wait? - StocksToTrade",
+          "fonte": "StocksToTrade",
+          "data": "Wed, 07 Jan 2026 02:04:00 GMT",
+          "resumo": "Vale Stock Surge: Time to Buy or Wait?  StocksToTrade",
           "conteudo_completo": ""
         },
         {
@@ -235,32 +235,32 @@
           "conteudo_completo": ""
         },
         {
-          "titulo": "Vale (VALE3) e siderúrgicas sobem até 4% após minério atingir máxima em 5 meses - InfoMoney",
-          "fonte": "InfoMoney",
-          "data": "Tue, 06 Jan 2026 21:44:10 GMT",
-          "resumo": "Vale (VALE3) e siderúrgicas sobem até 4% após minério atingir máxima em 5 meses  InfoMoneyAções da Vale ampliam ganhos e sobem quase 4% com forte movimento comprador  Valor EconômicoIbovespa fecha em alta com maior apetite ao risco; Vale e bancos avançam  Terra",
+          "titulo": "Exportações de Minério de Ferro do Brasil Atingem Recorde em 2025 com Impulso da Vale (VALE3) - Investimentos e Notícias",
+          "fonte": "Investimentos e Notícias",
+          "data": "Tue, 06 Jan 2026 22:01:03 GMT",
+          "resumo": "Exportações de Minério de Ferro do Brasil Atingem Recorde em 2025 com Impulso da Vale (VALE3)  Investimentos e Notícias",
           "conteudo_completo": ""
         }
       ],
       "news_for_screener": [
         "Recent news for VALE (scored by relevance):",
-        "- [4.0] Vale Stock Surge: Time to Buy or Wait? - StocksToTrade",
         "- [3.8] Stock Market Today, Jan. 6: Vale Shares Jump on Strong Day for Mining Stocks - The Motley Fool",
+        "- [3.8] Vale Stock Surge: Time to Buy or Wait? - StocksToTrade",
         "- [3.8] Vale’s Surge: Time to Consider Buying? - timothysykes.com"
       ],
       "news_for_judge": [
         "=== NEWS FOR VALE (SCORED BY RELEVANCE) ===",
         "Total articles analyzed: 5",
-        "[1] RELEVANCE SCORE: 4.0/10",
-        "Title: Vale Stock Surge: Time to Buy or Wait? - StocksToTrade",
-        "Source: StocksToTrade (quality=0.80)",
-        "Published: Wed, 07 Jan 2026 02:04:00 GMT (freshness=1.00)",
-        "Summary: Vale Stock Surge: Time to Buy or Wait?  StocksToTrade",
-        "[2] RELEVANCE SCORE: 3.8/10",
+        "[1] RELEVANCE SCORE: 3.8/10",
         "Title: Stock Market Today, Jan. 6: Vale Shares Jump on Strong Day for Mining Stocks - The Motley Fool",
         "Source: The Motley Fool (quality=0.80)",
         "Published: Tue, 06 Jan 2026 22:44:00 GMT (freshness=0.95)",
         "Summary: Stock Market Today, Jan. 6: Vale Shares Jump on Strong Day for Mining Stocks  The Motley Fool",
+        "[2] RELEVANCE SCORE: 3.8/10",
+        "Title: Vale Stock Surge: Time to Buy or Wait? - StocksToTrade",
+        "Source: StocksToTrade (quality=0.80)",
+        "Published: Wed, 07 Jan 2026 02:04:00 GMT (freshness=0.95)",
+        "Summary: Vale Stock Surge: Time to Buy or Wait?  StocksToTrade",
         "[3] RELEVANCE SCORE: 3.8/10",
         "Title: Vale’s Surge: Time to Consider Buying? - timothysykes.com",
         "Source: timothysykes.com (quality=0.80)",
@@ -272,10 +272,10 @@
         "Published: Tue, 06 Jan 2026 23:04:00 GMT (freshness=0.95)",
         "Summary: Stock Market Today, Jan. 6: Vale Shares Jump on Strong Day for Mining Stocks  Nasdaq",
         "[5] RELEVANCE SCORE: 3.8/10",
-        "Title: Vale (VALE3) e siderúrgicas sobem até 4% após minério atingir máxima em 5 meses - InfoMoney",
-        "Source: InfoMoney (quality=0.80)",
-        "Published: Tue, 06 Jan 2026 21:44:10 GMT (freshness=0.95)",
-        "Summary: Vale (VALE3) e siderúrgicas sobem até 4% após minério atingir máxima em 5 meses  InfoMoneyAções da Vale ampliam ganhos e sobem quase 4% com forte movimento comprador  Valor EconômicoIbovespa fecha em alta com maior apetite ao risco; Vale e bancos avançam  Terra"
+        "Title: Exportações de Minério de Ferro do Brasil Atingem Recorde em 2025 com Impulso da Vale (VALE3) - Investimentos e Notícias",
+        "Source: Investimentos e Notícias (quality=0.80)",
+        "Published: Tue, 06 Jan 2026 22:01:03 GMT (freshness=0.95)",
+        "Summary: Exportações de Minério de Ferro do Brasil Atingem Recorde em 2025 com Impulso da Vale (VALE3)  Investimentos e Notícias"
       ]
     },
     {
@@ -286,7 +286,7 @@
       "market_cap": 1439946637312,
       "market_cap_billions": 1439.95,
       "reason": "Gap down -4.1%",
-      "detected_at": "2026-01-07T02:47:04.749767",
+      "detected_at": "2026-01-07T03:39:20.865672",
       "news_content": [
         "Recent news for TSLA:",
         "- [Investor's Business Daily] Why Elon Musk And Tesla Aren't 'Losing Sleep' Over Nvidia's Self-Driving Announcement - Investor's Business Daily",
@@ -294,6 +294,13 @@
         "- [TipRanks] Cybercab Out: Tesla Stock (NASDAQ:TSLA) Plunges as Key Product Name Unavailable for Trademark - TipRanks"
       ],
       "news_articles": [
+        {
+          "titulo": "HSBC Stays Cautious on Tesla (TSLA) After Lower-Than-Expected Q4 Deliveries - Yahoo Finance",
+          "fonte": "Yahoo Finance",
+          "data": "Wed, 07 Jan 2026 03:39:33 GMT",
+          "resumo": "HSBC Stays Cautious on Tesla (TSLA) After Lower-Than-Expected Q4 Deliveries  Yahoo Finance",
+          "conteudo_completo": ""
+        },
         {
           "titulo": "Why Elon Musk And Tesla Aren't 'Losing Sleep' Over Nvidia's Self-Driving Announcement - Investor's Business Daily",
           "fonte": "Investor's Business Daily",
@@ -321,49 +328,42 @@
           "data": "Tue, 06 Jan 2026 18:03:04 GMT",
           "resumo": "Cybercab Out: Tesla Stock (NASDAQ:TSLA) Plunges as Key Product Name Unavailable for Trademark  TipRanks",
           "conteudo_completo": ""
-        },
-        {
-          "titulo": "Tesla Stock Could Be Worth Just $80 - Barron's",
-          "fonte": "Barron's",
-          "data": "Tue, 06 Jan 2026 17:34:00 GMT",
-          "resumo": "Tesla Stock Could Be Worth Just $80  Barron's",
-          "conteudo_completo": ""
         }
       ],
       "news_for_screener": [
         "Recent news for TSLA (scored by relevance):",
+        "- [4.0] HSBC Stays Cautious on Tesla (TSLA) After Lower-Than-Expected Q4 Deliveries - Yahoo Finance",
         "- [3.8] Why Elon Musk And Tesla Aren't 'Losing Sleep' Over Nvidia's Self-Driving Announcement - Investor's Business Daily",
-        "- [3.8] ‘Cool Your Jets,’ Warns Analyst on Blockbuster 2026 Tesla (TSLA) Prediction - TipRanks",
-        "- [3.8] Tesla: The Growth Company In Decline (NASDAQ:TSLA) - Seeking Alpha"
+        "- [3.8] ‘Cool Your Jets,’ Warns Analyst on Blockbuster 2026 Tesla (TSLA) Prediction - TipRanks"
       ],
       "news_for_judge": [
         "=== NEWS FOR TSLA (SCORED BY RELEVANCE) ===",
         "Total articles analyzed: 5",
-        "[1] RELEVANCE SCORE: 3.8/10",
+        "[1] RELEVANCE SCORE: 4.0/10",
+        "Title: HSBC Stays Cautious on Tesla (TSLA) After Lower-Than-Expected Q4 Deliveries - Yahoo Finance",
+        "Source: Yahoo Finance (quality=0.80)",
+        "Published: Wed, 07 Jan 2026 03:39:33 GMT (freshness=1.00)",
+        "Summary: HSBC Stays Cautious on Tesla (TSLA) After Lower-Than-Expected Q4 Deliveries  Yahoo Finance",
+        "[2] RELEVANCE SCORE: 3.8/10",
         "Title: Why Elon Musk And Tesla Aren't 'Losing Sleep' Over Nvidia's Self-Driving Announcement - Investor's Business Daily",
         "Source: Investor's Business Daily (quality=0.80)",
         "Published: Tue, 06 Jan 2026 22:22:00 GMT (freshness=0.95)",
         "Summary: Why Elon Musk And Tesla Aren't 'Losing Sleep' Over Nvidia's Self-Driving Announcement  Investor's Business Daily",
-        "[2] RELEVANCE SCORE: 3.8/10",
+        "[3] RELEVANCE SCORE: 3.8/10",
         "Title: ‘Cool Your Jets,’ Warns Analyst on Blockbuster 2026 Tesla (TSLA) Prediction - TipRanks",
         "Source: TipRanks (quality=0.80)",
         "Published: Wed, 07 Jan 2026 00:00:44 GMT (freshness=0.95)",
         "Summary: ‘Cool Your Jets,’ Warns Analyst on Blockbuster 2026 Tesla (TSLA) Prediction  TipRanks",
-        "[3] RELEVANCE SCORE: 3.8/10",
+        "[4] RELEVANCE SCORE: 3.8/10",
         "Title: Tesla: The Growth Company In Decline (NASDAQ:TSLA) - Seeking Alpha",
         "Source: Seeking Alpha (quality=0.80)",
         "Published: Tue, 06 Jan 2026 22:40:19 GMT (freshness=0.95)",
         "Summary: Tesla: The Growth Company In Decline (NASDAQ:TSLA)  Seeking Alpha",
-        "[4] RELEVANCE SCORE: 3.4/10",
+        "[5] RELEVANCE SCORE: 3.4/10",
         "Title: Cybercab Out: Tesla Stock (NASDAQ:TSLA) Plunges as Key Product Name Unavailable for Trademark - TipRanks",
         "Source: TipRanks (quality=0.80)",
         "Published: Tue, 06 Jan 2026 18:03:04 GMT (freshness=0.85)",
-        "Summary: Cybercab Out: Tesla Stock (NASDAQ:TSLA) Plunges as Key Product Name Unavailable for Trademark  TipRanks",
-        "[5] RELEVANCE SCORE: 3.4/10",
-        "Title: Tesla Stock Could Be Worth Just $80 - Barron's",
-        "Source: Barron's (quality=0.80)",
-        "Published: Tue, 06 Jan 2026 17:34:00 GMT (freshness=0.85)",
-        "Summary: Tesla Stock Could Be Worth Just $80  Barron's"
+        "Summary: Cybercab Out: Tesla Stock (NASDAQ:TSLA) Plunges as Key Product Name Unavailable for Trademark  TipRanks"
       ]
     },
     {
@@ -374,40 +374,26 @@
       "market_cap": 45707771904,
       "market_cap_billions": 45.71,
       "reason": "Gap down -4.1%",
-      "detected_at": "2026-01-07T02:48:26.164990",
+      "detected_at": "2026-01-07T03:40:47.350567",
       "news_content": [
         "Recent news for MSTR:",
         "- [Investor's Business Daily] MSCI Keeps Strategy — For Now — But Handcuffs Bitcoin Buying - Investor's Business Daily",
-        "- [CoinDesk] MSTR News: Strategy surges 6% on MSCI decision not to exclude digital asset treasury firms from indexes - CoinDesk",
-        "- [Investing.com] Strategy stock surges 6% after MSCI decides against excluding crypto firms - Investing.com"
+        "- [Nasdaq] Strategy (MSTR) Stock Sinks As Market Gains: What You Should Know - Nasdaq",
+        "- [Yahoo Finance] Big Pain Is Ahead for MicroStrategy Stock as Bitcoin Losses Mount. How Should You Play MSTR for January 2026? - Yahoo Finance"
       ],
       "news_articles": [
         {
           "titulo": "MSCI Keeps Strategy — For Now — But Handcuffs Bitcoin Buying - Investor's Business Daily",
           "fonte": "Investor's Business Daily",
           "data": "Tue, 06 Jan 2026 23:14:00 GMT",
-          "resumo": "MSCI Keeps Strategy — For Now — But Handcuffs Bitcoin Buying  Investor's Business Daily",
+          "resumo": "MSCI Keeps Strategy — For Now — But Handcuffs Bitcoin Buying  Investor's Business DailyMSTR MSCI News: MSCI decision 'a welcome reprieve,’ but analysts caution fight isn’t over  CoinDeskStrategy stock surges 6% after MSCI decides against excluding crypto firms  Yahoo FinanceThe Biggest Risk To MSTR Isn't MSCI Delisting Or Bitcoin’s Price Crashing, Says Analyst  StocktwitsMSCI Keeps DAT Companies in Global Indexes: MSTR Stock Up 5%  TradingView — Track All MarketsMSTR leads crypto stocks rally following MSCI index inclusion update even as Bitcoin stalled at $93,000  MSNStrategy Stock (MSTR) Jumps 6.6% After MSCI Pauses DATs Exclusion  TipRanksMSTR News: Strategy surges 6% on MSCI decision not to exclude digital asset treasury firms from indexes  CoinDeskMSTR Stock Spikes Over 6% After Hours As MSCI Drops Plan To Exclude Crypto Treasury Companies Like Strategy From Global Index - Michael Saylor Reacts  Benzinga",
           "conteudo_completo": ""
         },
         {
-          "titulo": "MSTR News: Strategy surges 6% on MSCI decision not to exclude digital asset treasury firms from indexes - CoinDesk",
-          "fonte": "CoinDesk",
-          "data": "Tue, 06 Jan 2026 21:30:04 GMT",
-          "resumo": "MSTR News: Strategy surges 6% on MSCI decision not to exclude digital asset treasury firms from indexes  CoinDesk",
-          "conteudo_completo": ""
-        },
-        {
-          "titulo": "Strategy stock surges 6% after MSCI decides against excluding crypto firms - Investing.com",
-          "fonte": "Investing.com",
-          "data": "Tue, 06 Jan 2026 21:27:58 GMT",
-          "resumo": "Strategy stock surges 6% after MSCI decides against excluding crypto firms  Investing.com",
-          "conteudo_completo": ""
-        },
-        {
-          "titulo": "MSTR MSCI News: MSCI decision 'a welcome reprieve,’ but analysts caution fight isn’t over - CoinDesk",
-          "fonte": "CoinDesk",
-          "data": "Tue, 06 Jan 2026 23:16:41 GMT",
-          "resumo": "MSTR MSCI News: MSCI decision 'a welcome reprieve,’ but analysts caution fight isn’t over  CoinDesk",
+          "titulo": "Strategy Inc (MSTR) stock jumps after hours after MSCI drops index-exclusion plan for bitcoin treasuries - ts2.tech",
+          "fonte": "ts2.tech",
+          "data": "Tue, 06 Jan 2026 23:04:12 GMT",
+          "resumo": "Strategy Inc (MSTR) stock jumps after hours after MSCI drops index-exclusion plan for bitcoin treasuries  ts2.tech",
           "conteudo_completo": ""
         },
         {
@@ -416,13 +402,27 @@
           "data": "Tue, 06 Jan 2026 23:00:00 GMT",
           "resumo": "Strategy (MSTR) Stock Sinks As Market Gains: What You Should Know  Nasdaq",
           "conteudo_completo": ""
+        },
+        {
+          "titulo": "MSTR Leads Crypto Stocks Rally Following MSCI Index Inclusion Update Even As Bitcoin Stalls At $93,000 - Stocktwits",
+          "fonte": "Stocktwits",
+          "data": "Wed, 07 Jan 2026 00:42:52 GMT",
+          "resumo": "MSTR Leads Crypto Stocks Rally Following MSCI Index Inclusion Update Even As Bitcoin Stalls At $93,000  Stocktwits",
+          "conteudo_completo": ""
+        },
+        {
+          "titulo": "Big Pain Is Ahead for MicroStrategy Stock as Bitcoin Losses Mount. How Should You Play MSTR for January 2026? - Yahoo Finance",
+          "fonte": "Yahoo Finance",
+          "data": "Tue, 06 Jan 2026 16:18:11 GMT",
+          "resumo": "Big Pain Is Ahead for MicroStrategy Stock as Bitcoin Losses Mount. How Should You Play MSTR for January 2026?  Yahoo Finance",
+          "conteudo_completo": ""
         }
       ],
       "news_for_screener": [
         "Recent news for MSTR (scored by relevance):",
         "- [3.8] MSCI Keeps Strategy — For Now — But Handcuffs Bitcoin Buying - Investor's Business Daily",
-        "- [3.8] MSTR News: Strategy surges 6% on MSCI decision not to exclude digital asset treasury firms from indexes - CoinDesk",
-        "- [3.8] Strategy stock surges 6% after MSCI decides against excluding crypto firms - Investing.com"
+        "- [3.8] Strategy Inc (MSTR) stock jumps after hours after MSCI drops index-exclusion plan for bitcoin treasuries - ts2.tech",
+        "- [3.8] Strategy (MSTR) Stock Sinks As Market Gains: What You Should Know - Nasdaq"
       ],
       "news_for_judge": [
         "=== NEWS FOR MSTR (SCORED BY RELEVANCE) ===",
@@ -431,27 +431,27 @@
         "Title: MSCI Keeps Strategy — For Now — But Handcuffs Bitcoin Buying - Investor's Business Daily",
         "Source: Investor's Business Daily (quality=0.80)",
         "Published: Tue, 06 Jan 2026 23:14:00 GMT (freshness=0.95)",
-        "Summary: MSCI Keeps Strategy — For Now — But Handcuffs Bitcoin Buying  Investor's Business Daily",
+        "Summary: MSCI Keeps Strategy — For Now — But Handcuffs Bitcoin Buying  Investor's Business DailyMSTR MSCI News: MSCI decision 'a welcome reprieve,’ but analysts caution fight isn’t over  CoinDeskStrategy stock surges 6% after MSCI decides against excluding crypto firms  Yahoo FinanceThe Biggest Risk To MSTR",
         "[2] RELEVANCE SCORE: 3.8/10",
-        "Title: MSTR News: Strategy surges 6% on MSCI decision not to exclude digital asset treasury firms from indexes - CoinDesk",
-        "Source: CoinDesk (quality=0.80)",
-        "Published: Tue, 06 Jan 2026 21:30:04 GMT (freshness=0.95)",
-        "Summary: MSTR News: Strategy surges 6% on MSCI decision not to exclude digital asset treasury firms from indexes  CoinDesk",
+        "Title: Strategy Inc (MSTR) stock jumps after hours after MSCI drops index-exclusion plan for bitcoin treasuries - ts2.tech",
+        "Source: ts2.tech (quality=0.80)",
+        "Published: Tue, 06 Jan 2026 23:04:12 GMT (freshness=0.95)",
+        "Summary: Strategy Inc (MSTR) stock jumps after hours after MSCI drops index-exclusion plan for bitcoin treasuries  ts2.tech",
         "[3] RELEVANCE SCORE: 3.8/10",
-        "Title: Strategy stock surges 6% after MSCI decides against excluding crypto firms - Investing.com",
-        "Source: Investing.com (quality=0.80)",
-        "Published: Tue, 06 Jan 2026 21:27:58 GMT (freshness=0.95)",
-        "Summary: Strategy stock surges 6% after MSCI decides against excluding crypto firms  Investing.com",
-        "[4] RELEVANCE SCORE: 3.8/10",
-        "Title: MSTR MSCI News: MSCI decision 'a welcome reprieve,’ but analysts caution fight isn’t over - CoinDesk",
-        "Source: CoinDesk (quality=0.80)",
-        "Published: Tue, 06 Jan 2026 23:16:41 GMT (freshness=0.95)",
-        "Summary: MSTR MSCI News: MSCI decision 'a welcome reprieve,’ but analysts caution fight isn’t over  CoinDesk",
-        "[5] RELEVANCE SCORE: 3.8/10",
         "Title: Strategy (MSTR) Stock Sinks As Market Gains: What You Should Know - Nasdaq",
         "Source: Nasdaq (quality=0.80)",
         "Published: Tue, 06 Jan 2026 23:00:00 GMT (freshness=0.95)",
-        "Summary: Strategy (MSTR) Stock Sinks As Market Gains: What You Should Know  Nasdaq"
+        "Summary: Strategy (MSTR) Stock Sinks As Market Gains: What You Should Know  Nasdaq",
+        "[4] RELEVANCE SCORE: 3.8/10",
+        "Title: MSTR Leads Crypto Stocks Rally Following MSCI Index Inclusion Update Even As Bitcoin Stalls At $93,000 - Stocktwits",
+        "Source: Stocktwits (quality=0.80)",
+        "Published: Wed, 07 Jan 2026 00:42:52 GMT (freshness=0.95)",
+        "Summary: MSTR Leads Crypto Stocks Rally Following MSCI Index Inclusion Update Even As Bitcoin Stalls At $93,000  Stocktwits",
+        "[5] RELEVANCE SCORE: 3.4/10",
+        "Title: Big Pain Is Ahead for MicroStrategy Stock as Bitcoin Losses Mount. How Should You Play MSTR for January 2026? - Yahoo Finance",
+        "Source: Yahoo Finance (quality=0.80)",
+        "Published: Tue, 06 Jan 2026 16:18:11 GMT (freshness=0.85)",
+        "Summary: Big Pain Is Ahead for MicroStrategy Stock as Bitcoin Losses Mount. How Should You Play MSTR for January 2026?  Yahoo Finance"
       ]
     },
     {
@@ -462,7 +462,7 @@
       "market_cap": 73380274176,
       "market_cap_billions": 73.38,
       "reason": "Gap up 3.9%",
-      "detected_at": "2026-01-07T02:49:46.771237",
+      "detected_at": "2026-01-07T03:42:09.718782",
       "news_content": [],
       "news_articles": [],
       "news_for_screener": [],
@@ -476,7 +476,7 @@
       "market_cap": 196863557632,
       "market_cap_billions": 196.86,
       "reason": "Gap up 3.5%",
-      "detected_at": "2026-01-07T02:47:59.899322",
+      "detected_at": "2026-01-07T03:40:17.825533",
       "news_content": [
         "Recent news for QCOM:",
         "- [digitimes] Innodisk, Qualcomm team up on Arm computing for industrial edge AI - digitimes",
@@ -513,10 +513,10 @@
           "conteudo_completo": ""
         },
         {
-          "titulo": "Garmin teams up with Qualcomm to deliver Nexus automotive-grade multi-domain computing platform - PR Newswire",
-          "fonte": "PR Newswire",
-          "data": "Tue, 06 Jan 2026 11:57:00 GMT",
-          "resumo": "Garmin teams up with Qualcomm to deliver Nexus automotive-grade multi-domain computing platform  PR Newswire",
+          "titulo": "Qualcomm Wants You to Know That Its New Car Chip Has Multitasking Baked In - gizmodo.com",
+          "fonte": "gizmodo.com",
+          "data": "Tue, 06 Jan 2026 17:30:43 GMT",
+          "resumo": "Qualcomm Wants You to Know That Its New Car Chip Has Multitasking Baked In  gizmodo.com",
           "conteudo_completo": ""
         }
       ],
@@ -549,11 +549,11 @@
         "Source: Yahoo Finance (quality=0.80)",
         "Published: Tue, 06 Jan 2026 17:10:33 GMT (freshness=0.85)",
         "Summary: Is It Too Late To Consider Buying Qualcomm (QCOM) After Record FY2025 EPS?  Yahoo Finance",
-        "[5] RELEVANCE SCORE: 2.8/10",
-        "Title: Garmin teams up with Qualcomm to deliver Nexus automotive-grade multi-domain computing platform - PR Newswire",
-        "Source: PR Newswire (quality=0.80)",
-        "Published: Tue, 06 Jan 2026 11:57:00 GMT (freshness=0.70)",
-        "Summary: Garmin teams up with Qualcomm to deliver Nexus automotive-grade multi-domain computing platform  PR Newswire"
+        "[5] RELEVANCE SCORE: 3.4/10",
+        "Title: Qualcomm Wants You to Know That Its New Car Chip Has Multitasking Baked In - gizmodo.com",
+        "Source: gizmodo.com (quality=0.80)",
+        "Published: Tue, 06 Jan 2026 17:30:43 GMT (freshness=0.85)",
+        "Summary: Qualcomm Wants You to Know That Its New Car Chip Has Multitasking Baked In  gizmodo.com"
       ]
     },
     {
@@ -564,7 +564,7 @@
       "market_cap": 516066082816,
       "market_cap_billions": 516.07,
       "reason": "Gap down -3.4%",
-      "detected_at": "2026-01-07T02:47:30.361946",
+      "detected_at": "2026-01-07T03:39:50.917780",
       "news_content": [
         "Recent news for XOM:",
         "- [Benzinga] Venezuela Stock Market Skyrockets 67% Since Maduro Capture - Chevron (NYSE:CVX), Exxon Mobil (NYSE:XOM) - Benzinga",
@@ -652,14 +652,21 @@
       "market_cap": 101724971008,
       "market_cap_billions": 101.72,
       "reason": "Gap up 3.4%",
-      "detected_at": "2026-01-07T02:47:17.819048",
+      "detected_at": "2026-01-07T03:39:35.089024",
       "news_content": [
         "Recent news for SBUX:",
+        "- [AD HOC NEWS] Starbucks Stock Is Going Wild: Is SBUX the Next Big Comeback Play or a Total Trap? - AD HOC NEWS",
         "- [Yahoo Finance] A Fresh Look At Starbucks (SBUX) Valuation As Shares Rebound And Earnings Expectations Diverge - Yahoo Finance",
-        "- [TipRanks] Starbucks Stock (NASDAQ:SBUX) Surges Again With Newegg Cross-Promotion - TipRanks",
-        "- [Benzinga] Price Over Earnings Overview: Starbucks - Benzinga"
+        "- [TipRanks] Starbucks Stock (NASDAQ:SBUX) Surges Again With Newegg Cross-Promotion - TipRanks"
       ],
       "news_articles": [
+        {
+          "titulo": "Starbucks Stock Is Going Wild: Is SBUX the Next Big Comeback Play or a Total Trap? - AD HOC NEWS",
+          "fonte": "AD HOC NEWS",
+          "data": "Wed, 07 Jan 2026 03:04:05 GMT",
+          "resumo": "Starbucks Stock Is Going Wild: Is SBUX the Next Big Comeback Play or a Total Trap?  AD HOC NEWS",
+          "conteudo_completo": ""
+        },
         {
           "titulo": "A Fresh Look At Starbucks (SBUX) Valuation As Shares Rebound And Earnings Expectations Diverge - Yahoo Finance",
           "fonte": "Yahoo Finance",
@@ -687,49 +694,42 @@
           "data": "Tue, 06 Jan 2026 07:39:42 GMT",
           "resumo": "Is Starbucks (SBUX) Pricing Make Sense After Years Of Subdued Share Returns  simplywall.st",
           "conteudo_completo": ""
-        },
-        {
-          "titulo": "Starbucks Stock Is Going Wild: Is SBUX the Next Big Comeback Play or a Total Trap? - AD HOC NEWS",
-          "fonte": "AD HOC NEWS",
-          "data": "Wed, 07 Jan 2026 03:04:05 GMT",
-          "resumo": "Starbucks Stock Is Going Wild: Is SBUX the Next Big Comeback Play or a Total Trap?  AD HOC NEWS",
-          "conteudo_completo": ""
         }
       ],
       "news_for_screener": [
         "Recent news for SBUX (scored by relevance):",
+        "- [4.0] Starbucks Stock Is Going Wild: Is SBUX the Next Big Comeback Play or a Total Trap? - AD HOC NEWS",
         "- [3.8] A Fresh Look At Starbucks (SBUX) Valuation As Shares Rebound And Earnings Expectations Diverge - Yahoo Finance",
-        "- [3.4] Starbucks Stock (NASDAQ:SBUX) Surges Again With Newegg Cross-Promotion - TipRanks",
-        "- [3.4] Price Over Earnings Overview: Starbucks - Benzinga"
+        "- [3.4] Starbucks Stock (NASDAQ:SBUX) Surges Again With Newegg Cross-Promotion - TipRanks"
       ],
       "news_for_judge": [
         "=== NEWS FOR SBUX (SCORED BY RELEVANCE) ===",
         "Total articles analyzed: 5",
-        "[1] RELEVANCE SCORE: 3.8/10",
+        "[1] RELEVANCE SCORE: 4.0/10",
+        "Title: Starbucks Stock Is Going Wild: Is SBUX the Next Big Comeback Play or a Total Trap? - AD HOC NEWS",
+        "Source: AD HOC NEWS (quality=0.80)",
+        "Published: Wed, 07 Jan 2026 03:04:05 GMT (freshness=1.00)",
+        "Summary: Starbucks Stock Is Going Wild: Is SBUX the Next Big Comeback Play or a Total Trap?  AD HOC NEWS",
+        "[2] RELEVANCE SCORE: 3.8/10",
         "Title: A Fresh Look At Starbucks (SBUX) Valuation As Shares Rebound And Earnings Expectations Diverge - Yahoo Finance",
         "Source: Yahoo Finance (quality=0.80)",
         "Published: Tue, 06 Jan 2026 23:14:49 GMT (freshness=0.95)",
         "Summary: A Fresh Look At Starbucks (SBUX) Valuation As Shares Rebound And Earnings Expectations Diverge  Yahoo Finance",
-        "[2] RELEVANCE SCORE: 3.4/10",
+        "[3] RELEVANCE SCORE: 3.4/10",
         "Title: Starbucks Stock (NASDAQ:SBUX) Surges Again With Newegg Cross-Promotion - TipRanks",
         "Source: TipRanks (quality=0.80)",
         "Published: Tue, 06 Jan 2026 17:32:56 GMT (freshness=0.85)",
         "Summary: Starbucks Stock (NASDAQ:SBUX) Surges Again With Newegg Cross-Promotion  TipRanks",
-        "[3] RELEVANCE SCORE: 3.4/10",
+        "[4] RELEVANCE SCORE: 3.4/10",
         "Title: Price Over Earnings Overview: Starbucks - Benzinga",
         "Source: Benzinga (quality=0.80)",
         "Published: Tue, 06 Jan 2026 19:00:34 GMT (freshness=0.85)",
         "Summary: Price Over Earnings Overview: Starbucks  Benzinga",
-        "[4] RELEVANCE SCORE: 2.8/10",
+        "[5] RELEVANCE SCORE: 2.8/10",
         "Title: Is Starbucks (SBUX) Pricing Make Sense After Years Of Subdued Share Returns - simplywall.st",
         "Source: simplywall.st (quality=0.80)",
         "Published: Tue, 06 Jan 2026 07:39:42 GMT (freshness=0.70)",
-        "Summary: Is Starbucks (SBUX) Pricing Make Sense After Years Of Subdued Share Returns  simplywall.st",
-        "[5] RELEVANCE SCORE: 2.0/10",
-        "Title: Starbucks Stock Is Going Wild: Is SBUX the Next Big Comeback Play or a Total Trap? - AD HOC NEWS",
-        "Source: AD HOC NEWS (quality=0.80)",
-        "Published: Wed, 07 Jan 2026 03:04:05 GMT (freshness=0.50)",
-        "Summary: Starbucks Stock Is Going Wild: Is SBUX the Next Big Comeback Play or a Total Trap?  AD HOC NEWS"
+        "Summary: Is Starbucks (SBUX) Pricing Make Sense After Years Of Subdued Share Returns  simplywall.st"
       ]
     },
     {
@@ -740,12 +740,12 @@
       "market_cap": 428327337984,
       "market_cap_billions": 428.33,
       "reason": "Gap up 3.3%",
-      "detected_at": "2026-01-07T02:48:41.235687",
+      "detected_at": "2026-01-07T03:41:00.738444",
       "news_content": [
         "Recent news for PLTR:",
+        "- [TipRanks] NVDA vs. PLTR: Which AI Stock Does Wall Street Prefer in 2026? - TipRanks",
         "- [Benzinga] Palantir Technologies Options Trading: A Deep Dive into Market Sentiment - Benzinga",
-        "- [TipRanks] CRWV vs. PLTR: Truist Securities Pulls the Trigger on One AI Stock, Stays Cautious on the Other - TipRanks",
-        "- [Finbold] Analyst revises Palantir (PLTR) stock price target - Finbold"
+        "- [TipRanks] CRWV vs. PLTR: Truist Securities Pulls the Trigger on One AI Stock, Stays Cautious on the Other - TipRanks"
       ],
       "news_articles": [
         {
@@ -763,24 +763,24 @@
           "conteudo_completo": ""
         },
         {
-          "titulo": "Palantir Technologies Options Trading: A Deep Dive into Market Sentiment - Benzinga",
-          "fonte": "Benzinga",
-          "data": "Tue, 06 Jan 2026 15:01:36 GMT",
-          "resumo": "Palantir Technologies Options Trading: A Deep Dive into Market Sentiment  Benzinga",
-          "conteudo_completo": ""
-        },
-        {
-          "titulo": "CRWV vs. PLTR: Truist Securities Pulls the Trigger on One AI Stock, Stays Cautious on the Other - TipRanks",
-          "fonte": "TipRanks",
-          "data": "Tue, 06 Jan 2026 15:23:48 GMT",
-          "resumo": "CRWV vs. PLTR: Truist Securities Pulls the Trigger on One AI Stock, Stays Cautious on the Other  TipRanks",
-          "conteudo_completo": ""
-        },
-        {
           "titulo": "Why Palantir Technologies (PLTR) Stock Is Trading Up Today - TradingView — Track All Markets",
           "fonte": "TradingView — Track All Markets",
           "data": "Tue, 06 Jan 2026 20:45:42 GMT",
           "resumo": "Why Palantir Technologies (PLTR) Stock Is Trading Up Today  TradingView — Track All Markets",
+          "conteudo_completo": ""
+        },
+        {
+          "titulo": "NVDA vs. PLTR: Which AI Stock Does Wall Street Prefer in 2026? - TipRanks",
+          "fonte": "TipRanks",
+          "data": "Tue, 06 Jan 2026 05:30:40 GMT",
+          "resumo": "NVDA vs. PLTR: Which AI Stock Does Wall Street Prefer in 2026?  TipRanks",
+          "conteudo_completo": ""
+        },
+        {
+          "titulo": "Palantir Technologies Options Trading: A Deep Dive into Market Sentiment - Benzinga",
+          "fonte": "Benzinga",
+          "data": "Tue, 06 Jan 2026 15:01:36 GMT",
+          "resumo": "Palantir Technologies Options Trading: A Deep Dive into Market Sentiment  Benzinga",
           "conteudo_completo": ""
         }
       ],
@@ -788,7 +788,7 @@
         "Recent news for PLTR (scored by relevance):",
         "- [3.8] Taylor Ryan D. sells $2.1m in Palantir (PLTR) stock - Investing.com",
         "- [3.8] Is Palantir Technologies (PLTR) Pricing Still Justified After A 149% One Year Surge - simplywall.st",
-        "- [3.4] Palantir Technologies Options Trading: A Deep Dive into Market Sentiment - Benzinga"
+        "- [3.4] Why Palantir Technologies (PLTR) Stock Is Trading Up Today - TradingView — Track All Markets"
       ],
       "news_for_judge": [
         "=== NEWS FOR PLTR (SCORED BY RELEVANCE) ===",
@@ -804,20 +804,20 @@
         "Published: Tue, 06 Jan 2026 23:37:01 GMT (freshness=0.95)",
         "Summary: Is Palantir Technologies (PLTR) Pricing Still Justified After A 149% One Year Surge  simplywall.st",
         "[3] RELEVANCE SCORE: 3.4/10",
-        "Title: Palantir Technologies Options Trading: A Deep Dive into Market Sentiment - Benzinga",
-        "Source: Benzinga (quality=0.80)",
-        "Published: Tue, 06 Jan 2026 15:01:36 GMT (freshness=0.85)",
-        "Summary: Palantir Technologies Options Trading: A Deep Dive into Market Sentiment  Benzinga",
-        "[4] RELEVANCE SCORE: 3.4/10",
-        "Title: CRWV vs. PLTR: Truist Securities Pulls the Trigger on One AI Stock, Stays Cautious on the Other - TipRanks",
-        "Source: TipRanks (quality=0.80)",
-        "Published: Tue, 06 Jan 2026 15:23:48 GMT (freshness=0.85)",
-        "Summary: CRWV vs. PLTR: Truist Securities Pulls the Trigger on One AI Stock, Stays Cautious on the Other  TipRanks",
-        "[5] RELEVANCE SCORE: 3.4/10",
         "Title: Why Palantir Technologies (PLTR) Stock Is Trading Up Today - TradingView — Track All Markets",
         "Source: TradingView — Track All Markets (quality=0.80)",
         "Published: Tue, 06 Jan 2026 20:45:42 GMT (freshness=0.85)",
-        "Summary: Why Palantir Technologies (PLTR) Stock Is Trading Up Today  TradingView — Track All Markets"
+        "Summary: Why Palantir Technologies (PLTR) Stock Is Trading Up Today  TradingView — Track All Markets",
+        "[4] RELEVANCE SCORE: 2.8/10",
+        "Title: NVDA vs. PLTR: Which AI Stock Does Wall Street Prefer in 2026? - TipRanks",
+        "Source: TipRanks (quality=0.80)",
+        "Published: Tue, 06 Jan 2026 05:30:40 GMT (freshness=0.70)",
+        "Summary: NVDA vs. PLTR: Which AI Stock Does Wall Street Prefer in 2026?  TipRanks",
+        "[5] RELEVANCE SCORE: 2.8/10",
+        "Title: Palantir Technologies Options Trading: A Deep Dive into Market Sentiment - Benzinga",
+        "Source: Benzinga (quality=0.80)",
+        "Published: Tue, 06 Jan 2026 15:01:36 GMT (freshness=0.70)",
+        "Summary: Palantir Technologies Options Trading: A Deep Dive into Market Sentiment  Benzinga"
       ]
     },
     {
@@ -828,11 +828,11 @@
       "market_cap": 348970713088,
       "market_cap_billions": 348.97,
       "reason": "Gap down -3.0%",
-      "detected_at": "2026-01-07T02:47:45.889595",
+      "detected_at": "2026-01-07T03:40:03.918526",
       "news_content": [
         "Recent news for AMD:",
         "- [Investopedia] What's the 'Next Big Thing' in AI? Here's What Nvidia and AMD Execs Say It Could Be - Investopedia",
-        "- [OC3D] Ryzen 9 9950X3D2? AMD: \"Stay Tuned\" - OC3D",
+        "- [Tom's Hardware] AMD Ryzen chief teases return of older Zen 3 chips to fight soaring RAM prices — 'That's something we're actively working on right now' - Tom's Hardware",
         "- [CNBC] AMD's Lisa Su says AI isn't replacing people, but is changing who gets hired - CNBC"
       ],
       "news_articles": [
@@ -844,24 +844,10 @@
           "conteudo_completo": ""
         },
         {
-          "titulo": "Ryzen 9 9950X3D2? AMD: \"Stay Tuned\" - OC3D",
-          "fonte": "OC3D",
-          "data": "Tue, 06 Jan 2026 21:28:52 GMT",
-          "resumo": "Ryzen 9 9950X3D2? AMD: \"Stay Tuned\"  OC3D",
-          "conteudo_completo": ""
-        },
-        {
           "titulo": "CES 2026 AMD Keynote livestream: See it live - Mashable",
           "fonte": "Mashable",
           "data": "Tue, 06 Jan 2026 23:12:42 GMT",
           "resumo": "CES 2026 AMD Keynote livestream: See it live  Mashable",
-          "conteudo_completo": ""
-        },
-        {
-          "titulo": "AMD's Lisa Su says AI isn't replacing people, but is changing who gets hired - CNBC",
-          "fonte": "CNBC",
-          "data": "Tue, 06 Jan 2026 16:55:16 GMT",
-          "resumo": "AMD's Lisa Su says AI isn't replacing people, but is changing who gets hired  CNBCCES 2026 AMD keynote highlights: AI chips for everyone  MashableAMD reveals new AI PC chips, details next-gen data center chips at CES 2026  Yahoo Finance",
           "conteudo_completo": ""
         },
         {
@@ -870,13 +856,27 @@
           "data": "Tue, 06 Jan 2026 20:12:23 GMT",
           "resumo": "AMD Ryzen chief teases return of older Zen 3 chips to fight soaring RAM prices — 'That's something we're actively working on right now'  Tom's Hardware",
           "conteudo_completo": ""
+        },
+        {
+          "titulo": "AMD's Lisa Su says AI isn't replacing people, but is changing who gets hired - CNBC",
+          "fonte": "CNBC",
+          "data": "Tue, 06 Jan 2026 16:55:16 GMT",
+          "resumo": "AMD's Lisa Su says AI isn't replacing people, but is changing who gets hired  CNBCAMD reveals new AI PC chips, details next-gen data center chips at CES 2026  Yahoo FinanceAMD Contemplates And Engineers Yottascale AI Compute  The Next Platform",
+          "conteudo_completo": ""
+        },
+        {
+          "titulo": "Buy Nvidia or AMD Stock After Rolling Out New AI Platforms? - Zacks Investment Research",
+          "fonte": "Zacks Investment Research",
+          "data": "Tue, 06 Jan 2026 20:00:12 GMT",
+          "resumo": "Buy Nvidia or AMD Stock After Rolling Out New AI Platforms?  Zacks Investment Research",
+          "conteudo_completo": ""
         }
       ],
       "news_for_screener": [
         "Recent news for AMD (scored by relevance):",
         "- [3.8] What's the 'Next Big Thing' in AI? Here's What Nvidia and AMD Execs Say It Could Be - Investopedia",
-        "- [3.8] Ryzen 9 9950X3D2? AMD: \"Stay Tuned\" - OC3D",
-        "- [3.8] CES 2026 AMD Keynote livestream: See it live - Mashable"
+        "- [3.8] CES 2026 AMD Keynote livestream: See it live - Mashable",
+        "- [3.4] AMD Ryzen chief teases return of older Zen 3 chips to fight soaring RAM prices — 'That's something we're actively working on right now' - Tom's Hardware"
       ],
       "news_for_judge": [
         "=== NEWS FOR AMD (SCORED BY RELEVANCE) ===",
@@ -887,25 +887,25 @@
         "Published: Tue, 06 Jan 2026 22:34:53 GMT (freshness=0.95)",
         "Summary: What's the 'Next Big Thing' in AI? Here's What Nvidia and AMD Execs Say It Could Be  Investopedia",
         "[2] RELEVANCE SCORE: 3.8/10",
-        "Title: Ryzen 9 9950X3D2? AMD: \"Stay Tuned\" - OC3D",
-        "Source: OC3D (quality=0.80)",
-        "Published: Tue, 06 Jan 2026 21:28:52 GMT (freshness=0.95)",
-        "Summary: Ryzen 9 9950X3D2? AMD: \"Stay Tuned\"  OC3D",
-        "[3] RELEVANCE SCORE: 3.8/10",
         "Title: CES 2026 AMD Keynote livestream: See it live - Mashable",
         "Source: Mashable (quality=0.80)",
         "Published: Tue, 06 Jan 2026 23:12:42 GMT (freshness=0.95)",
         "Summary: CES 2026 AMD Keynote livestream: See it live  Mashable",
+        "[3] RELEVANCE SCORE: 3.4/10",
+        "Title: AMD Ryzen chief teases return of older Zen 3 chips to fight soaring RAM prices — 'That's something we're actively working on right now' - Tom's Hardware",
+        "Source: Tom's Hardware (quality=0.80)",
+        "Published: Tue, 06 Jan 2026 20:12:23 GMT (freshness=0.85)",
+        "Summary: AMD Ryzen chief teases return of older Zen 3 chips to fight soaring RAM prices — 'That's something we're actively working on right now'  Tom's Hardware",
         "[4] RELEVANCE SCORE: 3.4/10",
         "Title: AMD's Lisa Su says AI isn't replacing people, but is changing who gets hired - CNBC",
         "Source: CNBC (quality=0.80)",
         "Published: Tue, 06 Jan 2026 16:55:16 GMT (freshness=0.85)",
-        "Summary: AMD's Lisa Su says AI isn't replacing people, but is changing who gets hired  CNBCCES 2026 AMD keynote highlights: AI chips for everyone  MashableAMD reveals new AI PC chips, details next-gen data center chips at CES 2026  Yahoo Finance",
+        "Summary: AMD's Lisa Su says AI isn't replacing people, but is changing who gets hired  CNBCAMD reveals new AI PC chips, details next-gen data center chips at CES 2026  Yahoo FinanceAMD Contemplates And Engineers Yottascale AI Compute  The Next Platform",
         "[5] RELEVANCE SCORE: 3.4/10",
-        "Title: AMD Ryzen chief teases return of older Zen 3 chips to fight soaring RAM prices — 'That's something we're actively working on right now' - Tom's Hardware",
-        "Source: Tom's Hardware (quality=0.80)",
-        "Published: Tue, 06 Jan 2026 20:12:23 GMT (freshness=0.85)",
-        "Summary: AMD Ryzen chief teases return of older Zen 3 chips to fight soaring RAM prices — 'That's something we're actively working on right now'  Tom's Hardware"
+        "Title: Buy Nvidia or AMD Stock After Rolling Out New AI Platforms? - Zacks Investment Research",
+        "Source: Zacks Investment Research (quality=0.80)",
+        "Published: Tue, 06 Jan 2026 20:00:12 GMT (freshness=0.85)",
+        "Summary: Buy Nvidia or AMD Stock After Rolling Out New AI Platforms?  Zacks Investment Research"
       ]
     },
     {
@@ -915,16 +915,103 @@
       "tier": "tier1_large_cap",
       "market_cap": 202106667008,
       "market_cap_billions": 202.11,
-      "reason": "Catalyst: Wegovy obesity pill now available at pharmacies : Shots - Health News - NPR...",
-      "detected_at": "2026-01-07T02:51:20.508848",
+      "reason": "Catalyst: Novo Nordisk launches Wegovy weight-loss pill in US, triggering price war - The ...",
+      "detected_at": "2026-01-07T03:39:01.651525",
       "news_content": [
-        "HEADLINE: Wegovy obesity pill now available at pharmacies : Shots - Health News - NPR",
-        "SUMMARY: Wegovy obesity pill now available at pharmacies : Shots - Health News  NPRWegovy is now available as a pill. Here’s what you need to know  CNNFirst GLP-1 pill for obesity from Novo Nordisk launches in the U.S.  CNBCWegovy Weight-Loss Pills Are Now Available in the U.S.—Here’s What That Means  Scientific AmericanA Pill Version of Wegovy Hits Pharmacies  Time Magazine",
+        "HEADLINE: Novo Nordisk launches Wegovy weight-loss pill in US, triggering price war - The Guardian",
+        "SUMMARY: Novo Nordisk launches Wegovy weight-loss pill in US, triggering price war  The GuardianWegovy is now available as a pill. Here’s what you need to know  CNNFirst GLP-1 pill for obesity from Novo Nordisk launches in the U.S.  CNBCWegovy Weight-Loss Pills Are Now Available in the U.S.—Here’s What That Means  Scientific AmericanWegovy obesity pill now available at pharmacies : Shots - Health News  NPR",
         "SOURCE: GNews-EN-BUSINESS"
       ],
       "news_articles": [],
       "news_for_screener": [],
       "news_for_judge": []
+    },
+    {
+      "ticker": "INTC",
+      "source": "news_catalyst",
+      "buzz_score": 8.0,
+      "tier": "tier1_large_cap",
+      "market_cap": 190990794752,
+      "market_cap_billions": 190.99,
+      "reason": "Catalyst: ASUS Republic of Gamers Presents Next-Gen Gaming Innovations, Commemorates 20 Ye...",
+      "detected_at": "2026-01-07T03:39:01.651857",
+      "news_content": [
+        "HEADLINE: ASUS Republic of Gamers Presents Next-Gen Gaming Innovations, Commemorates 20 Years of Gaming Excellence at CES 2026 - ASUS Pressroom",
+        "SUMMARY: ASUS Republic of Gamers Presents Next-Gen Gaming Innovations, Commemorates 20 Years of Gaming Excellence at CES 2026  ASUS PressroomCES 2026: Asus revives its dual-screen gaming laptop, adds full-sized OLED displays  MashableThe ASUS ROG Zephyrus Duo is big, weird and kind of awesome  EngadgetAsus launches two new ROG Zephyrus laptops at CES — 14 and 16-inch models come with latest AMD and Intel CPUs, and up to RTX 5090 GPU  Tom's HardwareGoPro and Asus Are Making a Co-Branded ProArt Laptop  PetaPixel",
+        "SOURCE: GNews-EN-TECHNOLOGY"
+      ],
+      "news_articles": [
+        {
+          "titulo": "Intel (NASDAQ:INTC) Stock Price Up 1.7% Following Analyst Upgrade - MarketBeat",
+          "fonte": "MarketBeat",
+          "data": "Tue, 06 Jan 2026 21:52:55 GMT",
+          "resumo": "Intel (NASDAQ:INTC) Stock Price Up 1.7% Following Analyst Upgrade  MarketBeat",
+          "conteudo_completo": ""
+        },
+        {
+          "titulo": "Intel exec confirms company will build new gaming chip, platform (INTC:NASDAQ) - Seeking Alpha",
+          "fonte": "Seeking Alpha",
+          "data": "Tue, 06 Jan 2026 19:53:11 GMT",
+          "resumo": "Intel exec confirms company will build new gaming chip, platform (INTC:NASDAQ)  Seeking Alpha",
+          "conteudo_completo": ""
+        },
+        {
+          "titulo": "Intel (INTC) Is Up 5.5% After Launching 18A-Based Core Ultra 3 AI Platform – Has The Bull Case Changed? - Yahoo Finance",
+          "fonte": "Yahoo Finance",
+          "data": "Tue, 06 Jan 2026 17:14:04 GMT",
+          "resumo": "Intel (INTC) Is Up 5.5% After Launching 18A-Based Core Ultra 3 AI Platform – Has The Bull Case Changed?  Yahoo Finance",
+          "conteudo_completo": ""
+        },
+        {
+          "titulo": "“Computing is Being Redefined” Intel Stock (NASDAQ:INTC) Jumps With CES 2026 Unveilings - TipRanks",
+          "fonte": "TipRanks",
+          "data": "Tue, 06 Jan 2026 20:03:36 GMT",
+          "resumo": "“Computing is Being Redefined” Intel Stock (NASDAQ:INTC) Jumps With CES 2026 Unveilings  TipRanks",
+          "conteudo_completo": ""
+        },
+        {
+          "titulo": "Intel unveils next gen processors at CES 2026 (INTC:NASDAQ) - Seeking Alpha",
+          "fonte": "Seeking Alpha",
+          "data": "Tue, 06 Jan 2026 05:51:21 GMT",
+          "resumo": "Intel unveils next gen processors at CES 2026 (INTC:NASDAQ)  Seeking Alpha",
+          "conteudo_completo": ""
+        }
+      ],
+      "news_for_screener": [
+        "Recent news for INTC (scored by relevance):",
+        "- [3.8] Intel (NASDAQ:INTC) Stock Price Up 1.7% Following Analyst Upgrade - MarketBeat",
+        "- [3.4] Intel exec confirms company will build new gaming chip, platform (INTC:NASDAQ) - Seeking Alpha",
+        "- [3.4] Intel (INTC) Is Up 5.5% After Launching 18A-Based Core Ultra 3 AI Platform – Has The Bull Case Changed? - Yahoo Finance"
+      ],
+      "news_for_judge": [
+        "=== NEWS FOR INTC (SCORED BY RELEVANCE) ===",
+        "Total articles analyzed: 5",
+        "[1] RELEVANCE SCORE: 3.8/10",
+        "Title: Intel (NASDAQ:INTC) Stock Price Up 1.7% Following Analyst Upgrade - MarketBeat",
+        "Source: MarketBeat (quality=0.80)",
+        "Published: Tue, 06 Jan 2026 21:52:55 GMT (freshness=0.95)",
+        "Summary: Intel (NASDAQ:INTC) Stock Price Up 1.7% Following Analyst Upgrade  MarketBeat",
+        "[2] RELEVANCE SCORE: 3.4/10",
+        "Title: Intel exec confirms company will build new gaming chip, platform (INTC:NASDAQ) - Seeking Alpha",
+        "Source: Seeking Alpha (quality=0.80)",
+        "Published: Tue, 06 Jan 2026 19:53:11 GMT (freshness=0.85)",
+        "Summary: Intel exec confirms company will build new gaming chip, platform (INTC:NASDAQ)  Seeking Alpha",
+        "[3] RELEVANCE SCORE: 3.4/10",
+        "Title: Intel (INTC) Is Up 5.5% After Launching 18A-Based Core Ultra 3 AI Platform – Has The Bull Case Changed? - Yahoo Finance",
+        "Source: Yahoo Finance (quality=0.80)",
+        "Published: Tue, 06 Jan 2026 17:14:04 GMT (freshness=0.85)",
+        "Summary: Intel (INTC) Is Up 5.5% After Launching 18A-Based Core Ultra 3 AI Platform – Has The Bull Case Changed?  Yahoo Finance",
+        "[4] RELEVANCE SCORE: 3.4/10",
+        "Title: “Computing is Being Redefined” Intel Stock (NASDAQ:INTC) Jumps With CES 2026 Unveilings - TipRanks",
+        "Source: TipRanks (quality=0.80)",
+        "Published: Tue, 06 Jan 2026 20:03:36 GMT (freshness=0.85)",
+        "Summary: “Computing is Being Redefined” Intel Stock (NASDAQ:INTC) Jumps With CES 2026 Unveilings  TipRanks",
+        "[5] RELEVANCE SCORE: 2.8/10",
+        "Title: Intel unveils next gen processors at CES 2026 (INTC:NASDAQ) - Seeking Alpha",
+        "Source: Seeking Alpha (quality=0.80)",
+        "Published: Tue, 06 Jan 2026 05:51:21 GMT (freshness=0.70)",
+        "Summary: Intel unveils next gen processors at CES 2026 (INTC:NASDAQ)  Seeking Alpha"
+      ]
     },
     {
       "ticker": "AVGO",
@@ -934,7 +1021,7 @@
       "market_cap": 1629907582976,
       "market_cap_billions": 1629.91,
       "reason": "Catalyst: Wi-Fi 8 is appearing at CES before most of us have switched to Wi-Fi 7 - The Ver...",
-      "detected_at": "2026-01-07T02:51:20.509158",
+      "detected_at": "2026-01-07T03:39:01.652020",
       "news_content": [
         "HEADLINE: Wi-Fi 8 is appearing at CES before most of us have switched to Wi-Fi 7 - The Verge",
         "SUMMARY: Wi-Fi 8 is appearing at CES before most of us have switched to Wi-Fi 7  The VergeMediaTek Filogic 8000 Family Pioneers the Wi-Fi 8 Ecosystem at CES 2026  MediaTekBroadcom Launches Unified Wi-Fi 8 Platform for Seamless AI Experiences in Homes  Yahoo FinanceASUS Debuts ROG WiFi 8 Router and First Real-World WiFi 8 Performance Test  ASUS PressroomWi-Fi 8 in 2026: Next-gen wireless standard prioritizes reliability over speed gains  Network World",
@@ -1021,7 +1108,7 @@
       "market_cap": 33202614272,
       "market_cap_billions": 33.2,
       "reason": "Catalyst: Wi-Fi 8 is appearing at CES before most of us have switched to Wi-Fi 7 - The Ver...",
-      "detected_at": "2026-01-07T02:51:20.509253",
+      "detected_at": "2026-01-07T03:39:03.243188",
       "news_content": [
         "HEADLINE: Wi-Fi 8 is appearing at CES before most of us have switched to Wi-Fi 7 - The Verge",
         "SUMMARY: Wi-Fi 8 is appearing at CES before most of us have switched to Wi-Fi 7  The VergeMediaTek Filogic 8000 Family Pioneers the Wi-Fi 8 Ecosystem at CES 2026  MediaTekBroadcom Launches Unified Wi-Fi 8 Platform for Seamless AI Experiences in Homes  Yahoo FinanceASUS Debuts ROG WiFi 8 Router and First Real-World WiFi 8 Performance Test  ASUS PressroomWi-Fi 8 in 2026: Next-gen wireless standard prioritizes reliability over speed gains  Network World",
@@ -1039,7 +1126,7 @@
       "market_cap": 74561314816,
       "market_cap_billions": 74.56,
       "reason": "Catalyst: Júlio Wiziack: Venezuela faz minoritários reverem plano de investimento da Petro...",
-      "detected_at": "2026-01-07T02:51:20.509519",
+      "detected_at": "2026-01-07T03:39:07.215737",
       "news_content": [
         "HEADLINE: Júlio Wiziack: Venezuela faz minoritários reverem plano de investimento da Petrobras - UOL Economia",
         "SUMMARY: Júlio Wiziack: Venezuela faz minoritários reverem plano de investimento da Petrobras  UOL EconomiaBrasil pode ser porto seguro para investimentos da China, avalia economista  UOL NotíciasQual pode ser o impacto para a Petrobras do novo cenário na Venezuela? Entenda  EstadãoBrasil vislumbra aumentar venda de petróleo bruto à China  CNN BrasilChina deve 'trocar' petróleo venezuelano pelo brasileiro, diz ex-diretor da Petrobras  Revista Oeste",
@@ -1061,10 +1148,10 @@
           "conteudo_completo": ""
         },
         {
-          "titulo": "PBR Launches Monster Energy Team Challenge, Debuting at Madison Square Garden and Airing on CBS - everything-cowboy.com",
-          "fonte": "everything-cowboy.com",
-          "data": "Tue, 06 Jan 2026 16:25:05 GMT",
-          "resumo": "PBR Launches Monster Energy Team Challenge, Debuting at Madison Square Garden and Airing on CBS  everything-cowboy.com",
+          "titulo": "PBR launches Monster Energy Team Challenge, debuting at Madison Square Garden and airing on CBS - PBR | Professional Bull Riders",
+          "fonte": "PBR | Professional Bull Riders",
+          "data": "Tue, 06 Jan 2026 15:07:09 GMT",
+          "resumo": "PBR launches Monster Energy Team Challenge, debuting at Madison Square Garden and airing on CBS  PBR | Professional Bull Riders",
           "conteudo_completo": ""
         },
         {
@@ -1086,7 +1173,7 @@
         "Recent news for PBR (scored by relevance):",
         "- [3.8] Billings PBR stop to feature new Monster Energy Team Challenge - Billings Gazette",
         "- [3.4] PBR Brings Monster Energy Team Challenge to Madison Square Garden - TicketNews",
-        "- [3.4] PBR Launches Monster Energy Team Challenge, Debuting at Madison Square Garden and Airing on CBS - everything-cowboy.com"
+        "- [2.8] PBR launches Monster Energy Team Challenge, debuting at Madison Square Garden and airing on CBS - PBR | Professional Bull Riders"
       ],
       "news_for_judge": [
         "=== NEWS FOR PBR (SCORED BY RELEVANCE) ===",
@@ -1101,11 +1188,11 @@
         "Source: TicketNews (quality=0.80)",
         "Published: Tue, 06 Jan 2026 17:23:17 GMT (freshness=0.85)",
         "Summary: PBR Brings Monster Energy Team Challenge to Madison Square Garden  TicketNews",
-        "[3] RELEVANCE SCORE: 3.4/10",
-        "Title: PBR Launches Monster Energy Team Challenge, Debuting at Madison Square Garden and Airing on CBS - everything-cowboy.com",
-        "Source: everything-cowboy.com (quality=0.80)",
-        "Published: Tue, 06 Jan 2026 16:25:05 GMT (freshness=0.85)",
-        "Summary: PBR Launches Monster Energy Team Challenge, Debuting at Madison Square Garden and Airing on CBS  everything-cowboy.com",
+        "[3] RELEVANCE SCORE: 2.8/10",
+        "Title: PBR launches Monster Energy Team Challenge, debuting at Madison Square Garden and airing on CBS - PBR | Professional Bull Riders",
+        "Source: PBR | Professional Bull Riders (quality=0.80)",
+        "Published: Tue, 06 Jan 2026 15:07:09 GMT (freshness=0.70)",
+        "Summary: PBR launches Monster Energy Team Challenge, debuting at Madison Square Garden and airing on CBS  PBR | Professional Bull Riders",
         "[4] RELEVANCE SCORE: 2.0/10",
         "Title: 2026 Monster Energy Team Challenge - PBR | Professional Bull Riders",
         "Source: PBR | Professional Bull Riders (quality=0.80)",
@@ -1126,26 +1213,19 @@
       "market_cap": 3893524430848,
       "market_cap_billions": 3893.52,
       "reason": "Tier1 Large Cap watchlist ($3893.5B)",
-      "detected_at": "2026-01-07T02:42:49.913232",
+      "detected_at": "2026-01-07T03:34:11.443495",
       "news_content": [
         "Recent news for AAPL:",
-        "- [TipRanks] AAPL Stock: Why Apple Got a Double Thumbs-Up from Top Analysts - TipRanks",
         "- [Barchart.com] Dear Apple Stock Fans, Mark Your Calendars for January 12 - Barchart.com",
-        "- [Benzinga] Apple App Store Net Revenue Growth Decelerates In December - Benzinga"
+        "- [Benzinga] Apple App Store Net Revenue Growth Decelerates In December - Benzinga",
+        "- [TipRanks] AAPL Stock: Why Apple Got a Double Thumbs-Up from Top Analysts - TipRanks"
       ],
       "news_articles": [
         {
-          "titulo": "Apple (NASDAQ:AAPL) Shares Down 1.8% - Should You Sell? - MarketBeat",
-          "fonte": "MarketBeat",
-          "data": "Tue, 06 Jan 2026 23:53:11 GMT",
-          "resumo": "Apple (NASDAQ:AAPL) Shares Down 1.8% - Should You Sell?  MarketBeat",
-          "conteudo_completo": ""
-        },
-        {
-          "titulo": "AAPL Stock: Why Apple Got a Double Thumbs-Up from Top Analysts - TipRanks",
-          "fonte": "TipRanks",
-          "data": "Tue, 06 Jan 2026 15:03:42 GMT",
-          "resumo": "AAPL Stock: Why Apple Got a Double Thumbs-Up from Top Analysts  TipRanks",
+          "titulo": "Apple’s (AAPL) Strong Fundamentals Already Priced In, Analysts Say - Yahoo Finance",
+          "fonte": "Yahoo Finance",
+          "data": "Wed, 07 Jan 2026 03:37:33 GMT",
+          "resumo": "Apple’s (AAPL) Strong Fundamentals Already Priced In, Analysts Say  Yahoo Finance",
           "conteudo_completo": ""
         },
         {
@@ -1163,47 +1243,54 @@
           "conteudo_completo": ""
         },
         {
-          "titulo": "Apple Stock Starts 2026 With a Downgrade. Why Investors Shouldn’t Make Too Much of It - 24/7 Wall St.",
-          "fonte": "24/7 Wall St.",
-          "data": "Tue, 06 Jan 2026 15:42:05 GMT",
-          "resumo": "Apple Stock Starts 2026 With a Downgrade. Why Investors Shouldn’t Make Too Much of It  24/7 Wall St.",
+          "titulo": "Dear Apple Stock Fans, Mark Your Calendars for January 12 - Yahoo Finance",
+          "fonte": "Yahoo Finance",
+          "data": "Tue, 06 Jan 2026 15:55:36 GMT",
+          "resumo": "Dear Apple Stock Fans, Mark Your Calendars for January 12  Yahoo Finance",
+          "conteudo_completo": ""
+        },
+        {
+          "titulo": "AAPL Stock: Why Apple Got a Double Thumbs-Up from Top Analysts - TipRanks",
+          "fonte": "TipRanks",
+          "data": "Tue, 06 Jan 2026 15:03:42 GMT",
+          "resumo": "AAPL Stock: Why Apple Got a Double Thumbs-Up from Top Analysts  TipRanks",
           "conteudo_completo": ""
         }
       ],
       "news_for_screener": [
         "Recent news for AAPL (scored by relevance):",
-        "- [3.8] Apple (NASDAQ:AAPL) Shares Down 1.8% - Should You Sell? - MarketBeat",
-        "- [3.4] AAPL Stock: Why Apple Got a Double Thumbs-Up from Top Analysts - TipRanks",
-        "- [3.4] Dear Apple Stock Fans, Mark Your Calendars for January 12 - Barchart.com"
+        "- [4.0] Apple’s (AAPL) Strong Fundamentals Already Priced In, Analysts Say - Yahoo Finance",
+        "- [3.4] Dear Apple Stock Fans, Mark Your Calendars for January 12 - Barchart.com",
+        "- [3.4] Apple App Store Net Revenue Growth Decelerates In December - Benzinga"
       ],
       "news_for_judge": [
         "=== NEWS FOR AAPL (SCORED BY RELEVANCE) ===",
         "Total articles analyzed: 5",
-        "[1] RELEVANCE SCORE: 3.8/10",
-        "Title: Apple (NASDAQ:AAPL) Shares Down 1.8% - Should You Sell? - MarketBeat",
-        "Source: MarketBeat (quality=0.80)",
-        "Published: Tue, 06 Jan 2026 23:53:11 GMT (freshness=0.95)",
-        "Summary: Apple (NASDAQ:AAPL) Shares Down 1.8% - Should You Sell?  MarketBeat",
+        "[1] RELEVANCE SCORE: 4.0/10",
+        "Title: Apple’s (AAPL) Strong Fundamentals Already Priced In, Analysts Say - Yahoo Finance",
+        "Source: Yahoo Finance (quality=0.80)",
+        "Published: Wed, 07 Jan 2026 03:37:33 GMT (freshness=1.00)",
+        "Summary: Apple’s (AAPL) Strong Fundamentals Already Priced In, Analysts Say  Yahoo Finance",
         "[2] RELEVANCE SCORE: 3.4/10",
-        "Title: AAPL Stock: Why Apple Got a Double Thumbs-Up from Top Analysts - TipRanks",
-        "Source: TipRanks (quality=0.80)",
-        "Published: Tue, 06 Jan 2026 15:03:42 GMT (freshness=0.85)",
-        "Summary: AAPL Stock: Why Apple Got a Double Thumbs-Up from Top Analysts  TipRanks",
-        "[3] RELEVANCE SCORE: 3.4/10",
         "Title: Dear Apple Stock Fans, Mark Your Calendars for January 12 - Barchart.com",
         "Source: Barchart.com (quality=0.80)",
         "Published: Tue, 06 Jan 2026 15:55:36 GMT (freshness=0.85)",
         "Summary: Dear Apple Stock Fans, Mark Your Calendars for January 12  Barchart.com",
-        "[4] RELEVANCE SCORE: 3.4/10",
+        "[3] RELEVANCE SCORE: 3.4/10",
         "Title: Apple App Store Net Revenue Growth Decelerates In December - Benzinga",
         "Source: Benzinga (quality=0.80)",
         "Published: Tue, 06 Jan 2026 18:08:08 GMT (freshness=0.85)",
         "Summary: Apple App Store Net Revenue Growth Decelerates In December  Benzinga",
-        "[5] RELEVANCE SCORE: 3.4/10",
-        "Title: Apple Stock Starts 2026 With a Downgrade. Why Investors Shouldn’t Make Too Much of It - 24/7 Wall St.",
-        "Source: 24/7 Wall St. (quality=0.80)",
-        "Published: Tue, 06 Jan 2026 15:42:05 GMT (freshness=0.85)",
-        "Summary: Apple Stock Starts 2026 With a Downgrade. Why Investors Shouldn’t Make Too Much of It  24/7 Wall St."
+        "[4] RELEVANCE SCORE: 3.4/10",
+        "Title: Dear Apple Stock Fans, Mark Your Calendars for January 12 - Yahoo Finance",
+        "Source: Yahoo Finance (quality=0.80)",
+        "Published: Tue, 06 Jan 2026 15:55:36 GMT (freshness=0.85)",
+        "Summary: Dear Apple Stock Fans, Mark Your Calendars for January 12  Yahoo Finance",
+        "[5] RELEVANCE SCORE: 2.8/10",
+        "Title: AAPL Stock: Why Apple Got a Double Thumbs-Up from Top Analysts - TipRanks",
+        "Source: TipRanks (quality=0.80)",
+        "Published: Tue, 06 Jan 2026 15:03:42 GMT (freshness=0.70)",
+        "Summary: AAPL Stock: Why Apple Got a Double Thumbs-Up from Top Analysts  TipRanks"
       ]
     },
     {
@@ -1214,11 +1301,11 @@
       "market_cap": 3556844503040,
       "market_cap_billions": 3556.84,
       "reason": "Tier1 Large Cap watchlist ($3556.8B)",
-      "detected_at": "2026-01-07T02:43:43.637608",
+      "detected_at": "2026-01-07T03:34:26.853653",
       "news_content": [
         "Recent news for MSFT:",
         "- [Benzinga] Price Over Earnings Overview: Microsoft - Benzinga",
-        "- [TipRanks] Microsoft (MSFT) Eyes Major January Layoffs as AI Costs Rise - TipRanks",
+        "- [TipRanks] Microsoft (MSFT) Plans Thousands of Job Cuts as AI Spending Accelerates - TipRanks",
         "- [Seeking Alpha] Microsoft: OpenAI Is Simply A Strategic Hedge (NASDAQ:MSFT) - Seeking Alpha"
       ],
       "news_articles": [
@@ -1237,17 +1324,10 @@
           "conteudo_completo": ""
         },
         {
-          "titulo": "Is Microsoft (MSFT) a Buy as Wall Street Analysts Look Optimistic? - Finviz",
-          "fonte": "Finviz",
-          "data": "Tue, 06 Jan 2026 15:41:46 GMT",
-          "resumo": "Is Microsoft (MSFT) a Buy as Wall Street Analysts Look Optimistic?  Finviz",
-          "conteudo_completo": ""
-        },
-        {
-          "titulo": "Microsoft (MSFT) Eyes Major January Layoffs as AI Costs Rise - TipRanks",
+          "titulo": "Microsoft (MSFT) Plans Thousands of Job Cuts as AI Spending Accelerates - TipRanks",
           "fonte": "TipRanks",
           "data": "Tue, 06 Jan 2026 12:52:48 GMT",
-          "resumo": "Microsoft (MSFT) Eyes Major January Layoffs as AI Costs Rise  TipRanks",
+          "resumo": "Microsoft (MSFT) Plans Thousands of Job Cuts as AI Spending Accelerates  TipRanks",
           "conteudo_completo": ""
         },
         {
@@ -1256,13 +1336,20 @@
           "data": "Tue, 06 Jan 2026 13:58:37 GMT",
           "resumo": "Microsoft: OpenAI Is Simply A Strategic Hedge (NASDAQ:MSFT)  Seeking Alpha",
           "conteudo_completo": ""
+        },
+        {
+          "titulo": "NVDA, MSFT: Daniel Ives Pounds the Table on Nvidia and Microsoft Stocks - TipRanks",
+          "fonte": "TipRanks",
+          "data": "Tue, 06 Jan 2026 11:26:50 GMT",
+          "resumo": "NVDA, MSFT: Daniel Ives Pounds the Table on Nvidia and Microsoft Stocks  TipRanks",
+          "conteudo_completo": ""
         }
       ],
       "news_for_screener": [
         "Recent news for MSFT (scored by relevance):",
         "- [3.4] Price Over Earnings Overview: Microsoft - Benzinga",
         "- [3.4] Jade Lizard in MSFT - tastylive",
-        "- [3.4] Is Microsoft (MSFT) a Buy as Wall Street Analysts Look Optimistic? - Finviz"
+        "- [2.8] Microsoft (MSFT) Plans Thousands of Job Cuts as AI Spending Accelerates - TipRanks"
       ],
       "news_for_judge": [
         "=== NEWS FOR MSFT (SCORED BY RELEVANCE) ===",
@@ -1277,21 +1364,21 @@
         "Source: tastylive (quality=0.80)",
         "Published: Tue, 06 Jan 2026 18:54:45 GMT (freshness=0.85)",
         "Summary: Jade Lizard in MSFT  tastylive",
-        "[3] RELEVANCE SCORE: 3.4/10",
-        "Title: Is Microsoft (MSFT) a Buy as Wall Street Analysts Look Optimistic? - Finviz",
-        "Source: Finviz (quality=0.80)",
-        "Published: Tue, 06 Jan 2026 15:41:46 GMT (freshness=0.85)",
-        "Summary: Is Microsoft (MSFT) a Buy as Wall Street Analysts Look Optimistic?  Finviz",
-        "[4] RELEVANCE SCORE: 2.8/10",
-        "Title: Microsoft (MSFT) Eyes Major January Layoffs as AI Costs Rise - TipRanks",
+        "[3] RELEVANCE SCORE: 2.8/10",
+        "Title: Microsoft (MSFT) Plans Thousands of Job Cuts as AI Spending Accelerates - TipRanks",
         "Source: TipRanks (quality=0.80)",
         "Published: Tue, 06 Jan 2026 12:52:48 GMT (freshness=0.70)",
-        "Summary: Microsoft (MSFT) Eyes Major January Layoffs as AI Costs Rise  TipRanks",
-        "[5] RELEVANCE SCORE: 2.8/10",
+        "Summary: Microsoft (MSFT) Plans Thousands of Job Cuts as AI Spending Accelerates  TipRanks",
+        "[4] RELEVANCE SCORE: 2.8/10",
         "Title: Microsoft: OpenAI Is Simply A Strategic Hedge (NASDAQ:MSFT) - Seeking Alpha",
         "Source: Seeking Alpha (quality=0.80)",
         "Published: Tue, 06 Jan 2026 13:58:37 GMT (freshness=0.70)",
-        "Summary: Microsoft: OpenAI Is Simply A Strategic Hedge (NASDAQ:MSFT)  Seeking Alpha"
+        "Summary: Microsoft: OpenAI Is Simply A Strategic Hedge (NASDAQ:MSFT)  Seeking Alpha",
+        "[5] RELEVANCE SCORE: 2.8/10",
+        "Title: NVDA, MSFT: Daniel Ives Pounds the Table on Nvidia and Microsoft Stocks - TipRanks",
+        "Source: TipRanks (quality=0.80)",
+        "Published: Tue, 06 Jan 2026 11:26:50 GMT (freshness=0.70)",
+        "Summary: NVDA, MSFT: Daniel Ives Pounds the Table on Nvidia and Microsoft Stocks  TipRanks"
       ]
     },
     {
@@ -1302,26 +1389,26 @@
       "market_cap": 4558732394496,
       "market_cap_billions": 4558.73,
       "reason": "Tier1 Large Cap watchlist ($4558.7B)",
-      "detected_at": "2026-01-07T02:43:56.230305",
+      "detected_at": "2026-01-07T03:35:50.649418",
       "news_content": [
         "Recent news for NVDA:",
+        "- [Yahoo Finance] Analysts See Upside for NVIDIA (NVDA) as CES Highlights AI Momentum - Yahoo Finance",
         "- [The Motley Fool] If I Could Buy Only 1 Stock to Bet on the AI Boom in 2026, It Would Be This One - The Motley Fool",
-        "- [Investor's Business Daily] Stock Market Today: Dow Gains Nearly 500 Points And Makes History, As S&P 500 Hits New High (Live Coverage) - Investor's Business Daily",
-        "- [Investopedia] What's the 'Next Big Thing' in AI? Here's What Nvidia and AMD Execs Say It Could Be - Investopedia"
+        "- [Investor's Business Daily] Stock Market Today: Dow Gains Nearly 500 Points And Makes History, As S&P 500 Hits New High (Live Coverage) - Investor's Business Daily"
       ],
       "news_articles": [
+        {
+          "titulo": "Analysts See Upside for NVIDIA (NVDA) as CES Highlights AI Momentum - Yahoo Finance",
+          "fonte": "Yahoo Finance",
+          "data": "Wed, 07 Jan 2026 03:32:00 GMT",
+          "resumo": "Analysts See Upside for NVIDIA (NVDA) as CES Highlights AI Momentum  Yahoo FinanceNvidia: Rally Is Impressive, But AI Boom Shows Bubble Signals (NASDAQ:NVDA)  Seeking AlphaNvidia Corp. (NVDA) Bank of America Maintains Buy Rating and $275 Target  The Globe and Mail",
+          "conteudo_completo": ""
+        },
         {
           "titulo": "If I Could Buy Only 1 Stock to Bet on the AI Boom in 2026, It Would Be This One - The Motley Fool",
           "fonte": "The Motley Fool",
           "data": "Wed, 07 Jan 2026 01:10:00 GMT",
           "resumo": "If I Could Buy Only 1 Stock to Bet on the AI Boom in 2026, It Would Be This One  The Motley Fool",
-          "conteudo_completo": ""
-        },
-        {
-          "titulo": "Stock Market Today: Dow Gains Nearly 500 Points And Makes History, As S&P 500 Hits New High (Live Coverage) - Investor's Business Daily",
-          "fonte": "Investor's Business Daily",
-          "data": "Tue, 06 Jan 2026 21:48:00 GMT",
-          "resumo": "Stock Market Today: Dow Gains Nearly 500 Points And Makes History, As S&P 500 Hits New High (Live Coverage)  Investor's Business Daily",
           "conteudo_completo": ""
         },
         {
@@ -1332,54 +1419,54 @@
           "conteudo_completo": ""
         },
         {
-          "titulo": "Nvidia: AI Spending Alarm Bell (NASDAQ:NVDA) - Seeking Alpha",
-          "fonte": "Seeking Alpha",
-          "data": "Wed, 07 Jan 2026 01:00:00 GMT",
-          "resumo": "Nvidia: AI Spending Alarm Bell (NASDAQ:NVDA)  Seeking Alpha",
+          "titulo": "Stock Market Today: Dow Gains Nearly 500 Points And Makes History, As S&P 500 Hits New High (Live Coverage) - Investor's Business Daily",
+          "fonte": "Investor's Business Daily",
+          "data": "Tue, 06 Jan 2026 21:48:00 GMT",
+          "resumo": "Stock Market Today: Dow Gains Nearly 500 Points And Makes History, As S&P 500 Hits New High (Live Coverage)  Investor's Business Daily",
           "conteudo_completo": ""
         },
         {
-          "titulo": "Nvidia (NVDA) Finance Chief Says AI Demand Exceeds $500 Billion Forecast - TipRanks",
-          "fonte": "TipRanks",
-          "data": "Tue, 06 Jan 2026 17:22:53 GMT",
-          "resumo": "Nvidia (NVDA) Finance Chief Says AI Demand Exceeds $500 Billion Forecast  TipRanks",
+          "titulo": "Buy Nvidia or AMD Stock After Rolling Out New AI Platforms? - Zacks Investment Research",
+          "fonte": "Zacks Investment Research",
+          "data": "Tue, 06 Jan 2026 20:00:12 GMT",
+          "resumo": "Buy Nvidia or AMD Stock After Rolling Out New AI Platforms?  Zacks Investment Research",
           "conteudo_completo": ""
         }
       ],
       "news_for_screener": [
         "Recent news for NVDA (scored by relevance):",
+        "- [4.0] Analysts See Upside for NVIDIA (NVDA) as CES Highlights AI Momentum - Yahoo Finance",
         "- [3.8] If I Could Buy Only 1 Stock to Bet on the AI Boom in 2026, It Would Be This One - The Motley Fool",
-        "- [3.8] Stock Market Today: Dow Gains Nearly 500 Points And Makes History, As S&P 500 Hits New High (Live Coverage) - Investor's Business Daily",
         "- [3.8] What's the 'Next Big Thing' in AI? Here's What Nvidia and AMD Execs Say It Could Be - Investopedia"
       ],
       "news_for_judge": [
         "=== NEWS FOR NVDA (SCORED BY RELEVANCE) ===",
         "Total articles analyzed: 5",
-        "[1] RELEVANCE SCORE: 3.8/10",
+        "[1] RELEVANCE SCORE: 4.0/10",
+        "Title: Analysts See Upside for NVIDIA (NVDA) as CES Highlights AI Momentum - Yahoo Finance",
+        "Source: Yahoo Finance (quality=0.80)",
+        "Published: Wed, 07 Jan 2026 03:32:00 GMT (freshness=1.00)",
+        "Summary: Analysts See Upside for NVIDIA (NVDA) as CES Highlights AI Momentum  Yahoo FinanceNvidia: Rally Is Impressive, But AI Boom Shows Bubble Signals (NASDAQ:NVDA)  Seeking AlphaNvidia Corp. (NVDA) Bank of America Maintains Buy Rating and $275 Target  The Globe and Mail",
+        "[2] RELEVANCE SCORE: 3.8/10",
         "Title: If I Could Buy Only 1 Stock to Bet on the AI Boom in 2026, It Would Be This One - The Motley Fool",
         "Source: The Motley Fool (quality=0.80)",
         "Published: Wed, 07 Jan 2026 01:10:00 GMT (freshness=0.95)",
         "Summary: If I Could Buy Only 1 Stock to Bet on the AI Boom in 2026, It Would Be This One  The Motley Fool",
-        "[2] RELEVANCE SCORE: 3.8/10",
-        "Title: Stock Market Today: Dow Gains Nearly 500 Points And Makes History, As S&P 500 Hits New High (Live Coverage) - Investor's Business Daily",
-        "Source: Investor's Business Daily (quality=0.80)",
-        "Published: Tue, 06 Jan 2026 21:48:00 GMT (freshness=0.95)",
-        "Summary: Stock Market Today: Dow Gains Nearly 500 Points And Makes History, As S&P 500 Hits New High (Live Coverage)  Investor's Business Daily",
         "[3] RELEVANCE SCORE: 3.8/10",
         "Title: What's the 'Next Big Thing' in AI? Here's What Nvidia and AMD Execs Say It Could Be - Investopedia",
         "Source: Investopedia (quality=0.80)",
         "Published: Tue, 06 Jan 2026 22:34:53 GMT (freshness=0.95)",
         "Summary: What's the 'Next Big Thing' in AI? Here's What Nvidia and AMD Execs Say It Could Be  Investopedia",
-        "[4] RELEVANCE SCORE: 3.8/10",
-        "Title: Nvidia: AI Spending Alarm Bell (NASDAQ:NVDA) - Seeking Alpha",
-        "Source: Seeking Alpha (quality=0.80)",
-        "Published: Wed, 07 Jan 2026 01:00:00 GMT (freshness=0.95)",
-        "Summary: Nvidia: AI Spending Alarm Bell (NASDAQ:NVDA)  Seeking Alpha",
+        "[4] RELEVANCE SCORE: 3.4/10",
+        "Title: Stock Market Today: Dow Gains Nearly 500 Points And Makes History, As S&P 500 Hits New High (Live Coverage) - Investor's Business Daily",
+        "Source: Investor's Business Daily (quality=0.80)",
+        "Published: Tue, 06 Jan 2026 21:48:00 GMT (freshness=0.85)",
+        "Summary: Stock Market Today: Dow Gains Nearly 500 Points And Makes History, As S&P 500 Hits New High (Live Coverage)  Investor's Business Daily",
         "[5] RELEVANCE SCORE: 3.4/10",
-        "Title: Nvidia (NVDA) Finance Chief Says AI Demand Exceeds $500 Billion Forecast - TipRanks",
-        "Source: TipRanks (quality=0.80)",
-        "Published: Tue, 06 Jan 2026 17:22:53 GMT (freshness=0.85)",
-        "Summary: Nvidia (NVDA) Finance Chief Says AI Demand Exceeds $500 Billion Forecast  TipRanks"
+        "Title: Buy Nvidia or AMD Stock After Rolling Out New AI Platforms? - Zacks Investment Research",
+        "Source: Zacks Investment Research (quality=0.80)",
+        "Published: Tue, 06 Jan 2026 20:00:12 GMT (freshness=0.85)",
+        "Summary: Buy Nvidia or AMD Stock After Rolling Out New AI Platforms?  Zacks Investment Research"
       ]
     },
     {
@@ -1390,7 +1477,7 @@
       "market_cap": 3807324405760,
       "market_cap_billions": 3807.32,
       "reason": "Tier1 Large Cap watchlist ($3807.3B)",
-      "detected_at": "2026-01-07T02:45:46.116927",
+      "detected_at": "2026-01-07T03:34:40.764044",
       "news_content": [
         "Recent news for GOOGL:",
         "- [Seeking Alpha] Alphabet’s AI Cloud Moment May Finally Be Here (NASDAQ:GOOGL) - Seeking Alpha",
@@ -1406,17 +1493,17 @@
           "conteudo_completo": ""
         },
         {
-          "titulo": "Alphabet’s AI Cloud Moment May Finally Be Here (NASDAQ:GOOGL) - Seeking Alpha",
-          "fonte": "Seeking Alpha",
-          "data": "Tue, 06 Jan 2026 15:51:40 GMT",
-          "resumo": "Alphabet’s AI Cloud Moment May Finally Be Here (NASDAQ:GOOGL)  Seeking Alpha",
-          "conteudo_completo": ""
-        },
-        {
           "titulo": "Alphabet Stock Eyes Breakout Above All-Time High As AI Chip Strategy Reshapes Sentiment - Seeking Alpha",
           "fonte": "Seeking Alpha",
           "data": "Tue, 06 Jan 2026 18:45:00 GMT",
           "resumo": "Alphabet Stock Eyes Breakout Above All-Time High As AI Chip Strategy Reshapes Sentiment  Seeking Alpha",
+          "conteudo_completo": ""
+        },
+        {
+          "titulo": "Alphabet’s AI Cloud Moment May Finally Be Here (NASDAQ:GOOGL) - Seeking Alpha",
+          "fonte": "Seeking Alpha",
+          "data": "Tue, 06 Jan 2026 15:51:40 GMT",
+          "resumo": "Alphabet’s AI Cloud Moment May Finally Be Here (NASDAQ:GOOGL)  Seeking Alpha",
           "conteudo_completo": ""
         },
         {
@@ -1437,8 +1524,8 @@
       "news_for_screener": [
         "Recent news for GOOGL (scored by relevance):",
         "- [3.8] Lobbying Update: $80,000 of GOOGLE PUBLIC SECTOR (AKA GOOGLE CLOUD) lobbying was just disclosed - Quiver Quantitative",
-        "- [3.4] Alphabet’s AI Cloud Moment May Finally Be Here (NASDAQ:GOOGL) - Seeking Alpha",
-        "- [3.4] Alphabet Stock Eyes Breakout Above All-Time High As AI Chip Strategy Reshapes Sentiment - Seeking Alpha"
+        "- [3.4] Alphabet Stock Eyes Breakout Above All-Time High As AI Chip Strategy Reshapes Sentiment - Seeking Alpha",
+        "- [2.8] Alphabet’s AI Cloud Moment May Finally Be Here (NASDAQ:GOOGL) - Seeking Alpha"
       ],
       "news_for_judge": [
         "=== NEWS FOR GOOGL (SCORED BY RELEVANCE) ===",
@@ -1449,15 +1536,15 @@
         "Published: Wed, 07 Jan 2026 00:04:00 GMT (freshness=0.95)",
         "Summary: Lobbying Update: $80,000 of GOOGLE PUBLIC SECTOR (AKA GOOGLE CLOUD) lobbying was just disclosed  Quiver Quantitative",
         "[2] RELEVANCE SCORE: 3.4/10",
-        "Title: Alphabet’s AI Cloud Moment May Finally Be Here (NASDAQ:GOOGL) - Seeking Alpha",
-        "Source: Seeking Alpha (quality=0.80)",
-        "Published: Tue, 06 Jan 2026 15:51:40 GMT (freshness=0.85)",
-        "Summary: Alphabet’s AI Cloud Moment May Finally Be Here (NASDAQ:GOOGL)  Seeking Alpha",
-        "[3] RELEVANCE SCORE: 3.4/10",
         "Title: Alphabet Stock Eyes Breakout Above All-Time High As AI Chip Strategy Reshapes Sentiment - Seeking Alpha",
         "Source: Seeking Alpha (quality=0.80)",
         "Published: Tue, 06 Jan 2026 18:45:00 GMT (freshness=0.85)",
         "Summary: Alphabet Stock Eyes Breakout Above All-Time High As AI Chip Strategy Reshapes Sentiment  Seeking Alpha",
+        "[3] RELEVANCE SCORE: 2.8/10",
+        "Title: Alphabet’s AI Cloud Moment May Finally Be Here (NASDAQ:GOOGL) - Seeking Alpha",
+        "Source: Seeking Alpha (quality=0.80)",
+        "Published: Tue, 06 Jan 2026 15:51:40 GMT (freshness=0.70)",
+        "Summary: Alphabet’s AI Cloud Moment May Finally Be Here (NASDAQ:GOOGL)  Seeking Alpha",
         "[4] RELEVANCE SCORE: 2.8/10",
         "Title: Is Alphabet Stock Heading for a Fall? - Trefis",
         "Source: Trefis (quality=0.80)",
@@ -1478,12 +1565,12 @@
       "market_cap": 2575593635840,
       "market_cap_billions": 2575.59,
       "reason": "Tier1 Large Cap watchlist ($2575.6B)",
-      "detected_at": "2026-01-07T02:44:52.383526",
+      "detected_at": "2026-01-07T03:35:37.800125",
       "news_content": [
         "Recent news for AMZN:",
         "- [TipRanks] Amazon’s (AMZN) AI Shopping Tool Prompts Backlash from Retailers - TipRanks",
-        "- [TradingView — Track All Markets] Key facts: Amazon stock rises 3%; class-action lawsuit allowed; Bezos sold 25M shares - TradingView — Track All Markets",
-        "- [Finbold] Wall Street analyst updates Amazon stock price target - Finbold"
+        "- [Nasdaq] Amazon Launches Alexa.com For Browser Chats With Alexa+ In Early Access - Nasdaq",
+        "- [TradingView — Track All Markets] Key facts: Amazon stock rises 3%; class-action lawsuit allowed; Bezos sold 25M shares - TradingView — Track All Markets"
       ],
       "news_articles": [
         {
@@ -1508,17 +1595,17 @@
           "conteudo_completo": ""
         },
         {
-          "titulo": "Amazon (AMZN) stock climbs on AWS self-driving truck deal as U.S. jobs data nears - ts2.tech",
-          "fonte": "ts2.tech",
-          "data": "Tue, 06 Jan 2026 21:41:24 GMT",
-          "resumo": "Amazon (AMZN) stock climbs on AWS self-driving truck deal as U.S. jobs data nears  ts2.tech",
-          "conteudo_completo": ""
-        },
-        {
           "titulo": "Key facts: Amazon stock rises 3%; class-action lawsuit allowed; Bezos sold 25M shares - TradingView — Track All Markets",
           "fonte": "TradingView — Track All Markets",
           "data": "Tue, 06 Jan 2026 20:03:21 GMT",
           "resumo": "Key facts: Amazon stock rises 3%; class-action lawsuit allowed; Bezos sold 25M shares  TradingView — Track All Markets",
+          "conteudo_completo": ""
+        },
+        {
+          "titulo": "Wall Street analyst updates Amazon stock price target - Finbold",
+          "fonte": "Finbold",
+          "data": "Tue, 06 Jan 2026 17:22:45 GMT",
+          "resumo": "Wall Street analyst updates Amazon stock price target  Finbold",
           "conteudo_completo": ""
         }
       ],
@@ -1546,16 +1633,16 @@
         "Source: CNBC (quality=0.80)",
         "Published: Tue, 06 Jan 2026 22:16:57 GMT (freshness=0.95)",
         "Summary: Amazon's AI shopping tool sparks backlash from online retailers that didn't want websites scraped  CNBC",
-        "[4] RELEVANCE SCORE: 3.8/10",
-        "Title: Amazon (AMZN) stock climbs on AWS self-driving truck deal as U.S. jobs data nears - ts2.tech",
-        "Source: ts2.tech (quality=0.80)",
-        "Published: Tue, 06 Jan 2026 21:41:24 GMT (freshness=0.95)",
-        "Summary: Amazon (AMZN) stock climbs on AWS self-driving truck deal as U.S. jobs data nears  ts2.tech",
-        "[5] RELEVANCE SCORE: 3.4/10",
+        "[4] RELEVANCE SCORE: 3.4/10",
         "Title: Key facts: Amazon stock rises 3%; class-action lawsuit allowed; Bezos sold 25M shares - TradingView — Track All Markets",
         "Source: TradingView — Track All Markets (quality=0.80)",
         "Published: Tue, 06 Jan 2026 20:03:21 GMT (freshness=0.85)",
-        "Summary: Key facts: Amazon stock rises 3%; class-action lawsuit allowed; Bezos sold 25M shares  TradingView — Track All Markets"
+        "Summary: Key facts: Amazon stock rises 3%; class-action lawsuit allowed; Bezos sold 25M shares  TradingView — Track All Markets",
+        "[5] RELEVANCE SCORE: 3.4/10",
+        "Title: Wall Street analyst updates Amazon stock price target - Finbold",
+        "Source: Finbold (quality=0.80)",
+        "Published: Tue, 06 Jan 2026 17:22:45 GMT (freshness=0.85)",
+        "Summary: Wall Street analyst updates Amazon stock price target  Finbold"
       ]
     },
     {
@@ -1566,7 +1653,7 @@
       "market_cap": 398289141760,
       "market_cap_billions": 398.29,
       "reason": "Tier1 Large Cap watchlist ($398.3B)",
-      "detected_at": "2026-01-07T02:44:38.313774",
+      "detected_at": "2026-01-07T03:37:11.691342",
       "news_content": [
         "Recent news for PETR4.SA:",
         "- [UOL Economia] Júlio Wiziack: Venezuela faz minoritários reverem plano de investimento da Petrobras - UOL Economia",
@@ -1578,7 +1665,7 @@
           "titulo": "Júlio Wiziack: Venezuela faz minoritários reverem plano de investimento da Petrobras - UOL Economia",
           "fonte": "UOL Economia",
           "data": "Tue, 06 Jan 2026 23:19:40 GMT",
-          "resumo": "Júlio Wiziack: Venezuela faz minoritários reverem plano de investimento da Petrobras  UOL EconomiaO impacto para a Petrobras a partir da crise na Venezuela, na visão do ex-presidente da ANP  NeoFeedPetróleo sobe, Petrobras (PETR4) cai: por que a crise na Venezuela puniu as brasileiras na bolsa?  Valor Investe",
+          "resumo": "Júlio Wiziack: Venezuela faz minoritários reverem plano de investimento da Petrobras  UOL EconomiaO impacto para a Petrobras a partir da crise na Venezuela, na visão do ex-presidente da ANP  NeoFeedDe Petrobras a PRIO: como se posicionar no setor após o ataque dos EUA à Venezuela?  InfoMoney",
           "conteudo_completo": ""
         },
         {
@@ -1592,7 +1679,7 @@
           "titulo": "Foz do Amazonas: Petrobras confirma vazamento de fluido em perfuração - O Globo",
           "fonte": "O Globo",
           "data": "Tue, 06 Jan 2026 17:35:11 GMT",
-          "resumo": "Foz do Amazonas: Petrobras confirma vazamento de fluido em perfuração  O GloboPetrobras confirma vazamento de fluido na Foz do Amazonas  Agência BrasilPetrobras reporta vazamento durante perfuração na Margem Equatorial  Poder360",
+          "resumo": "Foz do Amazonas: Petrobras confirma vazamento de fluido em perfuração  O GloboPetrobras confirma vazamento de fluido na Foz do Amazonas  MidiamaxPetrobras reporta vazamento durante perfuração na Margem Equatorial  Poder360",
           "conteudo_completo": ""
         },
         {
@@ -1603,10 +1690,10 @@
           "conteudo_completo": ""
         },
         {
-          "titulo": "NF cobra e Petrobrás define orientações sobre apontamento de frequência dos dias de greve, incluindo o regime de teletrabalho - Sindipetro NF",
-          "fonte": "Sindipetro NF",
-          "data": "Tue, 06 Jan 2026 20:05:00 GMT",
-          "resumo": "NF cobra e Petrobrás define orientações sobre apontamento de frequência dos dias de greve, incluindo o regime de teletrabalho  Sindipetro NF",
+          "titulo": "Petrobras (PETR3; PETR4) em alerta: pressão das ações provoca a revisão do consenso - Acionista.com.br",
+          "fonte": "Acionista.com.br",
+          "data": "Tue, 06 Jan 2026 20:35:41 GMT",
+          "resumo": "Petrobras (PETR3; PETR4) em alerta: pressão das ações provoca a revisão do consenso  Acionista.com.br",
           "conteudo_completo": ""
         }
       ],
@@ -1623,7 +1710,7 @@
         "Title: Júlio Wiziack: Venezuela faz minoritários reverem plano de investimento da Petrobras - UOL Economia",
         "Source: UOL Economia (quality=0.80)",
         "Published: Tue, 06 Jan 2026 23:19:40 GMT (freshness=0.95)",
-        "Summary: Júlio Wiziack: Venezuela faz minoritários reverem plano de investimento da Petrobras  UOL EconomiaO impacto para a Petrobras a partir da crise na Venezuela, na visão do ex-presidente da ANP  NeoFeedPetróleo sobe, Petrobras (PETR4) cai: por que a crise na Venezuela puniu as brasileiras na bolsa?  Val",
+        "Summary: Júlio Wiziack: Venezuela faz minoritários reverem plano de investimento da Petrobras  UOL EconomiaO impacto para a Petrobras a partir da crise na Venezuela, na visão do ex-presidente da ANP  NeoFeedDe Petrobras a PRIO: como se posicionar no setor após o ataque dos EUA à Venezuela?  InfoMoney",
         "[2] RELEVANCE SCORE: 3.4/10",
         "Title: Petrobras paralisa perfuração na Foz do Amazonas após perda de fluido, e ações recuam na B3 - ADVFN",
         "Source: ADVFN (quality=0.80)",
@@ -1633,17 +1720,17 @@
         "Title: Foz do Amazonas: Petrobras confirma vazamento de fluido em perfuração - O Globo",
         "Source: O Globo (quality=0.80)",
         "Published: Tue, 06 Jan 2026 17:35:11 GMT (freshness=0.85)",
-        "Summary: Foz do Amazonas: Petrobras confirma vazamento de fluido em perfuração  O GloboPetrobras confirma vazamento de fluido na Foz do Amazonas  Agência BrasilPetrobras reporta vazamento durante perfuração na Margem Equatorial  Poder360",
+        "Summary: Foz do Amazonas: Petrobras confirma vazamento de fluido em perfuração  O GloboPetrobras confirma vazamento de fluido na Foz do Amazonas  MidiamaxPetrobras reporta vazamento durante perfuração na Margem Equatorial  Poder360",
         "[4] RELEVANCE SCORE: 3.4/10",
         "Title: Ação da Petrobras cai com incidente na Foz do Amazonas e petróleo no radar - CNN Brasil",
         "Source: CNN Brasil (quality=0.80)",
         "Published: Tue, 06 Jan 2026 18:13:08 GMT (freshness=0.85)",
         "Summary: Ação da Petrobras cai com incidente na Foz do Amazonas e petróleo no radar  CNN Brasil",
         "[5] RELEVANCE SCORE: 3.4/10",
-        "Title: NF cobra e Petrobrás define orientações sobre apontamento de frequência dos dias de greve, incluindo o regime de teletrabalho - Sindipetro NF",
-        "Source: Sindipetro NF (quality=0.80)",
-        "Published: Tue, 06 Jan 2026 20:05:00 GMT (freshness=0.85)",
-        "Summary: NF cobra e Petrobrás define orientações sobre apontamento de frequência dos dias de greve, incluindo o regime de teletrabalho  Sindipetro NF"
+        "Title: Petrobras (PETR3; PETR4) em alerta: pressão das ações provoca a revisão do consenso - Acionista.com.br",
+        "Source: Acionista.com.br (quality=0.80)",
+        "Published: Tue, 06 Jan 2026 20:35:41 GMT (freshness=0.85)",
+        "Summary: Petrobras (PETR3; PETR4) em alerta: pressão das ações provoca a revisão do consenso  Acionista.com.br"
       ]
     },
     {
@@ -1654,7 +1741,7 @@
       "market_cap": 401484021760,
       "market_cap_billions": 401.48,
       "reason": "Tier1 Large Cap watchlist ($401.5B)",
-      "detected_at": "2026-01-07T02:46:25.429820",
+      "detected_at": "2026-01-07T03:36:33.361672",
       "news_content": [
         "Recent news for PETR3.SA:",
         "- [UOL Economia] Júlio Wiziack: Venezuela faz minoritários reverem plano de investimento da Petrobras - UOL Economia",
@@ -1663,24 +1750,17 @@
       ],
       "news_articles": [
         {
-          "titulo": "Brazil's Petrobras pauses drilling in environmentally sensitive region after fluid leak - Reuters",
-          "fonte": "Reuters",
-          "data": "Tue, 06 Jan 2026 22:47:15 GMT",
-          "resumo": "Brazil's Petrobras pauses drilling in environmentally sensitive region after fluid leak  Reuters",
-          "conteudo_completo": ""
-        },
-        {
           "titulo": "Júlio Wiziack: Venezuela faz minoritários reverem plano de investimento da Petrobras - UOL Economia",
           "fonte": "UOL Economia",
           "data": "Tue, 06 Jan 2026 23:19:40 GMT",
-          "resumo": "Júlio Wiziack: Venezuela faz minoritários reverem plano de investimento da Petrobras  UOL EconomiaO impacto para a Petrobras a partir da crise na Venezuela, na visão do ex-presidente da ANP  NeoFeedPetróleo sobe, Petrobras (PETR4) cai: por que a crise na Venezuela puniu as brasileiras na bolsa?  Valor Investe",
+          "resumo": "Júlio Wiziack: Venezuela faz minoritários reverem plano de investimento da Petrobras  UOL EconomiaO impacto para a Petrobras a partir da crise na Venezuela, na visão do ex-presidente da ANP  NeoFeedDe Petrobras a PRIO: como se posicionar no setor após o ataque dos EUA à Venezuela?  InfoMoney",
           "conteudo_completo": ""
         },
         {
           "titulo": "Foz do Amazonas: Petrobras confirma vazamento de fluido em perfuração - O Globo",
           "fonte": "O Globo",
           "data": "Tue, 06 Jan 2026 17:35:11 GMT",
-          "resumo": "Foz do Amazonas: Petrobras confirma vazamento de fluido em perfuração  O GloboPetrobras confirma vazamento de fluido na Foz do Amazonas  Agência BrasilPetrobras reporta vazamento durante perfuração na Margem Equatorial  Poder360",
+          "resumo": "Foz do Amazonas: Petrobras confirma vazamento de fluido em perfuração  O GloboPetrobras confirma vazamento de fluido na Foz do Amazonas  MidiamaxPetrobras reporta vazamento durante perfuração na Margem Equatorial  Poder360",
           "conteudo_completo": ""
         },
         {
@@ -1688,6 +1768,13 @@
           "fonte": "CNN Brasil",
           "data": "Tue, 06 Jan 2026 18:13:08 GMT",
           "resumo": "Ação da Petrobras cai com incidente na Foz do Amazonas e petróleo no radar  CNN Brasil",
+          "conteudo_completo": ""
+        },
+        {
+          "titulo": "Petrobras (PETR3; PETR4) em alerta: pressão das ações provoca a revisão do consenso - Acionista.com.br",
+          "fonte": "Acionista.com.br",
+          "data": "Tue, 06 Jan 2026 20:35:41 GMT",
+          "resumo": "Petrobras (PETR3; PETR4) em alerta: pressão das ações provoca a revisão do consenso  Acionista.com.br",
           "conteudo_completo": ""
         },
         {
@@ -1700,33 +1787,33 @@
       ],
       "news_for_screener": [
         "Recent news for PETR3.SA (scored by relevance):",
-        "- [3.8] Brazil's Petrobras pauses drilling in environmentally sensitive region after fluid leak - Reuters",
         "- [3.8] Júlio Wiziack: Venezuela faz minoritários reverem plano de investimento da Petrobras - UOL Economia",
-        "- [3.4] Foz do Amazonas: Petrobras confirma vazamento de fluido em perfuração - O Globo"
+        "- [3.4] Foz do Amazonas: Petrobras confirma vazamento de fluido em perfuração - O Globo",
+        "- [3.4] Ação da Petrobras cai com incidente na Foz do Amazonas e petróleo no radar - CNN Brasil"
       ],
       "news_for_judge": [
         "=== NEWS FOR PETR3.SA (SCORED BY RELEVANCE) ===",
         "Total articles analyzed: 5",
         "[1] RELEVANCE SCORE: 3.8/10",
-        "Title: Brazil's Petrobras pauses drilling in environmentally sensitive region after fluid leak - Reuters",
-        "Source: Reuters (quality=0.80)",
-        "Published: Tue, 06 Jan 2026 22:47:15 GMT (freshness=0.95)",
-        "Summary: Brazil's Petrobras pauses drilling in environmentally sensitive region after fluid leak  Reuters",
-        "[2] RELEVANCE SCORE: 3.8/10",
         "Title: Júlio Wiziack: Venezuela faz minoritários reverem plano de investimento da Petrobras - UOL Economia",
         "Source: UOL Economia (quality=0.80)",
         "Published: Tue, 06 Jan 2026 23:19:40 GMT (freshness=0.95)",
-        "Summary: Júlio Wiziack: Venezuela faz minoritários reverem plano de investimento da Petrobras  UOL EconomiaO impacto para a Petrobras a partir da crise na Venezuela, na visão do ex-presidente da ANP  NeoFeedPetróleo sobe, Petrobras (PETR4) cai: por que a crise na Venezuela puniu as brasileiras na bolsa?  Val",
-        "[3] RELEVANCE SCORE: 3.4/10",
+        "Summary: Júlio Wiziack: Venezuela faz minoritários reverem plano de investimento da Petrobras  UOL EconomiaO impacto para a Petrobras a partir da crise na Venezuela, na visão do ex-presidente da ANP  NeoFeedDe Petrobras a PRIO: como se posicionar no setor após o ataque dos EUA à Venezuela?  InfoMoney",
+        "[2] RELEVANCE SCORE: 3.4/10",
         "Title: Foz do Amazonas: Petrobras confirma vazamento de fluido em perfuração - O Globo",
         "Source: O Globo (quality=0.80)",
         "Published: Tue, 06 Jan 2026 17:35:11 GMT (freshness=0.85)",
-        "Summary: Foz do Amazonas: Petrobras confirma vazamento de fluido em perfuração  O GloboPetrobras confirma vazamento de fluido na Foz do Amazonas  Agência BrasilPetrobras reporta vazamento durante perfuração na Margem Equatorial  Poder360",
-        "[4] RELEVANCE SCORE: 3.4/10",
+        "Summary: Foz do Amazonas: Petrobras confirma vazamento de fluido em perfuração  O GloboPetrobras confirma vazamento de fluido na Foz do Amazonas  MidiamaxPetrobras reporta vazamento durante perfuração na Margem Equatorial  Poder360",
+        "[3] RELEVANCE SCORE: 3.4/10",
         "Title: Ação da Petrobras cai com incidente na Foz do Amazonas e petróleo no radar - CNN Brasil",
         "Source: CNN Brasil (quality=0.80)",
         "Published: Tue, 06 Jan 2026 18:13:08 GMT (freshness=0.85)",
         "Summary: Ação da Petrobras cai com incidente na Foz do Amazonas e petróleo no radar  CNN Brasil",
+        "[4] RELEVANCE SCORE: 3.4/10",
+        "Title: Petrobras (PETR3; PETR4) em alerta: pressão das ações provoca a revisão do consenso - Acionista.com.br",
+        "Source: Acionista.com.br (quality=0.80)",
+        "Published: Tue, 06 Jan 2026 20:35:41 GMT (freshness=0.85)",
+        "Summary: Petrobras (PETR3; PETR4) em alerta: pressão das ações provoca a revisão do consenso  Acionista.com.br",
         "[5] RELEVANCE SCORE: 3.4/10",
         "Title: NF cobra e Petrobrás define orientações sobre apontamento de frequência dos dias de greve, incluindo o regime de teletrabalho - Sindipetro NF",
         "Source: Sindipetro NF (quality=0.80)",
@@ -1742,12 +1829,12 @@
       "market_cap": 323872358400,
       "market_cap_billions": 323.87,
       "reason": "Tier1 Large Cap watchlist ($323.9B)",
-      "detected_at": "2026-01-07T02:43:30.377213",
+      "detected_at": "2026-01-07T03:35:23.994948",
       "news_content": [
         "Recent news for VALE3.SA:",
         "- [BPMoney] Vale dispara 4%: minério atinge máxima em 5 meses - BPMoney",
-        "- [Bitget] What's Influencing Investor Sentiment Toward Vale SA? - Bitget",
-        "- [Agência Brasil] Petrobras assina acordo para produzir diesel S10 para a Vale - Agência Brasil"
+        "- [Jornal Gazeta de Varginha] Petrobras e Vale fecham acordo para fornecimento de diesel em Minas Gerais - Jornal Gazeta de Varginha",
+        "- [Bitget] What's Influencing Investor Sentiment Toward Vale SA? - Bitget"
       ],
       "news_articles": [
         {
@@ -1755,6 +1842,13 @@
           "fonte": "BPMoney",
           "data": "Tue, 06 Jan 2026 21:55:08 GMT",
           "resumo": "Vale dispara 4%: minério atinge máxima em 5 meses  BPMoney",
+          "conteudo_completo": ""
+        },
+        {
+          "titulo": "Petrobras e Vale fecham acordo para fornecimento de diesel em Minas Gerais - Jornal Gazeta de Varginha",
+          "fonte": "Jornal Gazeta de Varginha",
+          "data": "Tue, 06 Jan 2026 19:48:11 GMT",
+          "resumo": "Petrobras e Vale fecham acordo para fornecimento de diesel em Minas Gerais  Jornal Gazeta de Varginha",
           "conteudo_completo": ""
         },
         {
@@ -1772,54 +1866,47 @@
           "conteudo_completo": ""
         },
         {
-          "titulo": "Vale fecha acordo com Petrobras para receber diesel menos poluente - BNamericas",
-          "fonte": "BNamericas",
-          "data": "Tue, 06 Jan 2026 14:30:40 GMT",
-          "resumo": "Vale fecha acordo com Petrobras para receber diesel menos poluente  BNamericas",
-          "conteudo_completo": ""
-        },
-        {
-          "titulo": "Petrobras e Vale fecham contrato para fornecimento de diesel em Minas Gerais - Portal Agro2",
-          "fonte": "Portal Agro2",
-          "data": "Tue, 06 Jan 2026 13:02:20 GMT",
-          "resumo": "Petrobras e Vale fecham contrato para fornecimento de diesel em Minas Gerais  Portal Agro2",
+          "titulo": "Vale investe R$ 9,5 bi em Minas Gerais até 2013 - Revista O Empreiteiro",
+          "fonte": "Revista O Empreiteiro",
+          "data": "Tue, 06 Jan 2026 13:27:44 GMT",
+          "resumo": "Vale investe R$ 9,5 bi em Minas Gerais até 2013  Revista O Empreiteiro",
           "conteudo_completo": ""
         }
       ],
       "news_for_screener": [
         "Recent news for VALE3.SA (scored by relevance):",
-        "- [3.8] Vale dispara 4%: minério atinge máxima em 5 meses - BPMoney",
-        "- [2.8] What's Influencing Investor Sentiment Toward Vale SA? - Bitget",
-        "- [2.8] Petrobras assina acordo para produzir diesel S10 para a Vale - Agência Brasil"
+        "- [3.4] Vale dispara 4%: minério atinge máxima em 5 meses - BPMoney",
+        "- [3.4] Petrobras e Vale fecham acordo para fornecimento de diesel em Minas Gerais - Jornal Gazeta de Varginha",
+        "- [2.8] What's Influencing Investor Sentiment Toward Vale SA? - Bitget"
       ],
       "news_for_judge": [
         "=== NEWS FOR VALE3.SA (SCORED BY RELEVANCE) ===",
         "Total articles analyzed: 5",
-        "[1] RELEVANCE SCORE: 3.8/10",
+        "[1] RELEVANCE SCORE: 3.4/10",
         "Title: Vale dispara 4%: minério atinge máxima em 5 meses - BPMoney",
         "Source: BPMoney (quality=0.80)",
-        "Published: Tue, 06 Jan 2026 21:55:08 GMT (freshness=0.95)",
+        "Published: Tue, 06 Jan 2026 21:55:08 GMT (freshness=0.85)",
         "Summary: Vale dispara 4%: minério atinge máxima em 5 meses  BPMoney",
-        "[2] RELEVANCE SCORE: 2.8/10",
+        "[2] RELEVANCE SCORE: 3.4/10",
+        "Title: Petrobras e Vale fecham acordo para fornecimento de diesel em Minas Gerais - Jornal Gazeta de Varginha",
+        "Source: Jornal Gazeta de Varginha (quality=0.80)",
+        "Published: Tue, 06 Jan 2026 19:48:11 GMT (freshness=0.85)",
+        "Summary: Petrobras e Vale fecham acordo para fornecimento de diesel em Minas Gerais  Jornal Gazeta de Varginha",
+        "[3] RELEVANCE SCORE: 2.8/10",
         "Title: What's Influencing Investor Sentiment Toward Vale SA? - Bitget",
         "Source: Bitget (quality=0.80)",
         "Published: Tue, 06 Jan 2026 04:15:18 GMT (freshness=0.70)",
         "Summary: What's Influencing Investor Sentiment Toward Vale SA?  Bitget",
-        "[3] RELEVANCE SCORE: 2.8/10",
+        "[4] RELEVANCE SCORE: 2.8/10",
         "Title: Petrobras assina acordo para produzir diesel S10 para a Vale - Agência Brasil",
         "Source: Agência Brasil (quality=0.80)",
         "Published: Tue, 06 Jan 2026 11:48:00 GMT (freshness=0.70)",
         "Summary: Petrobras assina acordo para produzir diesel S10 para a Vale  Agência Brasil",
-        "[4] RELEVANCE SCORE: 2.8/10",
-        "Title: Vale fecha acordo com Petrobras para receber diesel menos poluente - BNamericas",
-        "Source: BNamericas (quality=0.80)",
-        "Published: Tue, 06 Jan 2026 14:30:40 GMT (freshness=0.70)",
-        "Summary: Vale fecha acordo com Petrobras para receber diesel menos poluente  BNamericas",
         "[5] RELEVANCE SCORE: 2.8/10",
-        "Title: Petrobras e Vale fecham contrato para fornecimento de diesel em Minas Gerais - Portal Agro2",
-        "Source: Portal Agro2 (quality=0.80)",
-        "Published: Tue, 06 Jan 2026 13:02:20 GMT (freshness=0.70)",
-        "Summary: Petrobras e Vale fecham contrato para fornecimento de diesel em Minas Gerais  Portal Agro2"
+        "Title: Vale investe R$ 9,5 bi em Minas Gerais até 2013 - Revista O Empreiteiro",
+        "Source: Revista O Empreiteiro (quality=0.80)",
+        "Published: Tue, 06 Jan 2026 13:27:44 GMT (freshness=0.70)",
+        "Summary: Vale investe R$ 9,5 bi em Minas Gerais até 2013  Revista O Empreiteiro"
       ]
     },
     {
@@ -1830,7 +1917,7 @@
       "market_cap": 440620318720,
       "market_cap_billions": 440.62,
       "reason": "Tier1 Large Cap watchlist ($440.6B)",
-      "detected_at": "2026-01-07T02:45:33.780774",
+      "detected_at": "2026-01-07T03:37:54.153211",
       "news_content": [
         "Recent news for ITUB4.SA:",
         "- [Abrapp] Giro das associadas: Previ, Fundação Itaú Unibanco e Funpresp-Exe - Abrapp",
@@ -1838,6 +1925,13 @@
         "- [Seu Crédito Digital] WhatsApp do Itaú facilita PIX com nova função de reconhecimento de imagens - Seu Crédito Digital"
       ],
       "news_articles": [
+        {
+          "titulo": "Itaú Unibanco abre 103 vagas de emprego em processo seletivo no Brasil - JC Concursos",
+          "fonte": "JC Concursos",
+          "data": "Tue, 06 Jan 2026 23:10:00 GMT",
+          "resumo": "Itaú Unibanco abre 103 vagas de emprego em processo seletivo no Brasil  JC Concursos",
+          "conteudo_completo": ""
+        },
         {
           "titulo": "Giro das associadas: Previ, Fundação Itaú Unibanco e Funpresp-Exe - Abrapp",
           "fonte": "Abrapp",
@@ -1850,13 +1944,6 @@
           "fonte": "SindicarioNET",
           "data": "Tue, 06 Jan 2026 21:21:00 GMT",
           "resumo": "Sindicato convoca bancários do Itaú para deliberar ACT  SindicarioNET",
-          "conteudo_completo": ""
-        },
-        {
-          "titulo": "Itaú Unibanco abre 103 vagas de emprego em processo seletivo no Brasil - JC Concursos",
-          "fonte": "JC Concursos",
-          "data": "Tue, 06 Jan 2026 23:10:00 GMT",
-          "resumo": "Itaú Unibanco abre 103 vagas de emprego em processo seletivo no Brasil  JC Concursos",
           "conteudo_completo": ""
         },
         {
@@ -1876,28 +1963,28 @@
       ],
       "news_for_screener": [
         "Recent news for ITUB4.SA (scored by relevance):",
-        "- [3.8] Giro das associadas: Previ, Fundação Itaú Unibanco e Funpresp-Exe - Abrapp",
-        "- [3.8] Sindicato convoca bancários do Itaú para deliberar ACT - SindicarioNET",
-        "- [3.8] Itaú Unibanco abre 103 vagas de emprego em processo seletivo no Brasil - JC Concursos"
+        "- [3.8] Itaú Unibanco abre 103 vagas de emprego em processo seletivo no Brasil - JC Concursos",
+        "- [3.4] Giro das associadas: Previ, Fundação Itaú Unibanco e Funpresp-Exe - Abrapp",
+        "- [3.4] Sindicato convoca bancários do Itaú para deliberar ACT - SindicarioNET"
       ],
       "news_for_judge": [
         "=== NEWS FOR ITUB4.SA (SCORED BY RELEVANCE) ===",
         "Total articles analyzed: 5",
         "[1] RELEVANCE SCORE: 3.8/10",
-        "Title: Giro das associadas: Previ, Fundação Itaú Unibanco e Funpresp-Exe - Abrapp",
-        "Source: Abrapp (quality=0.80)",
-        "Published: Tue, 06 Jan 2026 21:10:00 GMT (freshness=0.95)",
-        "Summary: Giro das associadas: Previ, Fundação Itaú Unibanco e Funpresp-Exe  Abrapp",
-        "[2] RELEVANCE SCORE: 3.8/10",
-        "Title: Sindicato convoca bancários do Itaú para deliberar ACT - SindicarioNET",
-        "Source: SindicarioNET (quality=0.80)",
-        "Published: Tue, 06 Jan 2026 21:21:00 GMT (freshness=0.95)",
-        "Summary: Sindicato convoca bancários do Itaú para deliberar ACT  SindicarioNET",
-        "[3] RELEVANCE SCORE: 3.8/10",
         "Title: Itaú Unibanco abre 103 vagas de emprego em processo seletivo no Brasil - JC Concursos",
         "Source: JC Concursos (quality=0.80)",
         "Published: Tue, 06 Jan 2026 23:10:00 GMT (freshness=0.95)",
         "Summary: Itaú Unibanco abre 103 vagas de emprego em processo seletivo no Brasil  JC Concursos",
+        "[2] RELEVANCE SCORE: 3.4/10",
+        "Title: Giro das associadas: Previ, Fundação Itaú Unibanco e Funpresp-Exe - Abrapp",
+        "Source: Abrapp (quality=0.80)",
+        "Published: Tue, 06 Jan 2026 21:10:00 GMT (freshness=0.85)",
+        "Summary: Giro das associadas: Previ, Fundação Itaú Unibanco e Funpresp-Exe  Abrapp",
+        "[3] RELEVANCE SCORE: 3.4/10",
+        "Title: Sindicato convoca bancários do Itaú para deliberar ACT - SindicarioNET",
+        "Source: SindicarioNET (quality=0.80)",
+        "Published: Tue, 06 Jan 2026 21:21:00 GMT (freshness=0.85)",
+        "Summary: Sindicato convoca bancários do Itaú para deliberar ACT  SindicarioNET",
         "[4] RELEVANCE SCORE: 3.4/10",
         "Title: Comércio teve alta de 10% em dezembro, diz Itaú - Monitor Mercantil",
         "Source: Monitor Mercantil (quality=0.80)",
