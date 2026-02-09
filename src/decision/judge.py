@@ -15,8 +15,38 @@ from src.decision.grounding import GroundingService
 
 logger = logging.getLogger(__name__)
 
-# Caminho raiz do projeto
-PROJECT_ROOT = Path(__file__).parent.parent.parent
+# ─── Audit Callback ──────────────────────────────────────────────
+_judge_audit_callback = None
+
+
+def set_judge_audit_callback(cb):
+    """Set a callback to receive audit entries from the Judge.
+
+    The callback receives a dict with keys: timestamp, ticker, origin,
+    prompt (or summary), result, score, direction, justificativa.
+    Thread-safe: the callback should be non-blocking (e.g. queue.put_nowait).
+    """
+    global _judge_audit_callback
+    _judge_audit_callback = cb
+
+
+def _emit_audit(entry: dict) -> None:
+    """Fire the audit callback if set. Never lets exceptions escape."""
+    cb = _judge_audit_callback
+    if cb is None:
+        return
+    try:
+        cb(entry)
+    except Exception:
+        pass  # Audit must never break the pipeline
+
+
+# Caminho raiz do projeto (works both as script and .exe)
+import sys
+if getattr(sys, 'frozen', False):
+    PROJECT_ROOT = Path.cwd()
+else:
+    PROJECT_ROOT = Path(__file__).parent.parent.parent
 
 
 @dataclass
@@ -104,9 +134,15 @@ Responda em JSON com: decisao, nota_final, direcao, entry_price, stop_loss, take
                     market_data: Dict[str, Any], technical_data: Dict[str, Any],
                     macro_data: Dict[str, Any], correlation_data: Dict[str, Any],
                     news_details: str = "", correlation_analyzer=None,
-                    portfolio_prices: Optional[Dict] = None) -> TradeDecision:
+                    portfolio_prices: Optional[Dict] = None,
+                    alpaca_data: str = "",
+                    data_coherence: str = "") -> TradeDecision:
         """
         Executa julgamento final com Google Grounding, Cache e Correlation Validation (WS4).
+
+        Supports DUAL BRAIN input:
+        - Brain 1 (existing): yfinance market data + GNews + Gemini Screener
+        - Brain 2 (new/optional): Alpaca Markets real-time data + Benzinga News
 
         Args:
             ticker: Símbolo do ativo
@@ -118,25 +154,69 @@ Responda em JSON com: decisao, nota_final, direcao, entry_price, stop_loss, take
             news_details: Detalhes de notícias
             correlation_analyzer: Instância do CorrelationAnalyzer (para validation)
             portfolio_prices: Dict de preços do portfolio (para correlation check)
+            alpaca_data: Dados real-time formatados do Alpaca/Brain 2 (opcional)
+            data_coherence: Comparação de coerência entre Brain 1 e Brain 2 (opcional)
 
         Returns:
             TradeDecision
         """
+        logger.info(f"[JUDGE] {ticker}: Starting final judgment (threshold={self.threshold})")
         try:
-            # WS4.1: Check cache ANTES de processar (< 2h com setup idêntico)
-            cached = self.db.get_cached_decision(ticker, max_age_hours=2)
-            if cached:
-                logger.info(f"Cache HIT: {ticker} - reusing decision from {cached.get('timestamp')}")
+            # CORRELATION CHECK FIRST (must run BEFORE cache - portfolio may have changed)
+            if correlation_analyzer and portfolio_prices:
+                logger.info(f"[JUDGE] {ticker}: Checking correlation vs {len(portfolio_prices)} open positions...")
+                import asyncio
 
-                # Extrair e validar timestamp antes de usar fromisoformat
+                # Try to get ticker prices from portfolio_prices first (replay provides them)
+                # Only fetch from yfinance if not already available (live mode)
+                ticker_prices = portfolio_prices.get(ticker)
+                if ticker_prices is None:
+                    import yfinance as yf
+                    loop = asyncio.get_running_loop()
+                    ticker_obj = await loop.run_in_executor(None, lambda t=ticker: yf.Ticker(t))
+                    hist = await loop.run_in_executor(None, lambda: ticker_obj.history(period="60d"))
+                    if not hist.empty:
+                        ticker_prices = hist["Close"]
+
+                if ticker_prices is not None and len(ticker_prices) > 0:
+                    # Remove the ticker itself from portfolio_prices to avoid self-correlation
+                    check_prices = {k: v for k, v in portfolio_prices.items() if k != ticker}
+                    if check_prices:
+                        is_allowed, violated_tickers = correlation_analyzer.enforce_correlation_limit(
+                            ticker, ticker_prices, check_prices
+                        )
+                        if not is_allowed:
+                            logger.error(f"[JUDGE] CORRELATION VETO: {ticker} rejected (corr with {violated_tickers})")
+                            decision = self._create_rejection(
+                                ticker, f"VETO: Correlacao > 0.75 com {', '.join(violated_tickers)}"
+                            )
+                            _emit_audit({
+                                "timestamp": datetime.now().isoformat(),
+                                "ticker": ticker,
+                                "origin": "Phase 3 - Correlation Veto",
+                                "prompt": f"Correlation check vs {len(check_prices)} positions. Violated: {violated_tickers}",
+                                "result": "REJEITAR",
+                                "score": 0,
+                                "direction": "NEUTRO",
+                                "justificativa": decision.justificativa,
+                            })
+                            self.db.log_decision(ticker, decision.__dict__)
+                            return decision
+
+            # WS4.1: Check cache AFTER correlation (< 2h com setup idêntico)
+            # Include portfolio hash in cache key so changes invalidate cache
+            portfolio_key = ",".join(sorted(portfolio_prices.keys())) if portfolio_prices else ""
+            cached = self.db.get_cached_decision(ticker, max_age_hours=2, portfolio_key=portfolio_key)
+            if cached:
+                logger.info(f"[JUDGE] {ticker}: CACHE HIT - reusing decision from {cached.get('timestamp')}")
+
                 cached_timestamp = cached.get("timestamp")
                 if isinstance(cached_timestamp, str):
                     decision_time = datetime.fromisoformat(cached_timestamp)
                 else:
                     decision_time = datetime.now()
 
-                # Convert cached dict to TradeDecision
-                return TradeDecision(
+                cached_decision = TradeDecision(
                     ticker=ticker,
                     decisao=cached.get("decisao", "REJEITAR"),
                     nota_final=cached.get("nota_final", 0),
@@ -152,88 +232,148 @@ Responda em JSON com: decisao, nota_final, direcao, entry_price, stop_loss, take
                     validade_horas=cached.get("validade_horas", 4),
                     timestamp=decision_time
                 )
+                _emit_audit({
+                    "timestamp": datetime.now().isoformat(),
+                    "ticker": ticker,
+                    "origin": "Phase 3 - Cache Hit",
+                    "prompt": f"[CACHE HIT] Reusing decision from {cached.get('timestamp')}",
+                    "result": cached_decision.decisao,
+                    "score": cached_decision.nota_final,
+                    "direction": cached_decision.direcao,
+                    "justificativa": cached_decision.justificativa,
+                })
+                return cached_decision
 
             # WS4.2: Google Grounding Pre-Check (se news existe)
             grounded_news = news_details
             if self.grounding_service and news_details:
-                logger.info(f"Google Grounding: Verifying news for {ticker}...")
+                logger.info(f"[JUDGE] {ticker}: Google Grounding verifying news...")
                 grounding_result = await self.grounding_service.verify_news(ticker, news_details)
 
                 if grounding_result.verified:
                     # Augmentar news com fontes verificadas
                     sources = grounding_result.sources
                     grounded_news = f"{news_details}\n\nVerified Sources:\n" + "\n".join(f"- {s}" for s in sources[:3])
-                    logger.info(f"Google Grounding: {len(sources)} sources verified")
+                    logger.info(f"[JUDGE] {ticker}: Grounding OK - {len(sources)} sources (conf={grounding_result.confidence:.2f})")
                 elif grounding_result.confidence < 0.3:
                     # News não verificado com baixa confiança - rejeitar
-                    logger.warning(f"Google Grounding: Low confidence ({grounding_result.confidence:.2f}) - rejecting {ticker}")
+                    logger.warning(f"[JUDGE] {ticker}: Grounding FAILED (conf={grounding_result.confidence:.2f}) - REJECTING")
                     decision = self._create_rejection(ticker, "News não verificado (baixa confiança)")
+                    _emit_audit({
+                        "timestamp": datetime.now().isoformat(),
+                        "ticker": ticker,
+                        "origin": "Phase 3 - Grounding Veto",
+                        "prompt": f"Google Grounding check failed. Confidence={grounding_result.confidence:.2f}",
+                        "result": "REJEITAR",
+                        "score": 0,
+                        "direction": "NEUTRO",
+                        "justificativa": decision.justificativa,
+                    })
                     self.db.log_decision(ticker, decision.__dict__)
                     return decision
 
-            # Monta prompt completo (com news grounded)
+            # Monta prompt completo (com news grounded + Brain 2 data)
+            brain_mode = "DUAL" if alpaca_data else "SINGLE"
+            logger.info(f"[JUDGE] {ticker}: Building dossier ({brain_mode} brain) | "
+                        f"Screener={screener_result.get('nota', 0)}/10 | "
+                        f"RSI={technical_data.get('rsi', '?')} | VIX={macro_data.get('vix', '?')}")
             prompt = self._build_prompt(
                 ticker, screener_result, market_data, technical_data,
-                macro_data, correlation_data, grounded_news
+                macro_data, correlation_data, grounded_news,
+                alpaca_data=alpaca_data,
+                data_coherence=data_coherence
             )
 
-            # Chama IA (prefere OpenAI por qualidade)
+            # Chama IA (Gemini 3 Pro Preview - 1M input tokens, economico)
+            logger.info(f"[JUDGE] {ticker}: Calling AI (preferred=Gemini3Pro, temp=0.2)...")
             response = await self.ai_gateway.complete(
                 prompt=prompt,
-                preferred_provider=AIProvider.OPENAI,
+                preferred_provider=AIProvider.GEMINI_PRO,
                 temperature=0.2,
-                max_tokens=1500
+                max_tokens=2500
             )
 
             if not response.success or not response.parsed_json:
-                logger.error(f"Falha no julgamento de {ticker}")
-                decision = self._create_rejection(ticker, "Falha na análise de IA")
+                logger.error(f"[JUDGE] {ticker}: AI FAILED - success={response.success}, "
+                             f"json={'present' if response.parsed_json else 'None'}, "
+                             f"raw='{response.content[:150]}'")
+                decision = self._create_rejection(ticker, "Falha na analise de IA (JSON nao parseado)")
+                _emit_audit({
+                    "timestamp": datetime.now().isoformat(),
+                    "ticker": ticker,
+                    "origin": "Phase 3 - AI Failure",
+                    "prompt": prompt,
+                    "result": "REJEITAR",
+                    "score": 0,
+                    "direction": "NEUTRO",
+                    "justificativa": decision.justificativa,
+                })
                 self.db.log_decision(ticker, decision.__dict__)
                 return decision
+
+            logger.debug(f"[JUDGE] {ticker}: AI response via {response.provider.value}/{response.model} "
+                         f"({response.tokens_used} tokens)")
 
             # Valida e processa resposta
             decision = self._parse_decision(ticker, response.parsed_json)
 
-            # WS4.3: Correlation Validation (se APROVAR)
-            if decision.decisao == "APROVAR" and correlation_analyzer and portfolio_prices:
-                # Fetch preços do ticker
-                import yfinance as yf
-                ticker_obj = yf.Ticker(ticker)
-                hist = ticker_obj.history(period="60d")
+            # Correlation was already checked BEFORE cache (top of method)
 
-                if not hist.empty:
-                    ticker_prices = hist["Close"]
+            # Emit audit entry with full prompt and parsed decision
+            _emit_audit({
+                "timestamp": datetime.now().isoformat(),
+                "ticker": ticker,
+                "origin": "Phase 3 - Judge Decision",
+                "prompt": prompt,
+                "result": decision.decisao,
+                "score": decision.nota_final,
+                "direction": decision.direcao,
+                "justificativa": decision.justificativa,
+            })
 
-                    # Enforce correlation limit
-                    is_allowed, violated_tickers = correlation_analyzer.enforce_correlation_limit(
-                        ticker, ticker_prices, portfolio_prices
-                    )
+            # Log final verdict
+            logger.info(f"[JUDGE] {ticker}: VERDICT={decision.decisao} | Score={decision.nota_final}/10 | "
+                        f"Dir={decision.direcao} | R/R={decision.risco_recompensa:.1f} | "
+                        f"Entry=${decision.entry_price:.2f} SL=${decision.stop_loss:.2f} "
+                        f"TP1=${decision.take_profit_1:.2f}")
+            if decision.alertas:
+                logger.debug(f"[JUDGE] {ticker}: Alerts: {decision.alertas}")
 
-                    if not is_allowed:
-                        # HARD VETO - mudar decisão para REJEITAR
-                        logger.error(f"CORRELATION VETO: {ticker} rejected (correlation with {violated_tickers})")
-                        decision.decisao = "REJEITAR"
-                        decision.nota_final = 0
-                        decision.justificativa = f"VETO: Correlação > 0.75 com {', '.join(violated_tickers)}"
-                        decision.alertas.append(f"Correlation veto: {', '.join(violated_tickers)}")
-
-            # WS4.4: Cache e log decision
-            self.db.cache_decision(ticker, decision.__dict__)
+            # WS4.4: Cache e log decision (include portfolio_key for invalidation)
+            self.db.cache_decision(ticker, decision.__dict__, portfolio_key=portfolio_key)
             self.db.log_decision(ticker, decision.__dict__)
 
             return decision
 
         except Exception as e:
-            logger.error(f"Erro no julgamento de {ticker}: {e}")
+            logger.error(f"[JUDGE] {ticker}: EXCEPTION - {e}")
             decision = self._create_rejection(ticker, str(e))
+            _emit_audit({
+                "timestamp": datetime.now().isoformat(),
+                "ticker": ticker,
+                "origin": "Phase 3 - Exception",
+                "prompt": f"Exception: {e}",
+                "result": "REJEITAR",
+                "score": 0,
+                "direction": "NEUTRO",
+                "justificativa": str(e),
+            })
             self.db.log_decision(ticker, decision.__dict__)
             return decision
 
     def _build_prompt(self, ticker: str, screener_result: Dict,
                       market_data: Dict, technical_data: Dict,
                       macro_data: Dict, correlation_data: Dict,
-                      news_details: str) -> str:
-        """Constrói o prompt completo para o juiz."""
+                      news_details: str,
+                      alpaca_data: str = "",
+                      data_coherence: str = "") -> str:
+        """
+        Constrói o prompt completo para o juiz.
+
+        Supports DUAL BRAIN: Brain 1 (yfinance/GNews) and Brain 2 (Alpaca/Benzinga).
+        If alpaca_data/data_coherence are empty, those sections show fallback text
+        and the Judge operates in single-brain mode (backward compatible).
+        """
         return self.prompt_template.format(
             ticker=ticker,
             screener_nota=screener_result.get("nota", 0),
@@ -249,37 +389,73 @@ Responda em JSON com: decisao, nota_final, direcao, entry_price, stop_loss, take
             support=technical_data.get("support", 0),
             resistance=technical_data.get("resistance", 0),
             vix=macro_data.get("vix", 20),
+            vix_regime=macro_data.get("vix_regime", "normal"),
+            spy_price=macro_data.get("spy_price", 0),
             spy_trend=macro_data.get("spy_trend", "neutral"),
+            spy_change_pct=macro_data.get("spy_change_pct", 0),
+            qqq_price=macro_data.get("qqq_price", 0),
+            dxy_price=macro_data.get("dxy_price", 0),
+            us10y_yield=macro_data.get("us10y_yield", 0),
             sector_perf=market_data.get("sector_perf", 0),
             correlation=correlation_data.get("max_correlation", 0),
             sector_exposure=correlation_data.get("sector_exposure", 0),
             news_details=news_details or "Sem notícias adicionais",
-            rag_context=self.rag_context[:3000] if self.rag_context else "Sem manuais carregados"
+            alpaca_data=alpaca_data or "Brain 2 indisponivel (modo single-brain)",
+            data_coherence=data_coherence or "Apenas Brain 1 ativo - sem comparacao de coerencia",
+            rag_context=self.rag_context if self.rag_context else "Sem manuais carregados"
         )
 
     def _parse_decision(self, ticker: str, data: Dict) -> TradeDecision:
-        """Processa a decisão da IA."""
+        """Processa a decisao da IA com validacoes de negocio."""
         decisao = data.get("decisao", "REJEITAR")
         nota = float(data.get("nota_final", 0))
+        rr = float(data.get("risco_recompensa", 0))
+        logger.debug(f"[JUDGE] {ticker}: AI raw verdict={decisao} score={nota} R/R={rr:.1f}")
 
-        # Valida regras de negócio
+        # Validate business rules
         alerts = data.get("alertas", [])
+        if not isinstance(alerts, list):
+            alerts = []
 
-        # Força rejeição se nota abaixo do threshold
+        # Force rejection if score below threshold
         if nota < self.threshold and decisao == "APROVAR":
             decisao = "REJEITAR"
             alerts.append(f"Nota {nota} abaixo do threshold {self.threshold}")
+            logger.warning(f"[JUDGE] {ticker}: OVERRIDDEN - score {nota} < threshold {self.threshold}")
+
+        # Force rejection if R/R below 2.0 minimum
+        if rr < 2.0 and decisao == "APROVAR":
+            decisao = "REJEITAR"
+            alerts.append(f"R/R {rr:.1f} abaixo do minimo 2.0")
+            logger.warning(f"[JUDGE] {ticker}: OVERRIDDEN - R/R {rr:.1f} < 2.0 minimum")
+
+        # Validate entry/stop/TP prices are reasonable
+        entry = float(data.get("entry_price", 0))
+        stop = float(data.get("stop_loss", 0))
+        tp1 = float(data.get("take_profit_1", 0))
+
+        if decisao == "APROVAR" and entry > 0:
+            # Verify stop is on correct side
+            direcao = data.get("direcao", "LONG")
+            if direcao == "LONG" and stop >= entry:
+                alerts.append(f"Stop ${stop:.2f} >= Entry ${entry:.2f} para LONG")
+                decisao = "REJEITAR"
+                logger.warning(f"[JUDGE] {ticker}: OVERRIDDEN - stop ${stop:.2f} wrong side for LONG")
+            elif direcao == "SHORT" and stop <= entry:
+                alerts.append(f"Stop ${stop:.2f} <= Entry ${entry:.2f} para SHORT")
+                decisao = "REJEITAR"
+                logger.warning(f"[JUDGE] {ticker}: OVERRIDDEN - stop ${stop:.2f} wrong side for SHORT")
 
         return TradeDecision(
             ticker=ticker,
             decisao=decisao,
             nota_final=nota,
             direcao=data.get("direcao", "LONG"),
-            entry_price=float(data.get("entry_price", 0)),
-            stop_loss=float(data.get("stop_loss", 0)),
-            take_profit_1=float(data.get("take_profit_1", 0)),
+            entry_price=entry,
+            stop_loss=stop,
+            take_profit_1=tp1,
             take_profit_2=float(data.get("take_profit_2", 0)),
-            risco_recompensa=float(data.get("risco_recompensa", 0)),
+            risco_recompensa=rr,
             tamanho_sugerido=data.get("tamanho_posicao_sugerido", "NORMAL"),
             justificativa=data.get("justificativa", ""),
             alertas=alerts,
@@ -321,12 +497,13 @@ Responda em JSON com: decisao, nota_final, direcao, entry_price, stop_loss, take
         # Verifica se já tem posição no mesmo ativo
         for pos in current_positions:
             if pos.get("ticker") == decision.ticker:
-                logger.warning(f"Já existe posição em {decision.ticker}")
+                logger.warning(f"[JUDGE] Validation FAILED: duplicate position in {decision.ticker}")
                 return False
 
         # Verifica risco/recompensa mínimo
         if decision.risco_recompensa < 2.0:
-            logger.warning(f"R/R de {decision.risco_recompensa} abaixo de 2:1")
+            logger.warning(f"[JUDGE] Validation FAILED: R/R {decision.risco_recompensa:.1f} < 2:1 for {decision.ticker}")
             return False
 
+        logger.info(f"[JUDGE] {decision.ticker}: Post-validation PASSED (R/R={decision.risco_recompensa:.1f})")
         return True
